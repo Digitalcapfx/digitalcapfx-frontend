@@ -46,6 +46,11 @@
   --glow-1: rgba(47, 128, 255, 0.07);
   --glow-2: rgba(25, 194, 255, 0.05);
 
+  /* Gradients */
+  --brand-gradient: linear-gradient(135deg, var(--primary-500) 0%, var(--cyan-500) 100%);
+  --cta-gradient: linear-gradient(135deg, var(--primary-900) 0%, var(--primary-500) 100%);
+  --glow-gradient: linear-gradient(135deg, #7C3AED 0%, var(--primary-500) 100%);
+
   --font-sans: 'Inter', var(--font-inter), sans-serif;
   --font-satoshi: 'Satoshi', sans-serif;
 }
@@ -152,7 +157,7 @@ body {
 }
 
 /* Background Gradients */
-body::before {
+/* body::before {
   content: "";
   position: absolute;
   top: -10%;
@@ -174,7 +179,7 @@ body::after {
   background: radial-gradient(circle, var(--glow-2) 0%, transparent 70%);
   z-index: -1;
   pointer-events: none;
-}
+} */
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
@@ -221,4 +226,30 @@ body::after {
 .glass-button:hover {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.15);
+}
+
+section,
+nav {
+  padding: 0 0.5rem;
+}
+
+@media (min-width: 640px) {
+  section,
+  nav {
+    padding: 0 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  section,
+  nav {
+    padding: 0 3.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  section,
+  nav {
+    padding: 0 5rem;
+  }
 }
