@@ -1,5 +1,5 @@
-import ComingSoon from '@/components/pages/auth/dashboard/ComingSoon'
+import ProfileTab from '@/components/pages/auth/settings/ProfileTab'
 
 export default function Page() {
-    return <ComingSoon title="Settings" />
+    return <ProfileTab />
 }
