@@ -149,7 +149,7 @@ const Footer = () => {
                     <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
                         {COMPLIANCE_ITEMS.map((item) => (
                             <div key={item.label} className="flex items-center space-x-2 text-xs font-medium text-slate-400">
-                                <Shield className="h-4.5 w-4.5 text-emerald-500 fill-emerald-500/10" />
+                                <Shield className="h-5 w-5 text-emerald-500 fill-emerald-500/10" />
                                 <span className="font-sans">{item.label}</span>
                             </div>
                         ))}

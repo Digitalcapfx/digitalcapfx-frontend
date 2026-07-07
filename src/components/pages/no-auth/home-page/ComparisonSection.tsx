@@ -82,7 +82,7 @@ const ComparisonSection = () => {
                         {COMPARISON_ROWS.map((row) => (
                             <div 
                                 key={row.feature}
-                                className="grid grid-cols-12 items-center py-4.5 px-6 sm:px-8 hover:bg-white/[0.02] transition duration-200"
+                                className="grid grid-cols-12 items-center py-4 px-6 sm:px-8 hover:bg-white/[0.02] transition duration-200"
                             >
                                 <div className="col-span-6 text-left text-sm font-bold text-slate-300 font-satoshi">
                                     {row.feature}

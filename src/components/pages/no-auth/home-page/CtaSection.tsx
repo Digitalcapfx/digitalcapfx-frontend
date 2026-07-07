@@ -32,7 +32,7 @@ const CtaSection = () => {
                                 variant="primary" 
                                 size="large"
                                 className="rounded-full px-8 font-semibold shadow-xl shadow-primary-500/20"
-                                rightIcon={<ArrowRight className="h-4.5 w-4.5" />}
+                                rightIcon={<ArrowRight className="h-5 w-5" />}
                             >
                                 Create Business Account
                             </Button>
