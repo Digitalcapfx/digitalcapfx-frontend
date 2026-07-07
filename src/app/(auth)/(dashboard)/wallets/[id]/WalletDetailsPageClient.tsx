@@ -22,7 +22,7 @@ export default function WalletDetailsPageClient({ id }: WalletDetailsPageClientP
                 <h3 className="text-lg font-bold text-white font-satoshi">Wallet not found</h3>
                 <p className="text-xs text-slate-500 font-sans">The wallet currency code you requested could not be loaded.</p>
                 <button
-                    onClick={() => router.push('/dashboard/wallets')}
+                    onClick={() => router.push('/wallets')}
                     className="text-xs font-bold text-primary-400 hover:text-primary-350 hover:underline bg-[#0C1224] border border-white/5 px-4 py-2 rounded-xl cursor-pointer"
                 >
                     Back to Wallets

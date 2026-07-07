@@ -31,7 +31,7 @@ const QuickActions: React.FC = () => {
                 <span>Receive</span>
             </button>
             <button 
-                onClick={() => router.push('/dashboard/exchange')}
+                onClick={() => router.push('/exchange')}
                 className="bg-[#0C1224] border border-white/5 rounded-2xl p-4 flex items-center justify-center space-x-3 text-slate-300 hover:text-white hover:border-white/10 hover:bg-white/[0.02] transition duration-200 font-semibold text-sm cursor-pointer"
             >
                 <div className="w-8 h-8 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-400">

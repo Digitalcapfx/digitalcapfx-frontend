@@ -83,7 +83,7 @@ export const CardsPage: React.FC = () => {
                         <div 
                             key={c.id}
                             className="bg-[#080E1E] border border-white/5 hover:border-white/10 rounded-3xl p-5.5 space-y-5 transition duration-250 cursor-pointer shadow-lg group flex flex-col justify-between"
-                            onClick={() => router.push(`/dashboard/cards/${c.id}`)}
+                            onClick={() => router.push(`/cards/${c.id}`)}
                         >
                             {/* Graphic Card Preview Container */}
                             <div className={cn(

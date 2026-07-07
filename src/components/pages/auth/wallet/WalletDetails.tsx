@@ -198,7 +198,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, onBack }) => {
                             <span className="text-[11px]">Receive</span>
                         </button>
                         <button 
-                            onClick={() => router.push('/dashboard/exchange')}
+                            onClick={() => router.push('/exchange')}
                             className="bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01] transition duration-200 font-semibold cursor-pointer"
                         >
                             <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">

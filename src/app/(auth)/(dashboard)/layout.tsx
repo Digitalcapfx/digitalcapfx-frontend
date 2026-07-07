@@ -23,9 +23,9 @@ import NewCardSheet from '@/components/pages/auth/cards/NewCardSheet'
 
 const SIDEBAR_LINKS = [
     { label: 'Overview', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Wallets', icon: Wallet, href: '/dashboard/wallets' },
-    { label: 'Cards', icon: CreditCard, href: '/dashboard/cards' },
-    { label: 'Exchange', icon: RefreshCw, href: '/dashboard/exchange' },
+    { label: 'Wallets', icon: Wallet, href: '/wallets' },
+    { label: 'Cards', icon: CreditCard, href: '/cards' },
+    { label: 'Exchange', icon: RefreshCw, href: '/exchange' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -77,10 +77,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                         {/* Settings Button */}
                         <Link
-                            href="/dashboard/settings"
+                            href="/settings"
                             className={cn(
                                 "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition duration-200 focus:outline-none",
-                                pathname === '/dashboard/settings'
+                                pathname.startsWith('/settings')
                                     ? "bg-primary-500/10 border border-primary-500/20 text-primary-400"
                                     : "text-slate-400 hover:text-white hover:bg-white/[0.02]"
                             )}

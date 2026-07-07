@@ -150,8 +150,8 @@ const WalletsPage: React.FC = () => {
                             <div
                                 key={wallet.id}
                                 onClick={() => {
-                                    setBackPath('/dashboard/wallets');
-                                    router.push(`/dashboard/wallets/${wallet.id}`);
+                                    setBackPath('/wallets');
+                                    router.push(`/wallets/${wallet.id}`);
                                 }}
                                 className="bg-[#0C1224]/80 border border-[#131B30] hover:border-white/10 hover:bg-[#0E162A]/90 rounded-2xl p-4.5 flex items-center justify-between transition duration-250 cursor-pointer shadow-md select-none group"
                             >

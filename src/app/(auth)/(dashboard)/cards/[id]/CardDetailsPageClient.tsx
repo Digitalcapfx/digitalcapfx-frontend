@@ -22,7 +22,7 @@ export default function CardDetailsPageClient({ id }: CardDetailsPageClientProps
                 <h3 className="text-lg font-bold text-white font-satoshi">Card not found</h3>
                 <p className="text-xs text-slate-500 font-sans">The virtual card credentials could not be loaded.</p>
                 <button 
-                    onClick={() => router.push('/dashboard/cards')}
+                    onClick={() => router.push('/cards')}
                     className="text-xs font-bold text-primary-400 hover:text-primary-350 hover:underline bg-[#0C1224] border border-white/5 px-4 py-2 rounded-xl cursor-pointer"
                 >
                     Back to Cards
@@ -34,7 +34,7 @@ export default function CardDetailsPageClient({ id }: CardDetailsPageClientProps
     return (
         <CardDetails 
             card={card} 
-            onBack={() => router.push('/dashboard/cards')} 
+            onBack={() => router.push('/cards')} 
         />
     );
 }

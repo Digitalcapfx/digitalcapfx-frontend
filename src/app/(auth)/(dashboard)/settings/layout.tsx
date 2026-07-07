@@ -15,10 +15,10 @@ interface TabItem {
 }
 
 const TABS: TabItem[] = [
-    { id: 'profile', label: 'Profile', href: '/dashboard/settings', icon: User },
-    { id: 'security', label: 'Security', href: '/dashboard/settings/security', icon: Shield },
-    { id: 'verification', label: 'Verification', href: '/dashboard/settings/verification', icon: Scan },
-    { id: 'notifications', label: 'Notifications', href: '/dashboard/settings/notifications', icon: Bell },
+    { id: 'profile', label: 'Profile', href: '/settings', icon: User },
+    { id: 'security', label: 'Security', href: '/settings/security', icon: Shield },
+    { id: 'verification', label: 'Verification', href: '/settings/verification', icon: Scan },
+    { id: 'notifications', label: 'Notifications', href: '/settings/notifications', icon: Bell },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

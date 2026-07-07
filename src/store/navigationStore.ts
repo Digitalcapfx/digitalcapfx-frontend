@@ -11,7 +11,7 @@ interface NavigationState {
 export const useNavigationStore = create<NavigationState>()(
     persist(
         (set) => ({
-            backPath: '/dashboard/wallets', // default fallback routing path
+            backPath: '/wallets', // default fallback routing path
             setBackPath: (path: string) => set({ backPath: path }),
         }),
         {

@@ -54,7 +54,7 @@ const WalletCarousel: React.FC = () => {
                         key={card.currency}
                         onClick={() => {
                             setBackPath('/dashboard');
-                            router.push(`/dashboard/wallets/${card.currency.toLowerCase()}`);
+                            router.push(`/wallets/${card.currency.toLowerCase()}`);
                         }}
                         className={cn(
                             "w-[200px] h-[130px] rounded-2xl p-5 border flex flex-col justify-between shrink-0 hover:scale-[1.02] transition duration-200 cursor-pointer shadow-lg group",
