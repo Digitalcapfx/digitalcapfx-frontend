@@ -25,23 +25,24 @@ const NavBar = () => {
     const [activeId, setActiveId] = useState('features');
 
     return (
-        <nav className="relative flex items-center justify-between h-20 w-full bg-[#050816]/80 backdrop-blur-md sticky top-0 z-50 border-b border-white/5">
+        <nav className="relative flex items-center justify-between h-20 w-full backdrop-blur-md sticky top-0 z-50 border-b border-white/6">
+
             {/* Logo */}
             <div className="flex items-center">
                 <Link href="/" className="flex items-center">
                     <Image
                         src="/DFXLogo.svg"
                         alt="DigitalCap FX Logo"
-                        width={180}
-                        height={40}
+                        width={150}
+                        height={24}
                         priority
-                        className="h-8 w-auto"
+                        className="h-6 w-auto"
                     />
                 </Link>
             </div>
 
             {/* Nav Menu for Desktop */}
-            <div className="hidden md:flex items-center space-x-1 bg-[#0C1224]/60 border border-white/5 px-1.5 py-1 rounded-full">
+            <div className="hidden lg:flex items-center space-x-1 border border-white/5 px-1.5 py-1 rounded-full">
                 {NAV_LINKS.map((link) => {
                     const isActive = activeId === link.id;
                     return (
@@ -50,10 +51,10 @@ const NavBar = () => {
                             href={link.href}
                             onClick={() => setActiveId(link.id)}
                             className={cn(
-                                "px-5 py-2 text-xs font-semibold rounded-full transition duration-200 border",
+                                "px-4 py-2 text-sm font-medium rounded-full transition duration-200 border",
                                 isActive
                                     ? "text-white bg-white/5 border-white/5"
-                                    : "text-slate-400 hover:text-slate-200 border-transparent"
+                                    : "text-[#C8D0DD] hover:text-slate-200 border-transparent"
                             )}
                         >
                             {link.label}
@@ -63,16 +64,16 @@ const NavBar = () => {
             </div>
 
             {/* Actions for Desktop */}
-            <div className="hidden md:flex items-center space-x-3">
+            <div className="hidden lg:flex items-center space-x-3">
                 <Link href="/login">
-                    <Button variant="ghost" className="text-slate-300 font-semibold px-4 text-xs h-9">
+                    <Button variant="ghost" className="text-slate-300 font-medium px-4 text-sm h-9">
                         Log in
                     </Button>
                 </Link>
                 <Link href="/get-started">
                     <Button
                         variant="primary"
-                        className="rounded-full px-5 text-xs h-9 font-semibold"
+                        className="rounded-full px-5 text-sm h-9 font-medium"
                         rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
                     >
                         Get Started
@@ -81,7 +82,7 @@ const NavBar = () => {
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="flex md:hidden">
+            <div className="flex lg:hidden">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className="text-slate-400 hover:text-white p-2 focus:outline-none"
@@ -93,7 +94,7 @@ const NavBar = () => {
 
             {/* Mobile Menu Drawer */}
             {isOpen && (
-                <div className="absolute top-20 left-0 w-full bg-[#050816] border-b border-white/5 px-6 py-6 md:hidden flex flex-col space-y-4 z-40 transition-all duration-200">
+                <div className="absolute top-20 left-0 w-full bg-[#050816] border-b border-white/5 px-6 py-6 lg:hidden flex flex-col space-y-4 z-40 transition-all duration-200">
                     {NAV_LINKS.map((link) => (
                         <Link
                             key={link.id}
