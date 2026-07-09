@@ -12,18 +12,26 @@ import NewsletterSection from './NewsletterSection'
 
 const HomePage = () => {
     return (
-        <div className="max-w-7xl mx-auto">
-            <HeroSection />
+        <>
+            <div className="max-w-screen-2xl mx-auto">
+                <HeroSection />
+            </div>
             <RatesMarquee />
             <TrustedMarquee />
-            <FeaturesSection />
-            <HowItWorksSection />
+            <div className="max-w-screen-2xl mx-auto">
+                <FeaturesSection />
+                <HowItWorksSection />
+            </div>
             <ReviewsSection />
-            <ComparisonSection />
+            <div className="max-w-screen-2xl mx-auto">
+                <ComparisonSection />
+            </div>
             <FaqSection />
-            <CtaSection />
-            <NewsletterSection />
-        </div>
+            <div className="max-w-screen-2xl mx-auto">
+                <CtaSection />
+                <NewsletterSection />
+            </div>
+        </>
     )
 }
 

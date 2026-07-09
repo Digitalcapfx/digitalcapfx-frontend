@@ -25,7 +25,7 @@ const NavBar = () => {
     const [activeId, setActiveId] = useState('features');
 
     return (
-        <nav className="relative flex items-center justify-between h-20 w-full backdrop-blur-md sticky top-0 z-50 border-b border-white/6">
+        <nav className=" flex items-center justify-between h-20 w-full backdrop-blur-md fixed top-0 z-50 border-b border-white/6">
 
             {/* Logo */}
             <div className="flex items-center">

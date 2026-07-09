@@ -34,15 +34,14 @@ const RatesMarquee = () => {
             <div className="flex whitespace-nowrap min-w-full">
                 <div className="flex space-x-12 animate-marquee shrink-0 hover:[animation-play-state:paused] cursor-pointer">
                     {doubleItems.map((item, idx) => (
-                        <div 
-                            key={`${item.pair}-${idx}`} 
-                            className="flex items-center space-x-3 text-xs font-semibold"
+                        <div
+                            key={`${item.pair}-${idx}`}
+                            className="flex items-center space-x-2 text-xs font-semibold"
                         >
-                            <span className="text-slate-400 font-mono tracking-wider">{item.pair}</span>
-                            <span className="text-white font-mono font-bold">${item.price}</span>
-                            <div className={`flex items-center space-x-1 font-mono text-[10px] ${
-                                item.isPositive ? 'text-emerald-400' : 'text-rose-400'
-                            }`}>
+                            <span className="text-[#6D778A] tracking-wider">{item.pair}</span>
+                            <span className="text-[#F8FAFC] font-semibold">${item.price}</span>
+                            <div className={`flex items-center space-x-1 text-[10px] ${item.isPositive ? 'text-[#22C55E]' : 'text-[#EF4444]'
+                                }`}>
                                 {item.isPositive ? (
                                     <TrendingUp className="h-3 w-3" />
                                 ) : (
@@ -50,7 +49,7 @@ const RatesMarquee = () => {
                                 )}
                                 <span>{item.change}</span>
                             </div>
-                            <span className="text-white/10 select-none px-2">|</span>
+                            <span className="text-[#6D778A]/30 select-none px-2">|</span>
                         </div>
                     ))}
                 </div>

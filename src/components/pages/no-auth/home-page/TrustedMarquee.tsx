@@ -22,9 +22,9 @@ const TrustedMarquee = () => {
     const doublePartners = [...PARTNERS, ...PARTNERS, ...PARTNERS];
 
     return (
-        <div className="w-full bg-[#050816] py-16 border-b border-white/5 relative overflow-hidden select-none">
+        <div className="w-full bg-[#0C1224] py-12 border-b border-white/5 relative overflow-hidden select-none">
             {/* Centered Heading */}
-            <div className="text-center text-[10px] font-bold tracking-[0.25em] text-slate-500 uppercase mb-10 select-none">
+            <div className="text-center text-[11px] font-bold tracking-[0.25em] text-[#3E4658] uppercase mb-8 select-none">
                 Trusted Infrastructure & Networks
             </div>
 
@@ -35,9 +35,9 @@ const TrustedMarquee = () => {
             <div className="flex whitespace-nowrap min-w-full">
                 <div className="flex space-x-16 animate-marquee-slow shrink-0 hover:[animation-play-state:paused] cursor-pointer">
                     {doublePartners.map((partner, idx) => (
-                        <div 
-                            key={`${partner}-${idx}`} 
-                            className="text-base sm:text-lg font-bold tracking-tight text-slate-600 hover:text-slate-400 transition duration-300 select-none font-sans"
+                        <div
+                            key={`${partner}-${idx}`}
+                            className="text-sm font-bold tracking-tight text-[#3E4658] hover:text-slate-400 transition duration-300 select-none"
                         >
                             {partner}
                         </div>

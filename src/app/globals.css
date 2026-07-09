@@ -102,8 +102,8 @@
   --color-primary-900: var(--primary-900);
   --color-primary-800: var(--primary-800);
   --color-primary-700: var(--primary-700);
-  --color-primary-600: var(--primary-600);
-  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-500);
+  --color-primary-500: var(--primary-600);
   --color-cyan-500: var(--cyan-500);
   --color-cyan-400: var(--cyan-400);
   --color-cyan-300: var(--cyan-300);
