@@ -18,7 +18,9 @@ import {
     ShieldAlert as ShieldWarning,
     RefreshCw as SpinnerIcon,
     Clock,
-    Gift
+    Gift,
+    Menu,
+    X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SendMoneySheet from '@/components/pages/auth/_components/SendMoneySheet'
@@ -44,6 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const pathname = usePathname();
     const router = useRouter();
     const queryClient = useQueryClient();
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Verification blocker states
     const [otpCode, setOtpCode] = useState('');
@@ -153,7 +156,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
 
                     <form onSubmit={handleVerifySubmit} className="space-y-4">
-                        <input 
+                        <input
                             type="text"
                             required
                             maxLength={6}
@@ -190,7 +193,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </button>
                         )}
 
-                        <button 
+                        <button
                             onClick={handleSignOut}
                             className="text-rose-455 hover:underline cursor-pointer flex items-center space-x-1"
                         >
@@ -225,7 +228,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="h-screen w-screen bg-[#050816] text-white flex overflow-hidden">
 
             {/* Left Fixed Navigation Sidebar */}
-            <aside className="w-[260px] border-r border-white/5 bg-[#080E1E] flex flex-col justify-between p-6 select-none shrink-0 h-full">
+            <aside className="hidden lg:flex w-[260px] border-r border-white/5 bg-[#080E1E] flex-col justify-between p-6 select-none shrink-0 h-full">
                 <div className="space-y-8">
                     {/* Brand Logo */}
                     <div>
@@ -283,7 +286,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {/* Bottom Profile Details */}
                 <div className="space-y-4 pt-4 border-t border-white/5">
                     {/* Profile verification indicator */}
-                    <div 
+                    <div
                         onClick={() => router.push('/settings')}
                         className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 cursor-pointer hover:bg-white/[0.04] transition"
                     >
@@ -324,34 +327,45 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex-grow flex flex-col h-full overflow-hidden">
 
                 {/* Top Search Header */}
-                <header className="h-20 border-b border-white/5 px-8 flex items-center justify-between sticky top-0 bg-[#050816]/80 backdrop-blur z-30 select-none shrink-0">
+                <header className="h-20 border-b border-white/5 px-6 lg:px-8 flex items-center justify-between lg:justify-end sticky top-0 bg-[#050816]/80 backdrop-blur z-30 select-none shrink-0">
 
-                    {/* Search Field */}
-                    <div className="relative flex items-center w-[320px]">
-                        <Search className="absolute left-3.5 h-4 w-4 text-slate-500 pointer-events-none" />
-                        <input
-                            type="text"
-                            placeholder="Search transactions, wallets..."
-                            className="bg-black/20 border border-white/10 rounded-xl pl-10 pr-14 py-2.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-primary-500/50 w-full font-sans"
-                        />
-                        <span className="absolute right-3.5 bg-white/5 border border-white/10 text-[9px] font-bold text-slate-500 px-1.5 py-0.5 rounded uppercase tracking-widest font-mono">
-                            ⌘K
-                        </span>
+                    {/* Brand Logo on Mobile Left */}
+                    <div className="lg:hidden shrink-0">
+                        <Link href="/dashboard">
+                            <Image
+                                src="/DFXLogo.svg"
+                                alt="DigitalCap Logo"
+                                width={115}
+                                height={24}
+                                className="h-6 w-auto object-contain cursor-pointer"
+                            />
+                        </Link>
                     </div>
 
-                    {/* Notification & Avatar controls */}
-                    <div className="flex items-center space-x-4">
-                        <button className="flex items-center space-x-1.5 border border-white/10 hover:bg-white/5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-400 hover:text-white transition duration-200">
-                            <HelpCircle className="h-4 w-4" />
-                            <span>Help</span>
-                        </button>
-                        <button className="relative w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition">
+                    {/* Notification & Avatar controls + Hamburger beside it on Mobile */}
+                    <div className="flex items-center space-x-3 lg:space-x-4">
+                        <Link 
+                            href="/settings/notifications" 
+                            className="relative w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition"
+                        >
                             <Bell className="h-4 w-4" />
                             <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary-400"></span>
-                        </button>
-                        <div className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center font-bold text-white text-xs select-none">
+                        </Link>
+                        
+                        <Link 
+                            href="/settings"
+                            className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center font-bold text-white text-xs select-none hover:opacity-90 transition cursor-pointer active:scale-95"
+                        >
                             {initials}
-                        </div>
+                        </Link>
+
+                        {/* Mobile Menu Toggle Button (Beside Avatar) */}
+                        <button
+                            onClick={() => setMobileMenuOpen(true)}
+                            className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition duration-200"
+                        >
+                            <Menu className="h-5 w-5" />
+                        </button>
                     </div>
 
                 </header>
@@ -395,6 +409,120 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <NewCardSheet />
 
             </div>
+
+            {/* Mobile Sidebar Overlay Drawer */}
+            {mobileMenuOpen && (
+                <div className="fixed inset-0 z-50 lg:hidden flex">
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
+                        onClick={() => setMobileMenuOpen(false)}
+                    />
+
+                    {/* Drawer Content */}
+                    <div className="relative w-[280px] bg-[#080E1E] border-r border-white/5 flex flex-col justify-between p-6 h-full select-none animate-in slide-in-from-left duration-300 shadow-2xl">
+                        <div className="space-y-8">
+                            {/* Brand Logo & Close Button */}
+                            <div className="flex items-center justify-between">
+                                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                                    <Image
+                                        src="/DFXLogo.svg"
+                                        alt="DigitalCap Logo"
+                                        width={130}
+                                        height={28}
+                                        className="h-7 w-auto object-contain cursor-pointer"
+                                    />
+                                </Link>
+                                <button
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            {/* Navigation Items */}
+                            <div className="space-y-1.5">
+                                {SIDEBAR_LINKS.map((link) => {
+                                    const IconComponent = link.icon;
+                                    const active = pathname === link.href;
+                                    return (
+                                        <Link
+                                            key={link.label}
+                                            href={link.href}
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className={cn(
+                                                "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition duration-200 focus:outline-none",
+                                                active
+                                                    ? "bg-primary-500/10 border border-primary-500/20 text-primary-400"
+                                                    : "text-slate-400 hover:text-white hover:bg-white/[0.02]"
+                                            )}
+                                        >
+                                            <IconComponent className="h-5 w-5" />
+                                            <span>{link.label}</span>
+                                        </Link>
+                                    )
+                                })}
+
+                                <div className="h-[1px] bg-white/5 my-4"></div>
+
+                                {/* Settings Button */}
+                                <Link
+                                    href="/settings"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className={cn(
+                                        "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition duration-200 focus:outline-none",
+                                        pathname.startsWith('/settings')
+                                            ? "bg-primary-500/10 border border-primary-500/20 text-primary-400"
+                                            : "text-slate-400 hover:text-white hover:bg-white/[0.02]"
+                                    )}
+                                >
+                                    <Settings className="h-5 w-5" />
+                                    <span>Settings</span>
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Bottom Profile Details */}
+                        <div className="space-y-4 pt-4 border-t border-white/5">
+                            {/* Profile verification indicator */}
+                            <div
+                                onClick={() => {
+                                    setMobileMenuOpen(false);
+                                    router.push('/settings');
+                                }}
+                                className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 cursor-pointer hover:bg-white/[0.04] transition"
+                            >
+                                <div className="flex items-center space-x-2.5 min-w-0">
+                                    <div className="w-8 h-8 rounded-lg bg-primary-500/15 flex items-center justify-center text-primary-400 shrink-0">
+                                        <span className="font-bold text-xs font-satoshi">{isBusiness ? '🏢' : '👤'}</span>
+                                    </div>
+                                    <div className="text-left min-w-0">
+                                        <h4 className="text-xs font-bold text-white truncate max-w-[110px]">{profileName}</h4>
+                                        <span className={cn("text-[9px] font-bold uppercase tracking-wider block mt-0.5 border px-1 py-0.5 rounded-sm truncate", badgeColor)}>
+                                            {kycBadge}
+                                        </span>
+                                    </div>
+                                </div>
+                                <svg className="h-3.5 w-3.5 text-slate-500 fill-current shrink-0" viewBox="0 0 20 20">
+                                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                </svg>
+                            </div>
+
+                            {/* Support & Logout */}
+                            <div className="space-y-1">
+                                <button
+                                    onClick={handleSignOut}
+                                    className="w-full flex items-center space-x-3 px-4 py-2 text-xs font-semibold text-rose-455 hover:text-rose-350 transition rounded-lg"
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                    <span>Sign out</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     )
