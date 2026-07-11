@@ -42,6 +42,11 @@ export class AuthService extends BaseService {
     return response.data;
   }
 
+  async logout() {
+    const response = await this.api.post('/auth/logout');
+    return response.data;
+  }
+
   async forgotPin(emailOrPhone: string) {
     const response = await this.api.post('/auth/forgot-pin', { emailOrPhone });
     return response.data;

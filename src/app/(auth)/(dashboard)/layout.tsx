@@ -106,8 +106,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
 
     const handleSignOut = () => {
-        // Clear proxy cookies by calling logout or just redirect to login which deletes cookies client side
-        router.push('/login');
+        authService.logout().finally(() => {
+            localStorage.removeItem('account_type');
+            router.push('/login');
+        });
     };
 
     // Full page loading overlay for session setups

@@ -159,8 +159,8 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // If the server explicitly rejected auth (and refresh failed), wipe the cookies
-        if (response.status === 401 && !isAuthEndpoint) {
+        // If the server explicitly rejected auth (and refresh failed), or user logged out, wipe the cookies
+        if ((response.status === 401 && !isAuthEndpoint) || endpoint.includes('/auth/logout')) {
             res.cookies.delete('noe_token');
             res.cookies.delete('noe_refresh_token');
             res.cookies.delete('account_type');
