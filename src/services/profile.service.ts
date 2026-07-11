@@ -1,35 +1,43 @@
 import { BaseService } from './base.service';
 
 export interface UpdateProfileRequest {
-  first_name?: string;
-  last_name?: string;
-  date_of_birth?: string;
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
   nationality?: string;
-  avatar_url?: string;
+  avatarUrl?: string;
   bio?: string;
 }
 
 export interface ProfileResponseData {
   id: string;
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  phone_number: string;
-  is_email_verified: boolean;
-  kyc_status: 'idle' | 'pending' | 'approved' | 'rejected';
-  date_of_birth?: string;
+  phoneNumber: string;
+  isEmailVerified: boolean;
+  kycStatus: 'idle' | 'pending' | 'approved' | 'rejected';
+  accountType?: 'individual' | 'business';
+  companyLegalName?: string;
+  dateOfBirth?: string;
   nationality?: string;
-  avatar_url?: string;
+  avatarUrl?: string;
   bio?: string;
 }
 
+export interface ProfileResponse {
+  success: boolean;
+  data?: ProfileResponseData;
+  error?: any;
+}
+
 export class ProfileService extends BaseService {
-  async getProfile() {
+  async getProfile(): Promise<ProfileResponse> {
     const response = await this.api.get('/profile');
     return response.data;
   }
 
-  async updateProfile(payload: UpdateProfileRequest) {
+  async updateProfile(payload: UpdateProfileRequest): Promise<ProfileResponse> {
     const response = await this.api.patch('/profile', payload);
     return response.data;
   }

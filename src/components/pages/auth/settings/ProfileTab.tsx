@@ -1,45 +1,79 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useSettingsStore } from '@/store/settingsStore'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { profileService } from '@/services/profile.service'
+import { toast } from 'sonner'
+import { RefreshCw } from 'lucide-react'
 
 export const ProfileTab: React.FC = () => {
-    const { profile, updateProfile } = useSettingsStore();
-    
-    const [firstName, setFirstName] = useState(profile.firstName);
-    const [lastName, setLastName] = useState(profile.lastName);
-    const [dob, setDob] = useState(profile.dob);
-    const [country, setCountry] = useState(profile.country);
-    const [address, setAddress] = useState(profile.address);
-    const [nationality, setNationality] = useState(profile.nationality);
-    const [occupation, setOccupation] = useState(profile.occupation);
-    const [phoneNumber, setPhoneNumber] = useState(profile.phoneNumber);
+    const queryClient = useQueryClient();
 
-    // Keep fields in sync with store (in case of hydration delays)
+    const profileQuery = useQuery({
+        queryKey: ['profile'],
+        queryFn: () => profileService.getProfile(),
+    });
+
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [dob, setDob] = useState('');
+    const [nationality, setNationality] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+
+    // Keep fields in sync with query response
     useEffect(() => {
-        setFirstName(profile.firstName);
-        setLastName(profile.lastName);
-        setDob(profile.dob);
-        setCountry(profile.country);
-        setAddress(profile.address);
-        setNationality(profile.nationality);
-        setOccupation(profile.occupation);
-        setPhoneNumber(profile.phoneNumber);
-    }, [profile]);
+        if (profileQuery.data?.success && profileQuery.data.data) {
+            const p = profileQuery.data.data;
+            setFirstName(p.firstName || '');
+            setLastName(p.lastName || '');
+            setDob(p.dateOfBirth || '');
+            setNationality(p.nationality || '');
+            setPhoneNumber(p.phoneNumber || '');
+        }
+    }, [profileQuery.data]);
+
+    const updateProfileMutation = useMutation({
+        mutationFn: (payload: {
+            firstName: string;
+            lastName: string;
+            dateOfBirth: string;
+            nationality: string;
+            phoneNumber: string;
+        }) => profileService.updateProfile(payload),
+        onSuccess: (data) => {
+            if (data?.success) {
+                toast.success('Profile details updated successfully!');
+                queryClient.invalidateQueries({ queryKey: ['profile'] });
+            } else {
+                toast.error(data?.error?.message || 'Failed to save changes.');
+            }
+        },
+        onError: (err: any) => {
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to save profile changes.');
+            toast.error(msg);
+        }
+    });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        updateProfile({
+        updateProfileMutation.mutate({
             firstName,
             lastName,
-            dob,
-            country,
-            address,
+            dateOfBirth: dob,
             nationality,
-            occupation,
-            phoneNumber
+            phoneNumber,
         });
     };
+
+    if (profileQuery.isLoading) {
+        return (
+            <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-8 flex flex-col items-center justify-center min-h-[300px]">
+                <RefreshCw className="h-8 w-8 text-primary-400 animate-spin" />
+                <span className="text-xs font-bold text-slate-500 mt-3 select-none">Loading your profile details...</span>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 md:p-8 shadow-xl">
@@ -54,6 +88,7 @@ export const ProfileTab: React.FC = () => {
                         <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">First name</label>
                         <input 
                             type="text"
+                            required
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
                             className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-sans font-semibold"
@@ -63,6 +98,7 @@ export const ProfileTab: React.FC = () => {
                         <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Last Name</label>
                         <input 
                             type="text"
+                            required
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
                             className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-sans font-semibold"
@@ -75,48 +111,19 @@ export const ProfileTab: React.FC = () => {
                         <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Date of Birth</label>
                         <input 
                             type="date"
+                            required
                             value={dob}
                             onChange={(e) => setDob(e.target.value)}
                             className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-mono font-semibold"
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Country</label>
-                        <input 
-                            type="text"
-                            value={country}
-                            onChange={(e) => setCountry(e.target.value)}
-                            className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-sans font-semibold"
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Physical address</label>
-                    <input 
-                        type="text"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-sans font-semibold"
-                    />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Nationality</label>
                         <input 
                             type="text"
+                            required
                             value={nationality}
                             onChange={(e) => setNationality(e.target.value)}
-                            className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-sans font-semibold"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Occupation</label>
-                        <input 
-                            type="text"
-                            value={occupation}
-                            onChange={(e) => setOccupation(e.target.value)}
                             className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-sans font-semibold"
                         />
                     </div>
@@ -126,6 +133,7 @@ export const ProfileTab: React.FC = () => {
                     <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Phone number</label>
                     <input 
                         type="text"
+                        required
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-mono font-semibold"
@@ -135,15 +143,10 @@ export const ProfileTab: React.FC = () => {
                 <div className="flex items-center space-x-3.5 pt-4 text-left">
                     <button
                         type="submit"
-                        className="bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs px-5 py-3.5 rounded-xl shadow-lg transition duration-200 cursor-pointer active:scale-95"
+                        disabled={updateProfileMutation.isPending}
+                        className="bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs px-5 py-3.5 rounded-xl shadow-lg transition duration-200 cursor-pointer active:scale-95 disabled:opacity-50"
                     >
-                        Save Changes
-                    </button>
-                    <button
-                        type="button"
-                        className="bg-slate-800 hover:bg-slate-750 text-slate-400 font-bold text-xs px-5 py-3.5 rounded-xl border border-white/5 transition duration-200 cursor-pointer active:scale-95"
-                    >
-                        Cancel
+                        {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
 

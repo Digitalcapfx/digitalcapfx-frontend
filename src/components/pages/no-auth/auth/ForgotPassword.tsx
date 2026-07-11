@@ -2,28 +2,132 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, Mail } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, ArrowRight, ShieldCheck, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { OtpInput } from '@/components/ui/OtpInput'
 import AuthLayout from '@/components/pages/no-auth/layout/AuthLayout'
+import { useMutation } from '@tanstack/react-query'
+import { authService } from '@/services/auth.service'
+import { toast } from 'sonner'
 
 const ForgotPassword = () => {
-    const [email, setEmail] = useState('');
-    const [submitted, setSubmitted] = useState(false);
+    const router = useRouter();
+    const [emailOrPhone, setEmailOrPhone] = useState('');
+    const [code, setCode] = useState('');
+    const [newPin, setNewPin] = useState('');
+    const [step, setStep] = useState<'request' | 'reset'>('request');
+    const [errorMsg, setErrorMsg] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (email) {
-            setSubmitted(true);
+    // Form field errors
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const clearFieldError = (field: string) => {
+        if (errors[field]) {
+            setErrors((prev) => {
+                const updated = { ...prev };
+                delete updated[field];
+                return updated;
+            });
         }
+    };
+
+    // React Query Mutations
+    const forgotPinMutation = useMutation({
+        mutationFn: (emailOrPhone: string) => authService.forgotPin(emailOrPhone),
+        onSuccess: (data) => {
+            if (data?.success) {
+                toast.success('Verification code sent successfully!');
+                setStep('reset');
+            } else {
+                const rawError = data?.error;
+                const msg = typeof rawError === 'object'
+                    ? (rawError.message || JSON.stringify(rawError))
+                    : (rawError || 'Failed to request reset OTP.');
+                setErrorMsg(msg);
+                toast.error(msg);
+            }
+        },
+        onError: (err: any) => {
+            console.error('Forgot PIN Error:', err);
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object'
+                ? (rawError.message || JSON.stringify(rawError))
+                : (rawError || err.response?.data?.message || 'Failed to request verification code.');
+            setErrorMsg(msg);
+            toast.error(msg);
+        }
+    });
+
+    const resetPinMutation = useMutation({
+        mutationFn: (payload: { emailOrPhone: string; code: string; newPin: string }) =>
+            authService.resetPin(payload),
+        onSuccess: (data) => {
+            if (data?.success) {
+                toast.success('PIN reset successfully! Please sign in with your new PIN.');
+                router.push('/login');
+            } else {
+                const rawError = data?.error;
+                const msg = typeof rawError === 'object'
+                    ? (rawError.message || JSON.stringify(rawError))
+                    : (rawError || 'Reset PIN failed.');
+                setErrorMsg(msg);
+                toast.error(msg);
+            }
+        },
+        onError: (err: any) => {
+            console.error('Reset PIN Error:', err);
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object'
+                ? (rawError.message || JSON.stringify(rawError))
+                : (rawError || err.response?.data?.message || 'Failed to reset PIN.');
+            setErrorMsg(msg);
+            toast.error(msg);
+        }
+    });
+
+    const handleRequestSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setErrorMsg('');
+        
+        if (!emailOrPhone.trim()) {
+            setErrors({ emailOrPhone: 'Email or phone number is required' });
+            return;
+        }
+        setErrors({});
+        forgotPinMutation.mutate(emailOrPhone.trim());
+    };
+
+    const handleResetSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setErrorMsg('');
+
+        const newErrors: Record<string, string> = {};
+        if (code.length !== 6) {
+            newErrors.code = 'Please enter the 6-digit verification code';
+        }
+        if (!newPin.trim()) {
+            newErrors.newPin = 'New PIN is required';
+        } else if (newPin.length !== 6) {
+            newErrors.newPin = 'New PIN must be exactly 6 digits';
+        }
+
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length > 0) return;
+
+        resetPinMutation.mutate({
+            emailOrPhone: emailOrPhone.trim(),
+            code,
+            newPin: newPin.trim(),
+        });
     };
 
     return (
         <AuthLayout>
-            {!submitted ? (
-                /* State 1: Forgot Password Input Form */
-                <div className="space-y-6">
-                    {/* Back to sign in link at top */}
+            {step === 'request' ? (
+                /* Phase 1: Request OTP Code */
+                <div className="space-y-6 text-left animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <div>
                         <Link 
                             href="/login" 
@@ -34,7 +138,6 @@ const ForgotPassword = () => {
                         </Link>
                     </div>
 
-                    {/* Glowing Mail Envelope Icon */}
                     <div className="relative w-fit">
                         <div className="absolute inset-0 rounded-2xl bg-primary-500/20 blur-[20px]"></div>
                         <div className="relative w-12 h-12 rounded-2xl bg-primary-500/10 border border-primary-500/25 flex items-center justify-center text-primary-400">
@@ -42,38 +145,45 @@ const ForgotPassword = () => {
                         </div>
                     </div>
 
-                    {/* Header info */}
                     <div className="space-y-2">
                         <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
-                            Forgot your password?
+                            Forgot your PIN?
                         </h1>
-                        <p className="text-slate-400 text-sm font-sans leading-relaxed">
-                            No problem. Enter the email address linked to your account and we'll send you a secure reset link.
+                        <p className="text-[#6D778A] text-sm font-sans leading-relaxed">
+                            Enter the email address or phone number linked to your account and we'll send you a verification code.
                         </p>
                     </div>
 
-                    {/* Email Form */}
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    {errorMsg && (
+                        <div className="p-4 bg-rose-500/10 border border-rose-500/25 rounded-2xl text-xs font-semibold text-rose-400 font-sans leading-relaxed select-none">
+                            {errorMsg}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleRequestSubmit} className="space-y-5">
                         <Input 
                             required
-                            type="email"
-                            label="Email*"
-                            placeholder="you@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            label="Email or Phone number*"
+                            placeholder="you@email.com or +234..."
+                            value={emailOrPhone}
+                            onChange={(e) => {
+                                setEmailOrPhone(e.target.value);
+                                clearFieldError('emailOrPhone');
+                            }}
+                            error={errors.emailOrPhone}
                         />
 
                         <Button
                             type="submit"
                             variant="primary"
-                            className="w-full rounded-full h-[52px] font-semibold shadow-lg shadow-primary-500/10 text-base"
+                            disabled={forgotPinMutation.isPending}
+                            className="w-full rounded-full h-[52px] font-semibold text-base"
                             rightIcon={<ArrowRight className="h-5 w-5" />}
                         >
-                            Send reset link
+                            {forgotPinMutation.isPending ? 'Sending...' : 'Send reset code'}
                         </Button>
                     </form>
 
-                    {/* Sign in fallback */}
                     <div className="text-center pt-2 select-none">
                         <span className="text-xs font-medium text-slate-500 font-sans">
                             Remembered it?{' '}
@@ -84,85 +194,102 @@ const ForgotPassword = () => {
                     </div>
                 </div>
             ) : (
-                /* State 2: Check Your Inbox Instruction Card */
-                <div className="space-y-6">
-                    {/* Glowing Mail Envelope Icon */}
-                    <div className="relative w-fit mx-auto lg:mx-0">
-                        <div className="absolute inset-0 rounded-2xl bg-cyan-500/15 blur-[20px]"></div>
-                        <div className="relative w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400">
-                            <Mail className="h-6 w-6" />
-                        </div>
-                    </div>
-
-                    {/* Header info */}
-                    <div className="space-y-2 text-center lg:text-left">
-                        <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
-                            Check your inbox
-                        </h1>
-                        <p className="text-slate-400 text-sm font-sans leading-relaxed">
-                            We've sent a password reset link to <br />
-                            <strong className="text-white font-bold font-mono">{email}</strong>
-                        </p>
-                    </div>
-
-                    {/* Step Instructions Panel */}
-                    <div className="bg-[#0C1224]/50 border border-white/5 rounded-2xl p-5 space-y-4 text-left select-none font-sans">
-                        <div className="flex items-start space-x-3.5">
-                            <div className="w-5 h-5 rounded-full bg-primary-500/15 flex items-center justify-center text-[10px] font-bold text-primary-400 shrink-0 mt-0.5">
-                                1
-                            </div>
-                            <span className="text-xs font-semibold text-slate-350 leading-relaxed">
-                                Open the email from DigitalCap FX
-                            </span>
-                        </div>
-                        <div className="flex items-start space-x-3.5">
-                            <div className="w-5 h-5 rounded-full bg-primary-500/15 flex items-center justify-center text-[10px] font-bold text-primary-400 shrink-0 mt-0.5">
-                                2
-                            </div>
-                            <span className="text-xs font-semibold text-slate-350 leading-relaxed">
-                                Click "Reset my password" in the email
-                            </span>
-                        </div>
-                        <div className="flex items-start space-x-3.5">
-                            <div className="w-5 h-5 rounded-full bg-primary-500/15 flex items-center justify-center text-[10px] font-bold text-primary-400 shrink-0 mt-0.5">
-                                3
-                            </div>
-                            <span className="text-xs font-semibold text-slate-350 leading-relaxed">
-                                Choose a new strong password
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Resend Email Button */}
-                    <div className="space-y-4">
+                /* Phase 2: Verify OTP & Enter New PIN */
+                <div className="space-y-6 text-left animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div>
                         <button 
-                            onClick={() => setSubmitted(false)}
-                            className="w-full h-[52px] rounded-full border border-white/10 text-white hover:bg-white/5 hover:border-white/20 transition duration-200 text-sm font-semibold select-none font-sans active:scale-[0.98]"
+                            onClick={() => {
+                                setStep('request');
+                                setCode('');
+                                setNewPin('');
+                                setErrors({});
+                                setErrorMsg('');
+                            }}
+                            className="inline-flex items-center space-x-2 text-xs font-bold text-slate-500 hover:text-slate-355 transition-colors font-sans select-none"
                         >
-                            Resend email
+                            <ArrowLeft className="h-4 w-4" />
+                            <span>Change email/phone</span>
                         </button>
+                    </div>
 
-                        <div className="text-center">
-                            <Link 
-                                href="/login" 
-                                className="inline-flex items-center space-x-2 text-xs font-bold text-slate-500 hover:text-slate-350 transition-colors font-sans select-none"
-                            >
-                                <ArrowLeft className="h-4 w-4" />
-                                <span>Back to sign in</span>
-                            </Link>
+                    <div className="relative w-fit">
+                        <div className="absolute inset-0 rounded-2xl bg-cyan-500/20 blur-[20px]"></div>
+                        <div className="relative w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400">
+                            <ShieldCheck className="h-5 w-5" />
                         </div>
                     </div>
 
-                    {/* Expiration disclaimer */}
-                    <div className="text-center lg:text-left select-none pt-4 border-t border-white/5">
-                        <p className="text-[10px] font-bold text-slate-550 tracking-wide uppercase font-sans">
-                            Link expires in 30 minutes. Check your spam folder if you don't see it.
+                    <div className="space-y-2">
+                        <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
+                            Reset your PIN
+                        </h1>
+                        <p className="text-[#6D778A] text-sm font-sans leading-relaxed">
+                            We've sent a 6-digit code to <strong className="text-white font-bold">{emailOrPhone}</strong>. Enter it below along with your new PIN.
                         </p>
                     </div>
+
+                    {errorMsg && (
+                        <div className="p-4 bg-rose-500/10 border border-rose-500/25 rounded-2xl text-xs font-semibold text-rose-400 font-sans leading-relaxed select-none">
+                            {errorMsg}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleResetSubmit} className="space-y-5">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-slate-400 block tracking-wide select-none">
+                                Verification Code*
+                            </label>
+                            <div className="max-w-[340px] flex py-1">
+                                <OtpInput 
+                                    value={code}
+                                    onChange={(val) => {
+                                        setCode(val);
+                                        clearFieldError('code');
+                                    }}
+                                    length={6}
+                                />
+                            </div>
+                            {errors.code && (
+                                <p className="text-xs text-red-500 font-semibold mt-1">
+                                    {errors.code}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Input 
+                                required
+                                type="password"
+                                label="New 6-Digit PIN*"
+                                placeholder="Enter new 6-digit PIN"
+                                maxLength={6}
+                                value={newPin}
+                                onChange={(e) => {
+                                    const cleaned = e.target.value.replace(/\D/g, '');
+                                    setNewPin(cleaned);
+                                    clearFieldError('newPin');
+                                }}
+                                error={errors.newPin}
+                            />
+                            <span className="text-[10px] text-slate-500 font-semibold block select-none">
+                                Pin code must be 6 numeric digits for rapid authentication.
+                            </span>
+                        </div>
+
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={resetPinMutation.isPending}
+                            className="w-full rounded-full h-[52px] font-semibold text-base"
+                            rightIcon={<ArrowRight className="h-5 w-5" />}
+                        >
+                            {resetPinMutation.isPending ? 'Resetting PIN...' : 'Reset PIN'}
+                        </Button>
+                    </form>
                 </div>
             )}
         </AuthLayout>
-    )
-}
+    );
+};
 
-export default ForgotPassword
+export default ForgotPassword;

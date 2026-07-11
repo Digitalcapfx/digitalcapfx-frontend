@@ -12,64 +12,58 @@ import {
     CheckCircle2,
     RefreshCw
 } from 'lucide-react'
-import { WALLETS_DATA, Wallet } from '../wallet/WalletsPage'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
 import { cn } from '@/lib/utils'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { accountService } from '@/services/account.service'
+import { exchangeService, QuoteData } from '@/services/exchange.service'
+import { toast } from 'sonner'
 
-// Mock conversion rates
-const CONVERSION_RATES: Record<string, Record<string, number>> = {
-    // Fiat rates
-    USD: { EUR: 0.85, GBP: 0.78, NGN: 1621.4, XOF: 600.0, XAF: 600.0, USD: 1 },
-    EUR: { USD: 1.1762, GBP: 0.91, NGN: 1907.0, XOF: 705.0, XAF: 705.0, EUR: 1 },
-    GBP: { USD: 1.282, EUR: 1.1636, NGN: 2085.0, XOF: 770.0, XAF: 770.0, GBP: 1 },
-    NGN: { USD: 0.000616, EUR: 0.000524, GBP: 0.00048, XOF: 0.37, XAF: 0.37, NGN: 1 },
-    XOF: { USD: 0.00167, EUR: 0.00142, GBP: 0.0013, NGN: 2.7, XAF: 1.0, XOF: 1 },
-    XAF: { USD: 0.00167, EUR: 0.00142, GBP: 0.0013, NGN: 2.7, XOF: 1.0, XAF: 1 },
-    // Crypto rates (using USDT base)
-    USDT: { USDC: 1.0, BTC: 0.0000156, ETH: 0.000294, SOL: 0.00714, POL: 1.8, TRX: 8.3, LTC: 0.013, USDT: 1 },
-    USDC: { USDT: 1.0, BTC: 0.0000156, ETH: 0.000294, SOL: 0.00714, POL: 1.8, TRX: 8.3, LTC: 0.013, USDC: 1 },
-    BTC: { USDT: 64100.0, USDC: 64100.0, ETH: 18.8, SOL: 457.0, POL: 115000.0, TRX: 530000.0, LTC: 830.0, BTC: 1 },
-    ETH: { USDT: 3400.0, USDC: 3400.0, BTC: 0.053, SOL: 24.2, POL: 6100.0, TRX: 28000.0, LTC: 44.0, ETH: 1 },
-    SOL: { USDT: 140.0, USDC: 140.0, BTC: 0.00218, ETH: 0.041, POL: 252.0, TRX: 1150.0, LTC: 1.8, SOL: 1 },
-    POL: { USDT: 0.55, USDC: 0.55, BTC: 0.0000086, ETH: 0.00016, SOL: 0.0039, TRX: 4.5, LTC: 0.007, POL: 1 },
-    TRX: { USDT: 0.12, USDC: 0.12, BTC: 0.0000018, ETH: 0.000035, SOL: 0.00085, POL: 0.22, LTC: 0.0015, TRX: 1 },
-    LTC: { USDT: 77.0, USDC: 77.0, BTC: 0.0012, ETH: 0.022, SOL: 0.55, POL: 140.0, TRX: 640.0, LTC: 1 },
+export interface Wallet {
+    id: string;
+    name: string;
+    code: string;
+    type: 'fiat' | 'stablecoin';
+    balance: string;
+    rawBalance: number;
+}
+
+const CURRENCY_NAMES: Record<string, string> = {
+    USD: 'US Dollar',
+    EUR: 'Euro',
+    GBP: 'British Pound',
+    XOF: 'CFA Franc BCEAO',
+    XAF: 'CFA Franc BEAC',
+    USDC: 'USD Coin',
+    NGN: 'Nigerian Naira',
 };
 
-interface RateDisplay {
-    pair: string;
-    rate: string;
-    change: number;
-}
+const formatBalance = (amount: string | number, currency: string) => {
+    const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
+    if (isNaN(val)) return '0.00';
+    if (currency === 'XAF' || currency === 'XOF') {
+        return val.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency}`;
+    }
+    const symbols: Record<string, string> = {
+        USD: '$',
+        EUR: '€',
+        GBP: '£',
+    };
+    const prefix = symbols[currency] || '';
+    return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
+};
 
-const LIVE_RATES: RateDisplay[] = [
-    { pair: 'EUR/USD', rate: '1.1762', change: 0.42 },
+const LIVE_RATES = [
+    { pair: 'EUR/USD', rate: '1.0825', change: 0.42 },
     { pair: 'GBP/USD', rate: '1.2710', change: 0.12 },
-    { pair: 'USD/NGN', rate: '1,621.4', change: -1.20 },
-    { pair: 'EUR/NGN', rate: '1,907.0', change: -0.85 },
+    { pair: 'USD/XAF', rate: '608.4', change: -0.20 },
+    { pair: 'EUR/XOF', rate: '655.9', change: -0.05 },
     { pair: 'GBP/EUR', rate: '1.1636', change: 0.31 },
-    { pair: 'USD/GHS', rate: '15.42', change: 0.08 },
-];
-
-interface RecentConversion {
-    id: string;
-    fromCode: string;
-    toCode: string;
-    fromVal: string;
-    toVal: string;
-    date: string;
-    rate: string;
-}
-
-const RECENT_CONVERSIONS: RecentConversion[] = [
-    { id: '1', fromCode: 'EUR', toCode: 'USD', fromVal: '€10,000', toVal: '$11,762', date: 'Jun 25', rate: '1.1762' },
-    { id: '2', fromCode: 'GBP', toCode: 'USD', fromVal: '£5,000', toVal: '$6,355', date: 'Jun 24', rate: '1.2710' },
-    { id: '3', fromCode: 'USD', toCode: 'NGN', fromVal: '$2,000', toVal: '₦3.24M', date: 'Jun 23', rate: '1,621.4' },
 ];
 
 export const ExchangePage: React.FC = () => {
-    // success sheet open control
+    const queryClient = useQueryClient();
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
     
     // Core selection states
@@ -81,46 +75,130 @@ export const ExchangePage: React.FC = () => {
     const [isToDropdownOpen, setIsToDropdownOpen] = useState(false);
     
     // Amount values
-    const [fromAmount, setFromAmount] = useState('10000');
+    const [fromAmount, setFromAmount] = useState('100');
     const [toAmount, setToAmount] = useState('');
     
-    // Rates & Timer states
+    // Live countdown timer for preview quote
     const [timer, setTimer] = useState(30);
     const [rateMultiplier, setRateMultiplier] = useState(1.0);
 
-    const fromWallet = WALLETS_DATA.find(w => w.id === fromWalletId) || WALLETS_DATA[0];
+    // Confirm step
+    const [confirmQuote, setConfirmQuote] = useState<QuoteData | null>(null);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [confirmTimer, setConfirmTimer] = useState(30);
+
+    // Load Wallets Dynamically
+    const fiatQuery = useQuery({
+        queryKey: ['accounts'],
+        queryFn: () => accountService.getAccounts(),
+    });
+
+    const cryptoQuery = useQuery({
+        queryKey: ['cryptoBalances'],
+        queryFn: () => accountService.getCryptoBalances(),
+    });
+
+    const exchangeHistoryQuery = useQuery({
+        queryKey: ['exchangeHistory'],
+        queryFn: () => exchangeService.getExchangeHistory().catch(() => ({ success: false, data: [] })),
+    });
+
+    const walletsList: Wallet[] = [];
+
+    // Map stablecoin wallet
+    if (cryptoQuery.data?.success && cryptoQuery.data.data) {
+        const d = cryptoQuery.data.data;
+        walletsList.push({
+            id: 'usdc',
+            name: CURRENCY_NAMES.USDC,
+            code: 'USDC',
+            type: 'stablecoin',
+            balance: formatBalance(d.balance_usdc, 'USDC'),
+            rawBalance: parseFloat(d.balance_usdc || '0'),
+        });
+    }
+
+    // Map fiat wallets
+    if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
+        fiatQuery.data.data.forEach((acc) => {
+            walletsList.push({
+                id: acc.currency.toLowerCase(),
+                name: CURRENCY_NAMES[acc.currency] || acc.currency,
+                code: acc.currency,
+                type: 'fiat',
+                balance: formatBalance(acc.balance, acc.currency),
+                rawBalance: parseFloat(acc.balance || '0'),
+            });
+        });
+    }
+
+    // Default configuration fallbacks
+    const fromWallet = walletsList.find(w => w.id === fromWalletId) || walletsList[0] || {
+        id: 'usd',
+        name: 'US Dollar',
+        code: 'USD',
+        type: 'fiat' as const,
+        balance: '$0.00',
+        rawBalance: 0,
+    };
+
     const isFromFiat = fromWallet.type === 'fiat';
 
-    // Filter target 'TO' currencies based on constraint: Fiat to Fiat OR Crypto to Crypto
-    const filteredToWallets = WALLETS_DATA.filter(w => {
+    // Target wallets matching constraints: Fiat to Fiat OR Crypto to Crypto
+    const filteredToWallets = walletsList.filter(w => {
         const isToFiat = w.type === 'fiat';
-        // Categorical constraint check
         if (isFromFiat !== isToFiat) return false;
-        // Cannot convert same currency
         if (fromWallet.id === w.id) return false;
         return true;
     });
 
-    const toWallet = WALLETS_DATA.find(w => w.id === toWalletId) || filteredToWallets[0] || WALLETS_DATA[1];
+    const toWallet = walletsList.find(w => w.id === toWalletId) || filteredToWallets[0] || walletsList[1] || {
+        id: 'eur',
+        name: 'Euro',
+        code: 'EUR',
+        type: 'fiat' as const,
+        balance: '€0.00',
+        rawBalance: 0,
+    };
 
-    // Force update target selection if it violates category rule on source swap
+    // Auto update selection if violated
     useEffect(() => {
-        const isToFiat = toWallet.type === 'fiat';
-        if (isFromFiat !== isToFiat || fromWallet.id === toWallet.id) {
-            const firstValid = filteredToWallets[0];
-            if (firstValid) {
-                setToWalletId(firstValid.id);
+        if (walletsList.length > 0) {
+            const isToFiat = toWallet.type === 'fiat';
+            if (isFromFiat !== isToFiat || fromWallet.id === toWallet.id) {
+                const firstValid = filteredToWallets[0];
+                if (firstValid) {
+                    setToWalletId(firstValid.id);
+                }
             }
         }
-    }, [fromWalletId]);
+    }, [fromWalletId, walletsList.length]);
 
-    // Live countdown timer simulated rates updates
+    // Live rates query
+    const rateQuery = useQuery({
+        queryKey: ['exchangeRate', fromWallet.code, toWallet.code],
+        queryFn: () => exchangeService.getRate(fromWallet.code, toWallet.code),
+        enabled: !!fromWallet.code && !!toWallet.code && fromWallet.code !== toWallet.code && walletsList.length > 0,
+    });
+
+    const activeRate = rateQuery.data?.success ? rateQuery.data.data.rate * rateMultiplier : 1.0 * rateMultiplier;
+
+    // Estimate conversions
+    useEffect(() => {
+        if (fromAmount === '') {
+            setToAmount('');
+            return;
+        }
+        const val = parseFloat(fromAmount) * activeRate;
+        setToAmount(val.toFixed(toWallet.type === 'fiat' ? 2 : 6));
+    }, [fromAmount, fromWallet.code, toWallet.code, activeRate]);
+
+    // simulated live ticks
     useEffect(() => {
         const interval = setInterval(() => {
             setTimer((prev) => {
                 if (prev <= 1) {
-                    // Reset timer and fluctuate exchange rates slightly (±0.04%)
-                    setRateMultiplier(1 + (Math.random() * 0.0008 - 0.0004));
+                    setRateMultiplier(1 + (Math.random() * 0.0006 - 0.0003));
                     return 30;
                 }
                 return prev - 1;
@@ -129,40 +207,115 @@ export const ExchangePage: React.FC = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // Resolve current exchange rate
-    const baseRate = CONVERSION_RATES[fromWallet.code]?.[toWallet.code] || 1.0;
-    const activeRate = baseRate * rateMultiplier;
-
-    // Sync input values bidirectionally
+    // Countdown for confirmation quote
     useEffect(() => {
-        if (fromAmount === '') {
-            setToAmount('');
-            return;
+        if (!isConfirmOpen) return;
+        const interval = setInterval(() => {
+            setConfirmTimer((prev) => {
+                if (prev <= 1) {
+                    toast.error('Quote expired. Please request a new quote.');
+                    setIsConfirmOpen(false);
+                    return 30;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [isConfirmOpen]);
+
+    // Mutations
+    const createQuoteMutation = useMutation({
+        mutationFn: () => exchangeService.createQuote({
+            source_currency: fromWallet.code,
+            target_currency: toWallet.code,
+            amount: parseFloat(fromAmount),
+            is_source: true,
+        }),
+        onSuccess: (data) => {
+            if (data?.success && data.data) {
+                setConfirmQuote(data.data);
+                setConfirmTimer(30);
+                setIsConfirmOpen(true);
+            } else {
+                toast.error(data?.error?.message || 'Failed to request lock quote.');
+            }
+        },
+        onError: (err: any) => {
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to generate quote.');
+            toast.error(msg);
         }
-        const val = parseFloat(fromAmount) * activeRate;
-        // Format to sensible decimal places
-        setToAmount(val.toFixed(toWallet.type === 'fiat' ? 2 : 6));
-    }, [fromAmount, fromWalletId, toWalletId, activeRate]);
+    });
+
+    const executeExchangeMutation = useMutation({
+        mutationFn: (quoteId: string) => exchangeService.executeExchange({ quote_id: quoteId }),
+        onSuccess: (data) => {
+            if (data?.success) {
+                setIsConfirmOpen(false);
+                setIsSuccessOpen(true);
+                // invalidate accounts
+                queryClient.invalidateQueries({ queryKey: ['accounts'] });
+                queryClient.invalidateQueries({ queryKey: ['cryptoBalances'] });
+                queryClient.invalidateQueries({ queryKey: ['activity'] });
+                queryClient.invalidateQueries({ queryKey: ['exchangeHistory'] });
+            } else {
+                toast.error(data?.error?.message || 'Failed to execute conversion.');
+            }
+        },
+        onError: (err: any) => {
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to convert.');
+            toast.error(msg);
+        }
+    });
 
     const handleSwap = () => {
         const tempId = fromWalletId;
         setFromWalletId(toWalletId);
         setToWalletId(tempId);
-        setFromAmount(toAmount);
     };
 
     const handleConvert = (e: React.FormEvent) => {
         e.preventDefault();
         if (!fromAmount || parseFloat(fromAmount) <= 0) return;
-        setIsSuccessOpen(true);
+        createQuoteMutation.mutate();
+    };
+
+    const handleConfirmExchange = () => {
+        if (confirmQuote?.quote_id) {
+            executeExchangeMutation.mutate(confirmQuote.quote_id);
+        }
     };
 
     const handleCloseSuccess = () => {
         setIsSuccessOpen(false);
-        setFromAmount('10000');
+        setFromAmount('100');
     };
 
-    const fee = parseFloat(fromAmount || '0') * 0.0015;
+    const estimatedFee = parseFloat(fromAmount || '0') * 0.0015;
+
+    // Load recent conversions
+    const rawHistory = exchangeHistoryQuery.data?.success && Array.isArray(exchangeHistoryQuery.data.data)
+        ? exchangeHistoryQuery.data.data
+        : [];
+
+    const recentExchanges = rawHistory.length > 0 
+        ? rawHistory.slice(0, 5) 
+        : [
+            { id: 'mock-1', fromCode: 'USD', toCode: 'EUR', fromVal: '$100', toVal: '€92.40', date: 'Just now', rate: '0.9240' },
+            { id: 'mock-2', fromCode: 'EUR', toCode: 'GBP', fromVal: '€500', toVal: '£420.50', date: 'Yesterday', rate: '0.8410' },
+        ];
+
+    const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading;
+
+    if (isLoading && walletsList.length === 0) {
+        return (
+            <div className="text-center py-16 min-h-[400px] flex flex-col items-center justify-center space-y-4">
+                <div className="w-10 h-10 border-4 border-t-primary-500 border-white/10 rounded-full animate-spin"></div>
+                <p className="text-xs text-slate-550 font-sans">Connecting conversion rates...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -173,7 +326,7 @@ export const ExchangePage: React.FC = () => {
                     <h2 className="text-2xl font-black text-white font-satoshi">
                         Exchange
                     </h2>
-                    <p className="text-xs font-semibold text-slate-555 font-sans">
+                    <p className="text-xs font-semibold text-slate-550 font-sans">
                         Swap currencies instantly
                     </p>
                 </div>
@@ -217,8 +370,8 @@ export const ExchangePage: React.FC = () => {
 
                                     {/* Dropdown Menu FROM */}
                                     {isFromDropdownOpen && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#0E1528] border border-white/10 rounded-2xl shadow-2xl z-30 max-h-[220px] overflow-y-auto scrollbar-none py-1.5">
-                                            {WALLETS_DATA.map((w) => (
+                                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#0E1528] border border-white/10 rounded-2xl shadow-2xl z-30 max-h-[220px] overflow-y-auto scrollbar-none py-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            {walletsList.map((w) => (
                                                 <div
                                                     key={w.id}
                                                     onClick={() => {
@@ -247,7 +400,10 @@ export const ExchangePage: React.FC = () => {
                                     <span>Wallet balance: {fromWallet.balance}</span>
                                     <button 
                                         type="button"
-                                        onClick={() => setFromAmount(fromWallet.balance.replace(/[^0-9.]/g, ''))}
+                                        onClick={() => {
+                                            const num = fromWallet.rawBalance;
+                                            setFromAmount(num > 0 ? num.toString() : '0');
+                                        }}
                                         className="text-primary-400 hover:text-primary-350 hover:underline cursor-pointer"
                                     >
                                         Use max
@@ -255,7 +411,7 @@ export const ExchangePage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Center Swap Buttons Indicator */}
+                            {/* Center Swap Buttons */}
                             <div className="absolute left-1/2 top-[108px] -translate-x-1/2 -translate-y-1/2 z-10">
                                 <button 
                                     type="button"
@@ -293,7 +449,7 @@ export const ExchangePage: React.FC = () => {
 
                                     {/* Dropdown Menu TO */}
                                     {isToDropdownOpen && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#0E1528] border border-white/10 rounded-2xl shadow-2xl z-30 max-h-[220px] overflow-y-auto scrollbar-none py-1.5">
+                                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#0E1528] border border-white/10 rounded-2xl shadow-2xl z-30 max-h-[220px] overflow-y-auto scrollbar-none py-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
                                             {filteredToWallets.map((w) => (
                                                 <div
                                                     key={w.id}
@@ -338,7 +494,7 @@ export const ExchangePage: React.FC = () => {
                                 <div className="flex justify-between items-center pb-1 border-b border-white/[0.03]">
                                     <span className="text-slate-400 font-bold">Fee breakdown</span>
                                     <span className="font-bold text-emerald-400 font-mono">
-                                        {fromWallet.type === 'fiat' ? '$' : ''}{fee.toFixed(fromWallet.type === 'fiat' ? 2 : 4)}
+                                        {formatBalance(estimatedFee, fromWallet.code)}
                                     </span>
                                 </div>
 
@@ -346,7 +502,7 @@ export const ExchangePage: React.FC = () => {
                                     <span className="text-slate-555 font-semibold">Exchange fee</span>
                                     <span className="font-bold text-white font-mono flex items-center space-x-1">
                                         <CurrencyIcon code={fromWallet.code} size="sm" />
-                                        <span>{fee.toFixed(fromWallet.type === 'fiat' ? 2 : 4)} {fromWallet.code} (0.15%)</span>
+                                        <span>{estimatedFee.toFixed(fromWallet.type === 'fiat' ? 2 : 4)} {fromWallet.code} (0.15%)</span>
                                     </span>
                                 </div>
 
@@ -364,7 +520,7 @@ export const ExchangePage: React.FC = () => {
                             {/* Convert CTA */}
                             <button
                                 type="submit"
-                                disabled={!fromAmount || parseFloat(fromAmount) <= 0}
+                                disabled={!fromAmount || parseFloat(fromAmount) <= 0 || createQuoteMutation.isPending}
                                 className={cn(
                                     "w-full py-4 rounded-xl font-bold text-sm tracking-wide shadow-lg transition duration-200 cursor-pointer active:scale-[0.98]",
                                     (fromAmount && parseFloat(fromAmount) > 0)
@@ -372,7 +528,7 @@ export const ExchangePage: React.FC = () => {
                                         : "bg-slate-800 text-slate-550 cursor-not-allowed"
                                 )}
                             >
-                                Exchange Now
+                                {createQuoteMutation.isPending ? 'Requesting quote...' : 'Exchange Now'}
                             </button>
 
                         </div>
@@ -394,12 +550,12 @@ export const ExchangePage: React.FC = () => {
                             <div className="space-y-3.5">
                                 {LIVE_RATES.map((rate) => (
                                     <div key={rate.pair} className="flex justify-between items-center text-xs">
-                                        <span className="font-bold text-slate-350">{rate.pair}</span>
+                                        <span className="font-bold text-slate-355">{rate.pair}</span>
                                         <div className="text-right flex items-center space-x-2 font-mono">
                                             <span className="font-bold text-white">{rate.rate}</span>
                                             <span className={cn(
                                                 "text-[10px] font-bold flex items-center space-x-0.5",
-                                                rate.change > 0 ? "text-emerald-400" : "text-rose-450"
+                                                rate.change > 0 ? "text-emerald-400" : "text-rose-455"
                                             )}>
                                                 {rate.change > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                                                 <span>{rate.change > 0 ? '+' : ''}{rate.change}%</span>
@@ -416,16 +572,20 @@ export const ExchangePage: React.FC = () => {
                                 Recent Conversions
                             </h3>
                             <div className="space-y-4">
-                                {RECENT_CONVERSIONS.map((conv) => (
+                                {recentExchanges.map((conv: any) => (
                                     <div key={conv.id} className="flex justify-between items-center text-xs">
                                         <div className="flex items-center space-x-2.5 min-w-0">
                                             <div className="flex items-center -space-x-1.5 shrink-0">
-                                                <CurrencyIcon code={conv.fromCode} size="sm" />
-                                                <CurrencyIcon code={conv.toCode} size="sm" />
+                                                <CurrencyIcon code={conv.fromCode || conv.source_currency || 'USD'} size="sm" />
+                                                <CurrencyIcon code={conv.toCode || conv.target_currency || 'EUR'} size="sm" />
                                             </div>
                                             <div className="text-left">
-                                                <span className="font-bold text-white block leading-tight">{conv.fromVal} → {conv.toVal}</span>
-                                                <span className="text-[9px] text-slate-500 font-bold block mt-0.5 select-none">{conv.date} • Rate {conv.rate}</span>
+                                                <span className="font-bold text-white block leading-tight">
+                                                    {conv.fromVal || formatBalance(conv.source_amount || '0', conv.source_currency || 'USD')} → {conv.toVal || formatBalance(conv.target_amount || '0', conv.target_currency || 'EUR')}
+                                                </span>
+                                                <span className="text-[9px] text-slate-500 font-bold block mt-0.5 select-none">
+                                                    {conv.date || new Date(conv.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • Rate {conv.rate}
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
@@ -451,6 +611,76 @@ export const ExchangePage: React.FC = () => {
 
                 </div>
             </div>
+
+            {/* Exchange Quote Confirmation Modal Sheet */}
+            <Sheet
+                isOpen={isConfirmOpen}
+                onClose={() => setIsConfirmOpen(false)}
+            >
+                <div className="space-y-6 flex flex-col justify-between h-full text-center">
+                    <div className="space-y-6 select-none pt-8 text-left">
+                        <div className="space-y-2">
+                            <h3 className="font-satoshi font-black text-2xl text-white tracking-tight">Confirm Exchange</h3>
+                            <p className="text-[#6D778A] text-xs font-sans">
+                                Please review your conversion parameters before accepting. Quotes expire dynamically to protect against volatility.
+                            </p>
+                        </div>
+
+                        {confirmQuote && (
+                            <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 space-y-4 font-sans text-xs">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-400 font-semibold">You Sell</span>
+                                    <span className="font-extrabold text-white font-mono text-sm">
+                                        {formatBalance(confirmQuote.source_amount, fromWallet.code)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-400 font-semibold">You Receive</span>
+                                    <span className="font-extrabold text-emerald-400 font-mono text-sm">
+                                        {formatBalance(confirmQuote.target_amount, toWallet.code)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-400 font-semibold">Exchange Rate</span>
+                                    <span className="font-bold text-white font-mono">
+                                        1 {fromWallet.code} = {confirmQuote.rate.toFixed(4)} {toWallet.code}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-400 font-semibold">Margin Fee (0.15%)</span>
+                                    <span className="font-bold text-slate-300 font-mono">
+                                        {formatBalance(confirmQuote.fee, fromWallet.code)}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-4 flex items-center justify-between text-xs select-none">
+                            <span className="text-amber-400 font-bold font-sans">Quote Lock Expiration</span>
+                            <div className="bg-[#0C1224] border border-white/5 font-mono text-amber-400 px-3 py-1 rounded-xl flex items-center space-x-1 shrink-0">
+                                <RefreshCw className="h-3 w-3 text-amber-500 animate-spin" />
+                                <span>00:{confirmTimer.toString().padStart(2, '0')}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 mt-auto">
+                        <button
+                            onClick={handleConfirmExchange}
+                            disabled={executeExchangeMutation.isPending}
+                            className="w-full bg-emerald-500 hover:bg-emerald-450 text-white font-bold text-sm py-4 rounded-xl shadow-lg transition duration-200 cursor-pointer active:scale-[0.98]"
+                        >
+                            {executeExchangeMutation.isPending ? 'Executing Exchange...' : 'Confirm & Convert'}
+                        </button>
+                        <button
+                            onClick={() => setIsConfirmOpen(false)}
+                            className="w-full bg-[#0C1224] border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white font-bold text-sm py-4 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98]"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </Sheet>
 
             {/* Exchange Success Sheet Drawer */}
             <Sheet
@@ -497,21 +727,21 @@ export const ExchangePage: React.FC = () => {
                         </div>
 
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">Exchange fee</span>
+                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Exchange fee</span>
                             <span className="font-bold text-white font-mono flex items-center space-x-1.5">
                                 <CurrencyIcon code={fromWallet.code} size="sm" />
-                                <span>{fee.toFixed(fromWallet.type === 'fiat' ? 2 : 4)} {fromWallet.code}</span>
+                                <span>{estimatedFee.toFixed(fromWallet.type === 'fiat' ? 2 : 4)} {fromWallet.code}</span>
                             </span>
                         </div>
 
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">Settlement</span>
+                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Settlement</span>
                             <span className="text-white">Instant (same day)</span>
                         </div>
 
                         <div className="flex justify-between items-center py-0.5 border-t border-white/5 pt-3">
-                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">Transaction ID</span>
-                            <span className="font-mono text-slate-350">CNV-2026-8842</span>
+                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Transaction ID</span>
+                            <span className="font-mono text-slate-350">CNV-EXEC-OK</span>
                         </div>
                     </div>
 

@@ -71,11 +71,11 @@ export const VerificationTab: React.FC = () => {
     useEffect(() => {
         if (profileQuery.data?.success && profileQuery.data?.data) {
             const p = profileQuery.data.data;
-            setFirstName(p.first_name || '');
-            setLastName(p.last_name || '');
-            setDob(p.date_of_birth || '');
+            setFirstName(p.firstName || '');
+            setLastName(p.lastName || '');
+            setDob(p.dateOfBirth || '');
             setNationality(p.nationality || '');
-            setPhoneNumber(p.phone_number || '');
+            setPhoneNumber(p.phoneNumber || '');
         }
     }, [profileQuery.data]);
 
@@ -104,10 +104,10 @@ export const VerificationTab: React.FC = () => {
         mutationFn: async () => {
             // 1. Update Profile (Names, DOB, Nationality)
             await profileService.updateProfile({
-                first_name: firstName,
-                last_name: lastName,
-                date_of_birth: dob,
-                nationality: nationality
+                firstName,
+                lastName,
+                dateOfBirth: dob,
+                nationality
             });
 
             // 2. Submit Documents
@@ -440,8 +440,186 @@ export const VerificationTab: React.FC = () => {
                 </div>
             )}
 
-            {/* Individual Account Stepper Timeline (Default) */}
-            {accountType === 'individual' && (
+            {/* Individual Onboarding Form (Unsubmitted/Idle/Rejected) */}
+            {accountType === 'individual' && kycStatus !== 'pending' && kycStatus !== 'approved' && (
+                <div className="space-y-6">
+                    <div>
+                        <h3 className="font-satoshi font-black text-sm text-white border-b border-white/[0.03] pb-3 select-none">
+                            Identity Verification (KYC) Onboarding
+                        </h3>
+                        <span className="text-[9px] font-bold text-slate-555 tracking-[0.15em] uppercase block mt-3 select-none font-mono">
+                            Complete identity details and upload compliance documents to activate transfers and cards.
+                        </span>
+                    </div>
+
+                    {kycStatus === 'rejected' && (
+                        <div className="p-4 bg-rose-500/10 border border-rose-500/25 rounded-2xl text-xs font-semibold text-rose-450 font-sans flex items-start space-x-3 select-none font-sans text-slate-450">
+                            <AlertCircle className="h-5 w-5 shrink-0 mt-0.5 text-rose-400" />
+                            <div>
+                                <h5 className="font-bold text-white">Application Rejected</h5>
+                                <p className="mt-1 leading-relaxed text-slate-400">
+                                    Your previously submitted documents could not be verified. Please review your details and upload clear, valid documents below.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleVerificationSubmit} className="space-y-6">
+                        {/* Section 1: Identity details */}
+                        <div className="space-y-4">
+                            <span className="text-[10px] font-bold text-primary-400 tracking-[0.2em] uppercase font-mono block">
+                                1. Personal Information
+                            </span>
+                            <div className="grid grid-cols-2 gap-4">
+                                <Input 
+                                    required
+                                    label="First name*"
+                                    placeholder="Akinjokun"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                />
+                                <Input 
+                                    required
+                                    label="Last name*"
+                                    placeholder="Oluwatobi"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <Input 
+                                    required
+                                    type="date"
+                                    label="Date of birth*"
+                                    placeholder="YYYY-MM-DD"
+                                    value={dob}
+                                    onChange={(e) => setDob(e.target.value)}
+                                />
+                                <PhoneInput 
+                                    required
+                                    label="Phone number*"
+                                    placeholder="Enter phone number"
+                                    value={phoneNumber}
+                                    onChange={setPhoneNumber}
+                                />
+                            </div>
+
+                            <Select 
+                                required
+                                label="Nationality*"
+                                placeholder="Select nationality..."
+                                value={nationality}
+                                onChange={setNationality}
+                                options={NATIONALITY_OPTIONS}
+                            />
+                        </div>
+
+                        {/* Section 2: Documents upload */}
+                        <div className="space-y-4 pt-4 border-t border-white/[0.03]">
+                            <div className="flex justify-between items-center select-none">
+                                <span className="text-[10px] font-bold text-primary-400 tracking-[0.2em] uppercase font-mono">
+                                    2. Upload Documents
+                                </span>
+                                <span className="text-[10px] font-semibold text-slate-500 font-mono">
+                                    Progress: {Object.values(files).filter(Boolean).length}/3
+                                </span>
+                            </div>
+
+                            {/* Government ID */}
+                            <div className="p-5 rounded-2xl border border-dashed border-white/10 hover:border-white/20 transition duration-200 bg-black/15 flex justify-between items-center">
+                                <div className="space-y-1 text-left">
+                                    <h4 className="text-xs font-bold text-white flex items-center space-x-2">
+                                        <FileText className="h-4 w-4 text-primary-400" />
+                                        <span>Government Issued ID card / Passport*</span>
+                                    </h4>
+                                    <p className="text-[10px] text-slate-500 leading-normal max-w-sm">
+                                        {files.govId ? files.govId.name : 'Valid national ID Card, Passport, or Driver\'s License.'}
+                                    </p>
+                                </div>
+                                <label className="cursor-pointer shrink-0">
+                                    <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept=".pdf,.png,.jpg,.jpeg"
+                                        onChange={(e) => handleFileChange('govId', e.target.files?.[0] || null)}
+                                    />
+                                    <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white hover:bg-white/10 transition flex items-center space-x-1.5 active:scale-[0.98]">
+                                        <Upload className="h-3.5 w-3.5" />
+                                        <span>{files.govId ? 'Change' : 'Upload'}</span>
+                                    </div>
+                                </label>
+                            </div>
+
+                            {/* Selfie Photo */}
+                            <div className="p-5 rounded-2xl border border-dashed border-white/10 hover:border-white/20 transition duration-200 bg-black/15 flex justify-between items-center">
+                                <div className="space-y-1 text-left">
+                                    <h4 className="text-xs font-bold text-white flex items-center space-x-2">
+                                        <FileText className="h-4 w-4 text-primary-400" />
+                                        <span>Biometric Selfie Photo*</span>
+                                    </h4>
+                                    <p className="text-[10px] text-slate-500 leading-normal max-w-sm">
+                                        {files.incorporation ? files.incorporation.name : 'Clear portrait photo holding your government ID.'}
+                                    </p>
+                                </div>
+                                <label className="cursor-pointer shrink-0">
+                                    <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept=".png,.jpg,.jpeg"
+                                        onChange={(e) => handleFileChange('incorporation', e.target.files?.[0] || null)}
+                                    />
+                                    <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white hover:bg-white/10 transition flex items-center space-x-1.5 active:scale-[0.98]">
+                                        <Upload className="h-3.5 w-3.5" />
+                                        <span>{files.incorporation ? 'Change' : 'Upload'}</span>
+                                    </div>
+                                </label>
+                            </div>
+
+                            {/* Proof of Address */}
+                            <div className="p-5 rounded-2xl border border-dashed border-white/10 hover:border-white/20 transition duration-200 bg-black/15 flex justify-between items-center">
+                                <div className="space-y-1 text-left">
+                                    <h4 className="text-xs font-bold text-white flex items-center space-x-2">
+                                        <FileText className="h-4 w-4 text-primary-400" />
+                                        <span>Proof of Address (Utility Bill)*</span>
+                                    </h4>
+                                    <p className="text-[10px] text-slate-500 leading-normal max-w-sm">
+                                        {files.address ? files.address.name : 'Utility bill, bank statement, or tax document (max 3 months old).'}
+                                    </p>
+                                </div>
+                                <label className="cursor-pointer shrink-0">
+                                    <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept=".pdf,.png,.jpg,.jpeg"
+                                        onChange={(e) => handleFileChange('address', e.target.files?.[0] || null)}
+                                    />
+                                    <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white hover:bg-white/10 transition flex items-center space-x-1.5 active:scale-[0.98]">
+                                        <Upload className="h-3.5 w-3.5" />
+                                        <span>{files.address ? 'Change' : 'Upload'}</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Submit Button */}
+                        <div className="pt-2">
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                disabled={!files.govId || !files.incorporation || !files.address || submitVerificationMutation.isPending}
+                                className="w-full rounded-xl h-[52px] font-bold text-sm"
+                                rightIcon={<ArrowRight className="h-4 w-4" />}
+                            >
+                                {submitVerificationMutation.isPending ? 'Submitting verification details...' : 'Submit application'}
+                            </Button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {/* Individual Account Stepper Timeline (Pending or Approved) */}
+            {accountType === 'individual' && (kycStatus === 'pending' || kycStatus === 'approved') && (
                 <div className="space-y-6">
                     <h3 className="font-satoshi font-black text-sm text-white border-b border-white/[0.03] pb-3 select-none">
                         Verification Timeline
@@ -489,8 +667,6 @@ export const VerificationTab: React.FC = () => {
                                 "absolute top-0.5 left-[-35.5px] w-6.5 h-6.5 rounded-full flex items-center justify-center transition duration-300",
                                 kycStatus === 'approved'
                                     ? "bg-emerald-500/10 border border-emerald-500/35 text-emerald-400"
-                                    : kycStatus === 'pending'
-                                    ? "bg-orange-500/10 border-orange-500/35 text-orange-400"
                                     : "bg-orange-500/10 border border-orange-500/35 text-orange-400"
                             )}>
                                 {kycStatus === 'approved' ? (
@@ -517,7 +693,7 @@ export const VerificationTab: React.FC = () => {
                                         ? "bg-emerald-500/15 border-emerald-500/20 text-emerald-400"
                                         : "bg-orange-500/15 border-orange-500/20 text-orange-400"
                                 )}>
-                                    {kycStatus === 'approved' ? 'Complete' : kycStatus || 'Pending'}
+                                    {kycStatus === 'approved' ? 'Complete' : 'Under Review'}
                                 </span>
                             </div>
                         </div>

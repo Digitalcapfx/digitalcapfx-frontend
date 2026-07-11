@@ -10,10 +10,35 @@ import {
     RefreshCw
 } from 'lucide-react'
 import { useCardStore } from '@/store/cardStore'
-import { WALLETS_DATA } from '../wallet/WalletsPage'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
 import { cn } from '@/lib/utils'
+import { useQuery } from '@tanstack/react-query'
+import { accountService } from '@/services/account.service'
+
+const CURRENCY_NAMES: Record<string, string> = {
+    USD: 'US Dollar',
+    EUR: 'Euro',
+    GBP: 'British Pound',
+    XOF: 'CFA Franc BCEAO',
+    XAF: 'CFA Franc BEAC',
+    USDC: 'USD Coin',
+};
+
+const formatBalance = (amount: string | number, currency: string) => {
+    const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
+    if (isNaN(val)) return '0.00';
+    if (currency === 'XAF' || currency === 'XOF') {
+        return val.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency}`;
+    }
+    const symbols: Record<string, string> = {
+        USD: '$',
+        EUR: '€',
+        GBP: '£',
+    };
+    const prefix = symbols[currency] || '';
+    return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
+};
 
 export const FundCardSheet: React.FC = () => {
     const { isFundOpen, closeFund, activeCardId, cards, fundCard } = useCardStore();
@@ -21,6 +46,39 @@ export const FundCardSheet: React.FC = () => {
     // Wizard step state: 1 = Form, 2 = Confirm, 3 = Success
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [amount, setAmount] = useState('');
+
+    const fiatQuery = useQuery({
+        queryKey: ['accounts'],
+        queryFn: () => accountService.getAccounts(),
+        enabled: isFundOpen,
+    });
+
+    const cryptoQuery = useQuery({
+        queryKey: ['cryptoBalances'],
+        queryFn: () => accountService.getCryptoBalances(),
+        enabled: isFundOpen,
+    });
+
+    const walletsList: any[] = [];
+    if (cryptoQuery.data?.success && cryptoQuery.data.data) {
+        const d = cryptoQuery.data.data;
+        walletsList.push({
+            name: CURRENCY_NAMES.USDC,
+            code: 'USDC',
+            balance: d.balance_usdc + ' USDC',
+            rawBalance: parseFloat(d.balance_usdc || '0'),
+        });
+    }
+    if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
+        fiatQuery.data.data.forEach((acc) => {
+            walletsList.push({
+                name: CURRENCY_NAMES[acc.currency] || acc.currency,
+                code: acc.currency,
+                balance: formatBalance(acc.balance, acc.currency),
+                rawBalance: parseFloat(acc.balance || '0'),
+            });
+        });
+    }
 
     useEffect(() => {
         if (isFundOpen) {
@@ -33,7 +91,7 @@ export const FundCardSheet: React.FC = () => {
     
     // Auto-select source wallet matching card currency
     const fundingWallet = card 
-        ? WALLETS_DATA.find(w => w.code.toUpperCase() === card.currency.toUpperCase())
+        ? walletsList.find((w: any) => w.code.toUpperCase() === card.currency.toUpperCase())
         : null;
 
     const isFormValid = () => {
@@ -41,7 +99,7 @@ export const FundCardSheet: React.FC = () => {
         if (!fundingWallet) return false;
         
         // Ensure they have enough balance in the wallet
-        const balanceNum = parseFloat(fundingWallet.balance.replace(/[^0-9.]/g, ''));
+        const balanceNum = fundingWallet.rawBalance;
         return parseFloat(amount) <= balanceNum;
     };
 

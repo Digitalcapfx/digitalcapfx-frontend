@@ -6,53 +6,107 @@ import { Plus, Search, Send, ArrowDownLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useTransactionStore } from '@/store/transactionStore'
 import PhoneSend from '../_components/PhoneSend'
-import WalletDetails from './WalletDetails'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { useNavigationStore } from '@/store/navigationStore'
 import { cn } from '@/lib/utils'
+import { useQuery } from '@tanstack/react-query'
+import { accountService } from '@/services/account.service'
 
 export interface Wallet {
     id: string;
     name: string;
     code: string;
-    type: 'fiat' | 'stablecoin' | 'crypto';
+    type: 'fiat' | 'stablecoin';
     balance: string;
+    rawBalance: number;
+    accountNumber?: string;
+    walletAddress?: string;
 }
 
-export const WALLETS_DATA: Wallet[] = [
-    { id: 'usdc', name: 'USD Coin', code: 'USDC', type: 'stablecoin', balance: '8,500.00 USDC' },
-    { id: 'eth', name: 'Ethereum', code: 'ETH', type: 'crypto', balance: '3.847 ETH' },
-    { id: 'pol', name: 'Polygon', code: 'POL', type: 'crypto', balance: '3,500.00 POL' },
-    { id: 'xof', name: 'CFA Franc BCEAO', code: 'XOF', type: 'fiat', balance: '1,850,000 XOF' },
-    { id: 'btc', name: 'Bitcoin', code: 'BTC', type: 'crypto', balance: '0.4523 BTC' },
-    { id: 'gbp', name: 'British Pound', code: 'GBP', type: 'fiat', balance: '£5,680.90' },
-    { id: 'usd', name: 'US Dollar', code: 'USD', type: 'fiat', balance: '$12,450.75' },
-    { id: 'eur', name: 'Euro', code: 'EUR', type: 'fiat', balance: '€8,320.40' },
-    { id: 'trx', name: 'TRON', code: 'TRX', type: 'crypto', balance: '25,000.00 TRX' },
-    { id: 'ltc', name: 'Litecoin', code: 'LTC', type: 'crypto', balance: '12.50 LTC' },
-    { id: 'xaf', name: 'CFA Franc BEAC', code: 'XAF', type: 'fiat', balance: '2,500,000 XAF' },
-    { id: 'sol', name: 'Solana', code: 'SOL', type: 'crypto', balance: '45.23 SOL' },
-    { id: 'ngn', name: 'Nigeria Naira', code: 'NGN', type: 'fiat', balance: '2,500,000 NGN' },
-];
+const CURRENCY_NAMES: Record<string, string> = {
+    USD: 'US Dollar',
+    EUR: 'Euro',
+    GBP: 'British Pound',
+    XOF: 'CFA Franc BCEAO',
+    XAF: 'CFA Franc BEAC',
+    USDC: 'USD Coin',
+    NGN: 'Nigerian Naira',
+};
+
+const formatBalance = (amount: string | number, currency: string) => {
+    const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
+    if (isNaN(val)) return '0.00';
+    if (currency === 'XAF' || currency === 'XOF') {
+        return val.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency}`;
+    }
+    const symbols: Record<string, string> = {
+        USD: '$',
+        EUR: '€',
+        GBP: '£',
+    };
+    const prefix = symbols[currency] || '';
+    return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
+};
 
 const WalletsPage: React.FC = () => {
     const router = useRouter();
     const setBackPath = useNavigationStore((state) => state.setBackPath);
     const openSend = useTransactionStore((state) => state.openSend);
     const openReceive = useTransactionStore((state) => state.openReceive);
-    const [activeTab, setActiveTab] = useState<'all' | 'fiat' | 'stablecoins' | 'crypto'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'fiat' | 'stablecoins'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
+    // React Query Queries
+    const fiatQuery = useQuery({
+        queryKey: ['accounts'],
+        queryFn: () => accountService.getAccounts(),
+    });
+
+    const cryptoQuery = useQuery({
+        queryKey: ['cryptoBalances'],
+        queryFn: () => accountService.getCryptoBalances(),
+    });
+
+    const walletsList: Wallet[] = [];
+
+    // Map stablecoin wallet
+    if (cryptoQuery.data?.success && cryptoQuery.data.data) {
+        const d = cryptoQuery.data.data;
+        const balNum = parseFloat(d.balance_usdc || '0');
+        walletsList.push({
+            id: 'usdc',
+            name: CURRENCY_NAMES.USDC,
+            code: 'USDC',
+            type: 'stablecoin',
+            balance: formatBalance(d.balance_usdc, 'USDC'),
+            rawBalance: balNum,
+        });
+    }
+
+    // Map fiat wallets
+    if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
+        fiatQuery.data.data.forEach((acc) => {
+            const balNum = parseFloat(acc.balance || '0');
+            walletsList.push({
+                id: acc.currency.toLowerCase(),
+                name: CURRENCY_NAMES[acc.currency] || acc.currency,
+                code: acc.currency,
+                type: 'fiat',
+                balance: formatBalance(acc.balance, acc.currency),
+                rawBalance: balNum,
+            });
+        });
+    }
+
     const handleCreateWallet = () => {
-        alert('Creating a new wallet...');
+        alert('Standard multi-currency accounts are auto-provisioned upon registration.');
     };
 
     // Filter wallets by active tab and search query
-    const filteredWallets = WALLETS_DATA.filter((wallet) => {
+    const filteredWallets = walletsList.filter((wallet) => {
         // Tab check
         if (activeTab === 'fiat' && wallet.type !== 'fiat') return false;
         if (activeTab === 'stablecoins' && wallet.type !== 'stablecoin') return false;
-        if (activeTab === 'crypto' && wallet.type !== 'crypto') return false;
 
         // Search check
         if (searchQuery) {
@@ -66,6 +120,8 @@ const WalletsPage: React.FC = () => {
 
         return true;
     });
+
+    const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading;
 
     return (
         <div className="space-y-8">
@@ -113,7 +169,7 @@ const WalletsPage: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 select-none">
                 {/* Tabs selection */}
                 <div className="bg-[#0C1224] border border-[#131B30] rounded-xl p-1 flex items-center space-x-1 shrink-0">
-                    {(['all', 'fiat', 'stablecoins', 'crypto'] as const).map((tab) => (
+                    {(['all', 'fiat', 'stablecoins'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -143,57 +199,61 @@ const WalletsPage: React.FC = () => {
             </div>
 
             {/* Wallets Grid List */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {filteredWallets.length > 0 ? (
-                    filteredWallets.map((wallet) => {
-                        return (
-                            <div
-                                key={wallet.id}
-                                onClick={() => {
-                                    setBackPath('/wallets');
-                                    router.push(`/wallets/${wallet.id}`);
-                                }}
-                                className="bg-[#0C1224]/80 border border-[#131B30] hover:border-white/10 hover:bg-[#0E162A]/90 rounded-2xl p-4.5 flex items-center justify-between transition duration-250 cursor-pointer shadow-md select-none group"
-                            >
-                                <div className="flex items-center space-x-3.5 min-w-0">
-                                    {/* Reusable CurrencyIcon Component */}
-                                    <CurrencyIcon 
-                                        code={wallet.code} 
-                                        name={wallet.name}
-                                        size="md"
-                                        className="group-hover:scale-105 transition-transform duration-250"
-                                    />
-
-                                    {/* Detail label */}
-                                    <div className="text-left min-w-0">
-                                        <h4 className="font-satoshi font-black text-sm text-white group-hover:text-primary-400 transition-colors duration-200 truncate">
-                                            {wallet.name}
-                                        </h4>
-                                        <span className="text-[10px] text-slate-500 font-bold tracking-wide uppercase block mt-0.5 select-none">
-                                            {wallet.code} <span className="opacity-40">•</span> {wallet.type}
+            {isLoading && walletsList.length === 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {[1, 2, 4].map((idx) => (
+                        <div key={idx} className="h-[92px] rounded-2xl bg-white/5 border border-white/5 animate-pulse" />
+                    ))}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {filteredWallets.length > 0 ? (
+                        filteredWallets.map((wallet) => {
+                            return (
+                                <div
+                                    key={wallet.id}
+                                    onClick={() => {
+                                        setBackPath('/wallets');
+                                        router.push(`/wallets/${wallet.code.toLowerCase()}`);
+                                    }}
+                                    className="p-5 rounded-2xl bg-[#080E1E] border border-white/5 hover:border-white/10 hover:bg-[#0C142A] transition duration-200 flex items-center justify-between cursor-pointer select-none group"
+                                >
+                                    <div className="flex items-center space-x-3.5 text-left">
+                                        <div className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+                                            <CurrencyIcon code={wallet.code} size="sm" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <span className="text-sm font-bold text-white group-hover:text-primary-400 transition-colors duration-200">
+                                                {wallet.name}
+                                            </span>
+                                            <div className="flex items-center space-x-2">
+                                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                                    {wallet.code}
+                                                </span>
+                                                <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                                <span className="text-[10px] font-semibold text-slate-500 capitalize">
+                                                    {wallet.type}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right space-y-0.5">
+                                        <span className="text-base font-extrabold text-white font-satoshi">
+                                            {wallet.balance}
                                         </span>
                                     </div>
                                 </div>
-
-                                {/* Balance */}
-                                <div className="font-mono text-sm font-extrabold text-white text-right">
-                                    {wallet.balance}
-                                </div>
-                            </div>
-                        )
-                    })
-                ) : (
-                    <div className="lg:col-span-2 py-16 border border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center space-y-3 select-none">
-                        <div className="text-center space-y-0.5">
-                            <h4 className="text-xs font-bold text-white font-satoshi">No wallets matching filter</h4>
-                            <p className="text-[11px] text-slate-550 font-sans">Try searching for another currency or type</p>
+                            )
+                        })
+                    ) : (
+                        <div className="col-span-2 text-center p-8 bg-[#080E1E]/50 border border-dashed border-white/5 rounded-2xl">
+                            <span className="text-xs font-semibold text-slate-500">No matching wallets found</span>
                         </div>
-                    </div>
-                )}
-            </div>
-
+                    )}
+                </div>
+            )}
         </div>
-    );
-};
+    )
+}
 
-export default WalletsPage;
+export default WalletsPage

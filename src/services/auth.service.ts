@@ -1,19 +1,19 @@
 import { BaseService } from './base.service';
 
 export interface RegisterRequest {
-  account_type: 'individual' | 'business';
-  first_name: string;
-  last_name: string;
+  accountType: 'individual' | 'business';
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   pin: string;
   country: string;
-  company_legal_name?: string;
-  company_registration_no?: string;
+  companyLegalName?: string;
+  companyRegistrationNo?: string;
   industry?: string;
-  country_of_incorporation?: string;
-  annual_revenue?: string;
-  business_website?: string;
+  countryOfIncorporation?: string;
+  annualRevenue?: string;
+  businessWebsite?: string;
 }
 
 export interface LoginRequest {
@@ -39,6 +39,16 @@ export class AuthService extends BaseService {
 
   async resendOtp() {
     const response = await this.api.post('/auth/email/resend-otp');
+    return response.data;
+  }
+
+  async forgotPin(emailOrPhone: string) {
+    const response = await this.api.post('/auth/forgot-pin', { emailOrPhone });
+    return response.data;
+  }
+
+  async resetPin(payload: { emailOrPhone: string; code: string; newPin: string }) {
+    const response = await this.api.post('/auth/reset-pin', payload);
     return response.data;
   }
 }

@@ -139,20 +139,20 @@ export const CredentialsStep: React.FC = () => {
     if (Object.keys(newErrors).length > 0 || !agree) return;
 
     const registerPayload: RegisterRequest = {
-      account_type: accountType || 'individual',
-      first_name: firstName,
-      last_name: lastName,
+      accountType: accountType || 'individual',
+      firstName,
+      lastName,
       email,
       phone,
       pin,
       country,
       ...(accountType === 'business' ? {
-        company_legal_name: companyName,
-        company_registration_no: companyRegNo,
+        companyLegalName: companyName,
+        companyRegistrationNo: companyRegNo,
         industry,
-        country_of_incorporation: countryOfIncorp,
-        annual_revenue: annualRevenue,
-        business_website: website || undefined
+        countryOfIncorporation: countryOfIncorp,
+        annualRevenue,
+        businessWebsite: website || undefined
       } : {})
     };
 

@@ -19,6 +19,23 @@ import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Wallet } from './WalletsPage'
 import { useTransactionStore } from '@/store/transactionStore'
 import { cn } from '@/lib/utils'
+import { useQuery } from '@tanstack/react-query'
+import { transferService } from '@/services/transfer.service'
+
+const formatBalance = (amount: string | number, currency: string) => {
+    const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
+    if (isNaN(val)) return '0.00';
+    if (currency === 'XAF' || currency === 'XOF') {
+        return val.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency}`;
+    }
+    const symbols: Record<string, string> = {
+        USD: '$',
+        EUR: '€',
+        GBP: '£',
+    };
+    const prefix = symbols[currency] || '';
+    return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
+};
 
 // 30-Day Activity Chart Component
 const ActivityChart: React.FC = () => {
@@ -98,27 +115,48 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, onBack }) => {
     };
 
     // Bank Account details strings
-    const ibanValue = 'GB29 NMBK 8832 9012 3442 12';
-    const ibanMasked = 'GB29 NMBK **** **** **** **';
+    const ibanValue = wallet.accountNumber || 'GB29 NMBK 8832 9012 3442 12';
+    const ibanMasked = wallet.accountNumber 
+        ? `${wallet.accountNumber.slice(0, 4)} **** **** **** **`
+        : 'GB29 NMBK **** **** **** **';
     const swiftValue = 'NWBKGB2L';
     const routingValue = '021000021';
-    const cryptoAddressValue = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
-    const cryptoAddressMasked = '0x71C7...8976F';
+    const cryptoAddressValue = wallet.walletAddress || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+    const cryptoAddressMasked = wallet.walletAddress
+        ? `${wallet.walletAddress.slice(0, 6)}...${wallet.walletAddress.slice(-5)}`
+        : '0x71C7...8976F';
 
-    // Mock transactions based on type
-    const transactions: Transaction[] = wallet.type === 'fiat' ? [
-        { id: '1', title: 'Stripe Inc.', subtitle: 'Wire • Jun 25', amount: '+$142,500.00', isIncoming: true, status: 'completed' },
-        { id: '2', title: 'Revolut Business', subtitle: 'Wire • Jun 24', amount: '-$22,100.00', isIncoming: false, status: 'completed' },
-        { id: '3', title: 'API Payout #3812', subtitle: 'API • Jun 23', amount: '-$5,000.00', isIncoming: false, status: 'failed' }
-    ] : [
-        { id: '1', title: `Received ${wallet.code}`, subtitle: 'Transfer • Jun 25', amount: `+142,500.00 ${wallet.code}`, isIncoming: true, status: 'completed' },
-        { id: '2', title: `Send ${wallet.code}`, subtitle: 'Transfer • Jun 24', amount: `-22,100.00 ${wallet.code}`, isIncoming: false, status: 'completed' }
-    ];
+    // React Query Activity Log
+    const activityQuery = useQuery({
+        queryKey: ['activity'],
+        queryFn: () => transferService.getActivity(),
+    });
 
-    // Display values for details cards
-    const displayBalance = wallet.type === 'fiat' 
-        ? wallet.balance 
-        : `48,250.00 ${wallet.code}`; // Mimic mockup values
+    // Map and filter transactions for this wallet
+    const filteredTxs = (activityQuery.data?.success && Array.isArray(activityQuery.data.data))
+        ? activityQuery.data.data
+            .filter((tx) => tx.currency.toUpperCase() === wallet.code.toUpperCase())
+            .map((tx) => {
+                const isIncoming = tx.type.toLowerCase().includes('deposit') || 
+                                   tx.type.toLowerCase().includes('receive') || 
+                                   tx.type.toLowerCase().includes('fund') || 
+                                   (tx.type.toLowerCase() === 'exchange' && parseFloat(tx.amount) > 0);
+                
+                const amtFormatted = (isIncoming ? '+' : '-') + formatBalance(Math.abs(parseFloat(tx.amount)), wallet.code);
+                
+                return {
+                    id: tx.id,
+                    title: tx.description || `${tx.type} transaction`,
+                    subtitle: `${tx.type} • ${new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+                    amount: amtFormatted,
+                    isIncoming,
+                    status: tx.status.toLowerCase() === 'completed' ? 'completed' as const : 'failed' as const,
+                };
+            })
+            .slice(0, 10)
+        : [];
+
+    const displayBalance = wallet.balance;
 
     return (
         <div className="space-y-6 text-left">
@@ -225,44 +263,54 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, onBack }) => {
 
                         {/* List items */}
                         <div className="space-y-4">
-                            {transactions.map((tx) => (
-                                <div key={tx.id} className="flex items-center justify-between py-1 border-b border-white/[0.03] last:border-b-0">
-                                    <div className="flex items-center space-x-3.5 min-w-0">
-                                        <div className={cn(
-                                            "w-9 h-9 rounded-full flex items-center justify-center shrink-0 border",
-                                            tx.isIncoming 
-                                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
-                                                : "bg-rose-500/10 border-rose-500/20 text-rose-400"
-                                        )}>
-                                            {tx.isIncoming ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <Send className="h-3.5 w-3.5" />}
+                            {activityQuery.isLoading ? (
+                                <div className="text-center py-6 text-xs text-slate-500 font-sans">
+                                    Loading history...
+                                </div>
+                            ) : filteredTxs.length > 0 ? (
+                                filteredTxs.map((tx) => (
+                                    <div key={tx.id} className="flex items-center justify-between py-1 border-b border-white/[0.03] last:border-b-0">
+                                        <div className="flex items-center space-x-3.5 min-w-0">
+                                            <div className={cn(
+                                                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 border",
+                                                tx.isIncoming 
+                                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                                                    : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                                            )}>
+                                                {tx.isIncoming ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <Send className="h-3.5 w-3.5" />}
+                                            </div>
+                                            <div className="text-left min-w-0">
+                                                <h4 className="font-sans font-bold text-xs text-white truncate">
+                                                    {tx.title}
+                                                </h4>
+                                                <span className="text-[10px] text-slate-500 font-medium block mt-0.5 select-none">
+                                                    {tx.subtitle}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="text-left min-w-0">
-                                            <h4 className="font-sans font-bold text-xs text-white truncate">
-                                                {tx.title}
-                                            </h4>
-                                            <span className="text-[10px] text-slate-500 font-medium block mt-0.5 select-none">
-                                                {tx.subtitle}
+
+                                        {/* Amount and Status details */}
+                                        <div className="text-right select-none">
+                                            <div className={cn(
+                                                "font-mono text-xs font-extrabold",
+                                                tx.isIncoming ? "text-emerald-400" : "text-white"
+                                            )}>
+                                                {tx.amount}
+                                            </div>
+                                            <span className={cn(
+                                                "text-[9px] font-bold block mt-1 uppercase tracking-wider",
+                                                tx.status === 'completed' ? "text-emerald-500" : "text-rose-500"
+                                            )}>
+                                                {tx.status}
                                             </span>
                                         </div>
                                     </div>
-
-                                    {/* Amount and Status details */}
-                                    <div className="text-right select-none">
-                                        <div className={cn(
-                                            "font-mono text-xs font-extrabold",
-                                            tx.isIncoming ? "text-emerald-400" : "text-white"
-                                        )}>
-                                            {tx.amount}
-                                        </div>
-                                        <span className={cn(
-                                            "text-[9px] font-bold block mt-1 uppercase tracking-wider",
-                                            tx.status === 'completed' ? "text-emerald-500" : "text-rose-500"
-                                        )}>
-                                            {tx.status}
-                                        </span>
-                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-6 text-xs text-slate-500 font-sans select-none">
+                                    No recent transactions for this wallet.
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
 
