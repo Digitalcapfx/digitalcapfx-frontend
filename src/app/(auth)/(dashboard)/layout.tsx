@@ -224,7 +224,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="space-y-8">
                     {/* Brand Logo */}
                     <div>
-                        <Link href="/">
+                        <Link href="/dashboard">
                             <Image
                                 src="/DFXLogo.svg"
                                 alt="DigitalCap Logo"
