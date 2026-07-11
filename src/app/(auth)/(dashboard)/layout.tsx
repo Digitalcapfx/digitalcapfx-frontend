@@ -13,7 +13,6 @@ import {
     HelpCircle,
     Bell,
     LogOut,
-    Search,
     ShieldAlert,
     ShieldAlert as ShieldWarning,
     RefreshCw as SpinnerIcon,
@@ -344,15 +343,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     {/* Notification & Avatar controls + Hamburger beside it on Mobile */}
                     <div className="flex items-center space-x-3 lg:space-x-4">
-                        <Link 
-                            href="/settings/notifications" 
+                        <Link
+                            href="/settings/notifications"
                             className="relative w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition"
                         >
                             <Bell className="h-4 w-4" />
                             <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary-400"></span>
                         </Link>
-                        
-                        <Link 
+
+                        <Link
                             href="/settings"
                             className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center font-bold text-white text-xs select-none hover:opacity-90 transition cursor-pointer active:scale-95"
                         >
