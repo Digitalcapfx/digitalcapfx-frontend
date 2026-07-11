@@ -147,10 +147,13 @@ const CountrySelect: React.FC<CountrySelectProps> = ({ value, onChange, options,
 
 // Custom Input Element styled to fit inside our container
 const PhoneInputElement = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-    (props, ref) => (
+    ({ className, ...props }, ref) => (
         <input
             ref={ref}
-            className="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 px-4 text-sm text-white font-sans placeholder-slate-500 h-full"
+            className={cn(
+                "w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 px-4 text-sm text-white font-sans placeholder-slate-500 h-full border-0 outline-0 shadow-none",
+                className
+            )}
             {...props}
         />
     )
@@ -174,7 +177,7 @@ export const PhoneInput = React.forwardRef<any, PhoneInputProps>(
             <div className={cn("w-full space-y-1.5 text-left", className)}>
                 {label && (
                     <label className="text-xs font-semibold text-slate-400 block tracking-wide select-none">
-                        {label}{required && <span className="text-rose-500 ml-0.5">*</span>}
+                        {label}
                     </label>
                 )}
                 

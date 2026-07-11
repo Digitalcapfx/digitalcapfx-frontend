@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { User, Shield, Scan, Bell, CheckCircle2 } from 'lucide-react'
-import { useSettingsStore } from '@/store/settingsStore'
+import { User, Shield, Scan, Bell } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface TabItem {
@@ -23,35 +22,9 @@ const TABS: TabItem[] = [
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const { toast, clearToast } = useSettingsStore();
-
-    // Auto-clear toast alert on changes
-    useEffect(() => {
-        if (toast) {
-            const t = setTimeout(() => {
-                clearToast();
-            }, 3000);
-            return () => clearTimeout(t);
-        }
-    }, [toast, clearToast]);
 
     return (
         <div className="space-y-6 text-left relative min-h-[500px]">
-            
-            {/* Global Settings Toast Alerts */}
-            {toast && (
-                <div 
-                    className={cn(
-                        "fixed top-6 right-6 z-50 flex items-center space-x-2.5 px-4.5 py-3 rounded-xl border text-xs font-bold font-sans shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300",
-                        toast.type === 'success'
-                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                            : "bg-rose-500/10 border-rose-500/20 text-rose-450"
-                    )}
-                >
-                    <CheckCircle2 className="h-4.5 w-4.5 shrink-0" />
-                    <span>{toast.message}</span>
-                </div>
-            )}
 
             {/* Layout Columns */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">

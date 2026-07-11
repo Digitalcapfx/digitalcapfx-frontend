@@ -3,55 +3,81 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import LoginForm from './LoginForm'
-import TwoFactorForm from './TwoFactorForm'
 import AuthLayout from '@/components/pages/no-auth/layout/AuthLayout'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { toast } from 'sonner'
+import { useMutation } from '@tanstack/react-query'
+import { authService, LoginRequest } from '@/services/auth.service'
 
 const Login = () => {
     const router = useRouter();
-    const [step, setStep] = useState<'form' | '2fa'>('form');
-
-    // State parameters passed to children
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+    const [pin, setPin] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
-    const [mfaCode, setMfaCode] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
 
-    const handleLoginSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (email && password) {
-            setStep('2fa');
+    // React Query Login Mutation
+    const loginMutation = useMutation({
+        mutationFn: (payload: LoginRequest) => authService.login(payload),
+        onSuccess: (data) => {
+            if (data?.success) {
+                toast.success('Logged in successfully!');
+                router.push('/dashboard');
+            } else {
+                const rawError = data?.error;
+                const msg = typeof rawError === 'object'
+                    ? (rawError.message || JSON.stringify(rawError))
+                    : (rawError || 'Invalid phone number or PIN');
+                setErrorMsg(msg);
+                toast.error(msg);
+            }
+        },
+        onError: (err: any) => {
+            console.error('Login error:', err);
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object'
+                ? (rawError.message || JSON.stringify(rawError))
+                : (rawError || err.response?.data?.message || 'Authentication failed. Please verify your credentials.');
+            setErrorMsg(msg);
+            toast.error(msg);
         }
-    };
+    });
 
-    const handleMfaSubmit = (e: React.FormEvent) => {
+    const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        router.push('/dashboard');
+        setErrorMsg('');
+        setPhoneError('');
+
+        if (!phone) {
+            setPhoneError('Phone number is required');
+            return;
+        }
+
+        if (!isValidPhoneNumber(phone)) {
+            setPhoneError('Please enter a valid phone number');
+            return;
+        }
+
+        if (phone && pin) {
+            loginMutation.mutate({ phone, pin });
+        }
     };
 
     return (
         <AuthLayout>
-            {step === 'form' ? (
-                <LoginForm 
-                    email={email}
-                    setEmail={setEmail}
-                    password={password}
-                    setPassword={setPassword}
-                    rememberMe={rememberMe}
-                    setRememberMe={setRememberMe}
-                    onSubmit={handleLoginSubmit}
-                />
-            ) : (
-                <TwoFactorForm 
-                    email={email}
-                    onBack={() => {
-                        setStep('form');
-                        setMfaCode('');
-                    }}
-                    onSubmit={handleMfaSubmit}
-                    mfaCode={mfaCode}
-                    setMfaCode={setMfaCode}
-                />
-            )}
+            <LoginForm 
+                phone={phone}
+                setPhone={setPhone}
+                phoneError={phoneError}
+                pin={pin}
+                setPin={setPin}
+                rememberMe={rememberMe}
+                setRememberMe={setRememberMe}
+                onSubmit={handleLoginSubmit}
+                errorMsg={errorMsg}
+                loading={loginMutation.isPending}
+            />
         </AuthLayout>
     )
 }

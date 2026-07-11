@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Laptop, Smartphone } from 'lucide-react'
 import { useSettingsStore } from '@/store/settingsStore'
+import { toast } from 'sonner'
 import ToggleSwitch from './ToggleSwitch'
 
 export const SecurityTab: React.FC = () => {
@@ -15,8 +16,7 @@ export const SecurityTab: React.FC = () => {
         toggleSessionTimeout, 
         sessions, 
         revokeSession, 
-        revokeAllOthers,
-        showToast
+        revokeAllOthers
     } = useSettingsStore();
 
     const [passwordForm, setPasswordForm] = useState({
@@ -28,14 +28,14 @@ export const SecurityTab: React.FC = () => {
     const handlePasswordUpdate = (e: React.FormEvent) => {
         e.preventDefault();
         if (!passwordForm.current || !passwordForm.newPassword || !passwordForm.confirm) {
-            showToast('Please fill in all password fields.', 'error');
+            toast.error('Please fill in all password fields.');
             return;
         }
         if (passwordForm.newPassword !== passwordForm.confirm) {
-            showToast('New passwords do not match.', 'error');
+            toast.error('New passwords do not match.');
             return;
         }
-        showToast('Password updated successfully!');
+        toast.success('Password updated successfully!');
         setPasswordForm({ current: '', newPassword: '', confirm: '' });
     };
 

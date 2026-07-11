@@ -1,85 +1,33 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import RegisterForm from './RegisterForm'
-import VerifyEmailForm from './VerifyEmailForm'
+import React, { useEffect } from 'react'
 import AuthLayout from '@/components/pages/no-auth/layout/AuthLayout'
+import { useRegisterStore } from '@/store/registerStore'
+import { AccountTypeStep } from './get-started/AccountTypeStep'
+import { BusinessDetailsStep } from './get-started/BusinessDetailsStep'
+import { CredentialsStep } from './get-started/CredentialsStep'
+import { VerifyEmailStep } from './get-started/VerifyEmailStep'
+import { DoneStep } from './get-started/DoneStep'
 
 const GetStarted = () => {
-    const router = useRouter();
-    // Stage controller
-    const [step, setStep] = useState<'form' | 'verify'>('form');
+    const { step, reset } = useRegisterStore();
 
-    // States passed to children
-    const [fullName, setFullName] = useState('');
-    const [email, setEmail] = useState('');
-    const [phone, setPhone] = useState('');
-    const [phoneError, setPhoneError] = useState('');
-    const [password, setPassword] = useState('');
-    const [country, setCountry] = useState('');
-    const [agree, setAgree] = useState(false);
-    const [code, setCode] = useState('');
-
-    const handleFormSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!phone) {
-            setPhoneError('Phone number is required');
-            return;
-        }
-
-        if (!isValidPhoneNumber(phone)) {
-            setPhoneError('Please enter a valid phone number');
-            return;
-        }
-
-        setPhoneError('');
-
-        if (fullName && email && phone && password && country && agree) {
-            setStep('verify');
-        }
-    };
-
-    const handleVerifySubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        router.push('/dashboard');
-    };
+    // Reset store data when user unmounts/leaves the signup page
+    useEffect(() => {
+        return () => {
+            reset();
+        };
+    }, [reset]);
 
     return (
         <AuthLayout>
-            {step === 'form' ? (
-                <RegisterForm 
-                    fullName={fullName}
-                    setFullName={setFullName}
-                    email={email}
-                    setEmail={setEmail}
-                    phone={phone}
-                    setPhone={setPhone}
-                    phoneError={phoneError}
-                    password={password}
-                    setPassword={setPassword}
-                    country={country}
-                    setCountry={setCountry}
-                    agree={agree}
-                    setAgree={setAgree}
-                    onSubmit={handleFormSubmit}
-                />
-            ) : (
-                <VerifyEmailForm 
-                    email={email}
-                    onBack={() => {
-                        setStep('form');
-                        setCode('');
-                    }}
-                    onSubmit={handleVerifySubmit}
-                    code={code}
-                    setCode={setCode}
-                />
-            )}
+            {step === 'account-type' && <AccountTypeStep />}
+            {step === 'business-details' && <BusinessDetailsStep />}
+            {step === 'credentials' && <CredentialsStep />}
+            {step === 'verify' && <VerifyEmailStep />}
+            {step === 'done' && <DoneStep />}
         </AuthLayout>
-    )
-}
+    );
+};
 
-export default GetStarted
+export default GetStarted;

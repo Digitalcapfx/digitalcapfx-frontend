@@ -66,7 +66,7 @@ export const Select: React.FC<SelectProps> = ({
         <div className="w-full space-y-1.5 text-left relative" ref={containerRef}>
             {label && (
                 <label className="text-xs font-semibold text-slate-400 block tracking-wide select-none">
-                    {label}{required && <span className="text-rose-500 ml-0.5">*</span>}
+                    {label}
                 </label>
             )}
 
