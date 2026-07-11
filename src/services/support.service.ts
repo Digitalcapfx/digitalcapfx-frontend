@@ -1,0 +1,86 @@
+import { BaseService } from './base.service';
+
+export interface FAQ {
+  id: string;
+  category: string;
+  question: string;
+  answer: string;
+}
+
+export interface SupportLink {
+  id: string;
+  name: string;
+  url: string;
+}
+
+export interface TicketMessage {
+  id: string;
+  senderType: 'user' | 'agent';
+  message: string;
+  createdAt: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  subject: string;
+  category: string;
+  status: 'open' | 'pending' | 'resolved' | 'closed';
+  createdAt: string;
+  updatedAt: string;
+  messages?: TicketMessage[];
+}
+
+export interface FAQListResponse {
+  success: boolean;
+  data: FAQ[];
+}
+
+export interface LinksResponse {
+  success: boolean;
+  data: SupportLink[];
+}
+
+export interface TicketListResponse {
+  success: boolean;
+  data: SupportTicket[];
+}
+
+export interface SingleTicketResponse {
+  success: boolean;
+  data: SupportTicket;
+}
+
+export class SupportService extends BaseService {
+  async getFAQs(category?: string): Promise<FAQListResponse> {
+    const url = category ? `/support/faqs?category=${category}` : '/support/faqs';
+    const response = await this.api.get(url);
+    return response.data;
+  }
+
+  async getLinks(): Promise<LinksResponse> {
+    const response = await this.api.get('/support/links');
+    return response.data;
+  }
+
+  async getTickets(): Promise<TicketListResponse> {
+    const response = await this.api.get('/support/tickets');
+    return response.data;
+  }
+
+  async createTicket(payload: { subject: string; category: string; message: string }): Promise<SingleTicketResponse> {
+    const response = await this.api.post('/support/tickets', payload);
+    return response.data;
+  }
+
+  async getTicketDetails(id: string): Promise<SingleTicketResponse> {
+    const response = await this.api.get(`/support/tickets/${id}`);
+    return response.data;
+  }
+
+  async sendTicketReply(id: string, message: string): Promise<{ success: boolean; data: TicketMessage }> {
+    const response = await this.api.post(`/support/tickets/${id}/messages`, { message });
+    return response.data;
+  }
+}
+
+export const supportService = new SupportService();

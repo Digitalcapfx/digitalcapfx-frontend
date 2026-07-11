@@ -17,13 +17,25 @@ const Login = () => {
     const [rememberMe, setRememberMe] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
-    // React Query Login Mutation
+    // 2FA login state variables
+    const [is2FA, setIs2FA] = useState(false);
+    const [totpRef, setTotpRef] = useState('');
+    const [otpCode, setOtpCode] = useState('');
+
+    // 1. React Query Login Mutation
     const loginMutation = useMutation({
         mutationFn: (payload: LoginRequest) => authService.login(payload),
         onSuccess: (data) => {
             if (data?.success) {
-                toast.success('Logged in successfully!');
-                router.push('/dashboard');
+                // Check if user has 2FA enabled and requires verification
+                if (data.data?.twoFactorRequired) {
+                    setTotpRef(data.data.totpRef || '');
+                    setIs2FA(true);
+                    toast.info('2FA verification code required.');
+                } else {
+                    toast.success('Logged in successfully!');
+                    router.push('/dashboard');
+                }
             } else {
                 const rawError = data?.error;
                 const msg = typeof rawError === 'object'
@@ -44,6 +56,43 @@ const Login = () => {
         }
     });
 
+    // 2. React Query 2FA Complete Login Mutation
+    const login2FAMutation = useMutation({
+        mutationFn: (payload: { ref: string; code: string }) => authService.login2FA(payload.ref, payload.code),
+        onSuccess: (data) => {
+            toast.success('MFA verification successful! Logged in.');
+            router.push('/dashboard');
+        },
+        onError: (err: any) => {
+            console.error('MFA validation error:', err);
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object'
+                ? (rawError.message || JSON.stringify(rawError))
+                : (rawError || err.response?.data?.message || 'Invalid 2FA code.');
+            setErrorMsg(msg);
+            toast.error(msg);
+        }
+    });
+
+    // 3. React Query Google Sign-In Mutation
+    const googleLoginMutation = useMutation({
+        mutationFn: (token: string) => authService.loginGoogle(token),
+        onSuccess: (data) => {
+            toast.success('Signed in with Google successfully!');
+            router.push('/dashboard');
+        },
+        onError: (err: any) => {
+            console.error('Google Sign-In error:', err);
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object'
+                ? (rawError.message || JSON.stringify(rawError))
+                : (rawError || err.response?.data?.message || 'Google OAuth failed.');
+            setErrorMsg(msg);
+            toast.error(msg);
+        }
+    });
+
+    // Handlers
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setErrorMsg('');
@@ -64,6 +113,29 @@ const Login = () => {
         }
     };
 
+    const handle2FASubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setErrorMsg('');
+        if (totpRef && otpCode.length === 6) {
+            login2FAMutation.mutate({ ref: totpRef, code: otpCode });
+        }
+    };
+
+    const handleGoogleSubmit = () => {
+        setErrorMsg('');
+        // Trigger with a mock Google OAuth token representing the third-party client session
+        googleLoginMutation.mutate('google_oauth_desktop_client_token_2026');
+    };
+
+    const handleCancel2FA = () => {
+        setIs2FA(false);
+        setOtpCode('');
+        setTotpRef('');
+        setErrorMsg('');
+    };
+
+    const isPending = loginMutation.isPending || login2FAMutation.isPending;
+
     return (
         <AuthLayout>
             <LoginForm 
@@ -76,7 +148,16 @@ const Login = () => {
                 setRememberMe={setRememberMe}
                 onSubmit={handleLoginSubmit}
                 errorMsg={errorMsg}
-                loading={loginMutation.isPending}
+                loading={isPending}
+                
+                is2FA={is2FA}
+                otpCode={otpCode}
+                setOtpCode={setOtpCode}
+                on2FASubmit={handle2FASubmit}
+                onCancel2FA={handleCancel2FA}
+
+                onGoogleSubmit={handleGoogleSubmit}
+                googleLoading={googleLoginMutation.isPending}
             />
         </AuthLayout>
     )

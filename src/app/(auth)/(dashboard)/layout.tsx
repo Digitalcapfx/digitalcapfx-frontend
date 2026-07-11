@@ -16,7 +16,9 @@ import {
     Search,
     ShieldAlert,
     ShieldAlert as ShieldWarning,
-    RefreshCw as SpinnerIcon
+    RefreshCw as SpinnerIcon,
+    Clock,
+    Gift
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SendMoneySheet from '@/components/pages/auth/_components/SendMoneySheet'
@@ -33,6 +35,9 @@ const SIDEBAR_LINKS = [
     { label: 'Wallets', icon: Wallet, href: '/wallets' },
     { label: 'Cards', icon: CreditCard, href: '/cards' },
     { label: 'Exchange', icon: RefreshCw, href: '/exchange' },
+    { label: 'Activity', icon: Clock, href: '/activity' },
+    { label: 'Referrals', icon: Gift, href: '/referrals' },
+    { label: 'Support Desk', icon: HelpCircle, href: '/support' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

@@ -51,6 +51,16 @@ class AccountService extends BaseService {
     const response = await this.api.get('/crypto/wallet');
     return response.data;
   }
+
+  async getAccountByCurrency(currency: string): Promise<{ success: boolean; data: AccountData }> {
+    const response = await this.api.get(`/accounts/${currency}`);
+    return response.data;
+  }
+
+  async getTransactionDetails(currency: string, id: string): Promise<{ success: boolean; data: any }> {
+    const response = await this.api.get(`/accounts/${currency}/transactions/${id}`);
+    return response.data;
+  }
 }
 
 export const accountService = new AccountService();

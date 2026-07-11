@@ -63,10 +63,8 @@ export const CredentialsStep: React.FC = () => {
     mutationFn: (payload: RegisterRequest) => authService.register(payload),
     onSuccess: (data) => {
       if (data?.success) {
-        toast.success('Registration successful!');
-        if (typeof window !== 'undefined') {
-          window.location.href = '/dashboard';
-        }
+        toast.success('Registration successful! Please verify your email.');
+        setStep('verify');
       } else {
         const rawError = data?.error;
         const msg = typeof rawError === 'object'

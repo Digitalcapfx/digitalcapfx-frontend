@@ -72,10 +72,13 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      console.warn('Session expired. Redirecting to login...');
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('account_type');
-        window.location.href = '/login';
+        const path = window.location.pathname;
+        if (path !== '/login' && path !== '/get-started' && path !== '/forgot-password') {
+          console.warn('Session expired. Redirecting to login...');
+          localStorage.removeItem('account_type');
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

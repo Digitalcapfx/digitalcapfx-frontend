@@ -5,6 +5,31 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { profileService } from '@/services/profile.service'
 import { toast } from 'sonner'
 import { RefreshCw } from 'lucide-react'
+import { DatePicker } from '@/components/ui/DatePicker'
+import { Select, SelectOption } from '@/components/ui/Select'
+import { getCountries, isValidPhoneNumber } from 'react-phone-number-input'
+import { PhoneInput } from '@/components/ui/PhoneInput'
+import en from 'react-phone-number-input/locale/en.json'
+
+const enLabels = en as Record<string, string>;
+const COUNTRY_OPTIONS: SelectOption[] = getCountries()
+  .map((countryCode) => ({
+    value: countryCode,
+    label: enLabels[countryCode] || countryCode,
+  }))
+  .sort((a, b) => a.label.localeCompare(b.label));
+
+const getCountryCodeByName = (name: string): string => {
+  if (!name) return '';
+  if (name.length === 2) return name.toUpperCase();
+  const code = Object.keys(enLabels).find(key => enLabels[key].toLowerCase() === name.toLowerCase());
+  return code || name;
+};
+
+const getCountryNameByCode = (code: string): string => {
+  if (!code) return '';
+  return enLabels[code] || code;
+};
 
 export const ProfileTab: React.FC = () => {
     const queryClient = useQueryClient();
@@ -19,6 +44,7 @@ export const ProfileTab: React.FC = () => {
     const [dob, setDob] = useState('');
     const [nationality, setNationality] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
+    const [phoneError, setPhoneError] = useState('');
 
     // Keep fields in sync with query response
     useEffect(() => {
@@ -57,6 +83,13 @@ export const ProfileTab: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setPhoneError('');
+
+        if (phoneNumber && !isValidPhoneNumber(phoneNumber)) {
+            setPhoneError('Please enter a valid phone number');
+            return;
+        }
+
         updateProfileMutation.mutate({
             firstName,
             lastName,
@@ -107,38 +140,30 @@ export const ProfileTab: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Date of Birth</label>
-                        <input 
-                            type="date"
-                            required
-                            value={dob}
-                            onChange={(e) => setDob(e.target.value)}
-                            className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-mono font-semibold"
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Nationality</label>
-                        <input 
-                            type="text"
-                            required
-                            value={nationality}
-                            onChange={(e) => setNationality(e.target.value)}
-                            className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-sans font-semibold"
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Phone number</label>
-                    <input 
-                        type="text"
+                    <DatePicker 
                         required
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="bg-black/35 border border-white/10 rounded-xl px-4.5 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-mono font-semibold"
+                        label="Date of Birth"
+                        value={dob}
+                        onChange={setDob}
+                    />
+                    <Select
+                        required
+                        label="Nationality*"
+                        placeholder="Select country..."
+                        value={getCountryCodeByName(nationality)}
+                        onChange={(val) => setNationality(getCountryNameByCode(val))}
+                        options={COUNTRY_OPTIONS}
                     />
                 </div>
+
+                <PhoneInput
+                    required
+                    label="Phone number*"
+                    placeholder="Enter phone number"
+                    value={phoneNumber}
+                    onChange={setPhoneNumber}
+                    error={phoneError}
+                />
 
                 <div className="flex items-center space-x-3.5 pt-4 text-left">
                     <button

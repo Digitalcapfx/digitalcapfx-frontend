@@ -20,6 +20,16 @@ export class KycService extends BaseService {
     const response = await this.api.get('/kyc/status');
     return response.data;
   }
+
+  async getKycDocuments(): Promise<{ success: boolean; data: any[] }> {
+    const response = await this.api.get('/kyc/documents');
+    return response.data;
+  }
+
+  async initMetaMap() {
+    const response = await this.api.post('/kyc/metamap/init');
+    return response.data;
+  }
 }
 
 export const kycService = new KycService();

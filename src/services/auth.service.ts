@@ -56,6 +56,16 @@ export class AuthService extends BaseService {
     const response = await this.api.post('/auth/reset-pin', payload);
     return response.data;
   }
+
+  async login2FA(ref: string, code: string): Promise<any> {
+    const response = await this.api.post('/auth/2fa/login', { ref, code });
+    return response.data;
+  }
+
+  async loginGoogle(token: string): Promise<any> {
+    const response = await this.api.post('/auth/google', { token });
+    return response.data;
+  }
 }
 
 export const authService = new AuthService();
