@@ -41,7 +41,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                     </div>
 
                     {/* Tabs Sidebar navigation */}
-                    <div className="space-y-1">
+                    <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible -mx-4 px-4 lg:mx-0 lg:px-0 space-x-2 lg:space-x-0 lg:space-y-1 scrollbar-none pb-2 lg:pb-0 shrink-0 select-none">
                         {TABS.map((tab) => {
                             const Icon = tab.icon;
                             const isActive = pathname === tab.href;
@@ -51,13 +51,13 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                                     key={tab.id}
                                     href={tab.href}
                                     className={cn(
-                                        "w-full flex items-center space-x-3 px-4.5 py-3.5 rounded-2xl text-xs font-bold transition duration-200 cursor-pointer select-none text-left block",
+                                        "w-auto lg:w-full flex items-center space-x-3 px-4 py-2.5 lg:px-4.5 lg:py-3.5 rounded-xl lg:rounded-2xl text-xs font-bold transition duration-200 cursor-pointer select-none shrink-0 block",
                                         isActive
                                             ? "bg-primary-500/10 border border-primary-500/20 text-primary-400 font-extrabold"
                                             : "text-slate-400 hover:text-white hover:bg-white/[0.015]"
                                     )}
                                 >
-                                    <div className="flex items-center space-x-3">
+                                    <div className="flex items-center space-x-2 lg:space-x-3">
                                         <Icon className="h-4.5 w-4.5 shrink-0" />
                                         <span>{tab.label}</span>
                                     </div>

@@ -91,7 +91,7 @@ export const BusinessDetailsStep: React.FC = () => {
           onChange={(e) => updateBusinessDetails({ companyRegNo: e.target.value })}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select 
             required
             label="Industry*"

@@ -67,7 +67,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     };
 
     return (
-        <div className="flex space-x-2.5 select-none w-fit">
+        <div className="flex space-x-1.5 sm:space-x-2.5 select-none w-fit">
             {digits.map((digit, idx) => (
                 <input 
                     key={idx}
@@ -82,7 +82,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
                     onKeyDown={(e) => handleKeyDown(e, idx)}
                     onPaste={handlePaste}
                     className={cn(
-                        "w-12 h-13 sm:w-14 sm:h-14 rounded-xl bg-[#0C1224]/50 border border-white/10 text-center text-xl font-bold text-white placeholder-slate-700 focus:outline-none focus:border-primary-500/80 transition-all font-mono disabled:opacity-50",
+                        "w-9 h-11 sm:w-14 sm:h-14 rounded-xl bg-[#0C1224]/50 border border-white/10 text-center text-lg sm:text-xl font-bold text-white placeholder-slate-700 focus:outline-none focus:border-primary-500/80 transition-all font-mono disabled:opacity-50",
                         error && "border-red-500 focus:border-red-500",
                         className
                     )}

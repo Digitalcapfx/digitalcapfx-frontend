@@ -588,7 +588,7 @@ export const SendMoneySheet: React.FC = () => {
                                             </div>
                                         ) : !isInternal && (
                                             /* Standard bank wire inputs */
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5">
                                                     <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Bank Name</span>
                                                     <input 

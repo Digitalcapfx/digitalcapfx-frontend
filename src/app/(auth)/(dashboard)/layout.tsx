@@ -393,7 +393,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
 
                 {/* Inner Pages Content */}
-                <div className="p-8 space-y-8 flex-grow overflow-y-auto">
+                <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 flex-grow overflow-y-auto">
                     {children}
                 </div>
 
