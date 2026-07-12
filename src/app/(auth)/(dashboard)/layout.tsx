@@ -307,10 +307,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     {/* Support & Logout */}
                     <div className="space-y-1">
-                        <button className="w-full flex items-center space-x-3 px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white transition rounded-lg">
-                            <HelpCircle className="h-4 w-4" />
-                            <span>Help & Support</span>
-                        </button>
                         <button
                             onClick={handleSignOut}
                             className="w-full flex items-center space-x-3 px-4 py-2 text-xs font-semibold text-rose-455 hover:text-rose-350 transition rounded-lg"

@@ -4,15 +4,23 @@ import React, { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface SheetProps {
+interface DialogProps {
     isOpen: boolean;
     onClose: () => void;
     title?: string;
     description?: string;
     children: React.ReactNode;
+    className?: string;
 }
 
-export const Sheet: React.FC<SheetProps> = ({ isOpen, onClose, title, description, children }) => {
+export const Dialog: React.FC<DialogProps> = ({
+    isOpen,
+    onClose,
+    title,
+    description,
+    children,
+    className
+}) => {
     const [shouldRender, setShouldRender] = useState(isOpen);
 
     useEffect(() => {
@@ -22,7 +30,7 @@ export const Sheet: React.FC<SheetProps> = ({ isOpen, onClose, title, descriptio
         } else {
             const timer = setTimeout(() => {
                 setShouldRender(false);
-            }, 300); // Wait for slide-out animation
+            }, 200); // Wait for scale transition
             document.body.style.overflow = 'unset';
             return () => clearTimeout(timer);
         }
@@ -31,35 +39,38 @@ export const Sheet: React.FC<SheetProps> = ({ isOpen, onClose, title, descriptio
     if (!shouldRender) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop Overlay */}
             <div 
                 className={cn(
-                    "fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300",
-                    isOpen ? "opacity-100" : "opacity-0"
+                    "fixed inset-0 bg-black/75 backdrop-blur-xs transition-opacity duration-200 ease-out",
+                    isOpen ? "opacity-100 animate-in fade-in" : "opacity-0 animate-out fade-out"
                 )}
                 onClick={onClose}
             />
 
-            {/* Slide-out Sheet Panel */}
+            {/* Modal Panel Content */}
             <div 
                 className={cn(
-                    "relative w-full max-w-[460px] h-full bg-[#080D1C] border-l border-white/5 shadow-2xl p-6 md:p-8 flex flex-col transition-transform duration-300 ease-out z-10 overflow-y-auto scrollbar-none",
-                    isOpen ? "translate-x-0" : "translate-x-full"
+                    "relative w-full max-w-3xl h-[80vh] bg-[#080D1C] border border-white/10 rounded-2xl shadow-2xl p-6 flex flex-col transition-all duration-200 ease-out z-10 overflow-hidden",
+                    isOpen 
+                        ? "opacity-100 scale-100 animate-in zoom-in-95 duration-200" 
+                        : "opacity-0 scale-95 animate-out zoom-out-95 duration-200",
+                    className
                 )}
             >
                 {/* Close Button */}
                 <button 
                     type="button"
                     onClick={onClose}
-                    className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition duration-200 cursor-pointer active:scale-95 z-20"
+                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition duration-200 cursor-pointer active:scale-95 z-20"
                 >
                     <X className="h-4 w-4" />
                 </button>
 
                 {title && (
-                    <div className="mb-6 space-y-1 pr-8 text-left select-none">
-                        <h2 className="font-satoshi font-black text-xl text-white tracking-tight">
+                    <div className="mb-4 space-y-1 pr-8 text-left select-none border-b border-white/5 pb-3 shrink-0">
+                        <h2 className="font-satoshi font-black text-lg text-white tracking-tight">
                             {title}
                         </h2>
                         {description && (
@@ -70,7 +81,7 @@ export const Sheet: React.FC<SheetProps> = ({ isOpen, onClose, title, descriptio
                     </div>
                 )}
 
-                <div className="flex-grow flex flex-col justify-between">
+                <div className="flex-grow overflow-hidden relative min-h-[300px]">
                     {children}
                 </div>
             </div>
@@ -78,4 +89,4 @@ export const Sheet: React.FC<SheetProps> = ({ isOpen, onClose, title, descriptio
     );
 };
 
-export default Sheet;
+export default Dialog;

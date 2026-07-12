@@ -1,16 +1,25 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Check, Clock, RefreshCw, AlertCircle, Shield, ArrowRight, ExternalLink } from 'lucide-react'
+import { Check, Clock, RefreshCw, AlertCircle, Shield, ArrowRight, ExternalLink, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { toast } from 'sonner'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { kycService } from '@/services/kyc.service'
+import { uploadService } from '@/services/upload.service'
+import { FileUpload } from '@/components/ui/FileUpload'
+import { FilePreviewDialog } from '@/components/ui/FilePreviewDialog'
 
 export const VerificationTab: React.FC = () => {
     const queryClient = useQueryClient();
     const [verificationLaunched, setVerificationLaunched] = useState(false);
+    const [manualDocType, setManualDocType] = useState<'national_id' | 'passport' | 'selfie' | 'proof_of_address'>('national_id');
+    const [docUrl, setDocUrl] = useState('');
+    const [manualUploading, setManualUploading] = useState(false);
+    const [historyPreviewUrl, setHistoryPreviewUrl] = useState('');
+    const [historyPreviewOpen, setHistoryPreviewOpen] = useState(false);
+    const [historyPreviewName, setHistoryPreviewName] = useState('');
 
     // Fetch live KYC status
     const kycStatusQuery = useQuery({
@@ -72,6 +81,36 @@ export const VerificationTab: React.FC = () => {
             },
             error: 'Failed to update status. Please try again.'
         });
+    };
+
+    const handleManualSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!docUrl) {
+            toast.error('Please upload a document file first.');
+            return;
+        }
+
+        setManualUploading(true);
+        try {
+            const submitRes = await kycService.submitDocument({
+                doc_type: manualDocType,
+                doc_url: docUrl
+            });
+
+            toast.success('KYC document submitted for manual review successfully!');
+            setDocUrl('');
+            
+            // Invalidate/refetch to display in document logs history
+            queryClient.invalidateQueries({ queryKey: ['kycDocuments'] });
+            queryClient.invalidateQueries({ queryKey: ['kycStatus'] });
+        } catch (err: any) {
+            console.error('Manual submission error:', err);
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || err.message || 'Submission failed.');
+            toast.error(msg);
+        } finally {
+            setManualUploading(false);
+        }
     };
 
     return (
@@ -210,6 +249,55 @@ export const VerificationTab: React.FC = () => {
                             )}
                         </div>
                     </div>
+
+                    {/* Manual File Upload Card Alternative */}
+                    <div className="bg-[#0C1224] border border-[#131B30] rounded-2xl p-6 space-y-6 text-left">
+                        <div className="space-y-2">
+                            <h4 className="text-sm font-bold text-white">
+                                Manual Document Upload
+                            </h4>
+                            <p className="text-slate-400 text-xs leading-relaxed">
+                                Prefer manual verification? Upload your government document directly below to be queued for review.
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleManualSubmit} className="space-y-4 pt-1">
+                            {/* Document Type Dropdown */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Document Type</label>
+                                <select
+                                    value={manualDocType}
+                                    onChange={(e) => setManualDocType(e.target.value as any)}
+                                    className="bg-black/35 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-semibold [&>option]:bg-[#080E1E]"
+                                >
+                                    <option value="national_id">National ID Card</option>
+                                    <option value="passport">International Passport</option>
+                                    <option value="selfie">Biometric Selfie</option>
+                                    <option value="proof_of_address">Proof of Address</option>
+                                </select>
+                            </div>
+
+                            {/* Reusable File Upload Input */}
+                            <FileUpload
+                                required
+                                label="Select Document File"
+                                purpose="kyc"
+                                value={docUrl}
+                                onUploadComplete={(readUrl) => setDocUrl(readUrl)}
+                            />
+
+                            {/* Submit Action */}
+                            <Button
+                                type="submit"
+                                disabled={!docUrl || manualUploading}
+                                className="w-full rounded-xl h-[46px] text-xs font-bold"
+                                leftIcon={manualUploading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                            >
+                                {manualUploading ? 'Submitting...' : 'Submit Document'}
+                            </Button>
+                        </form>
+                    </div>
+
                 </div>
             )}
 
@@ -252,15 +340,18 @@ export const VerificationTab: React.FC = () => {
                                             {doc.status || 'pending'}
                                         </span>
                                         {doc.docUrl && (
-                                            <a 
-                                                href={doc.docUrl} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer"
-                                                className="text-[10px] font-bold text-primary-400 hover:underline flex items-center space-x-1"
+                                            <button 
+                                                type="button" 
+                                                onClick={() => {
+                                                    setHistoryPreviewUrl(doc.docUrl);
+                                                    setHistoryPreviewName(typeLabel);
+                                                    setHistoryPreviewOpen(true);
+                                                }}
+                                                className="text-[10px] font-bold text-primary-400 hover:underline flex items-center space-x-1 bg-transparent border-0 cursor-pointer focus:outline-none"
                                             >
                                                 <span>View</span>
                                                 <ExternalLink className="h-3 w-3" />
-                                            </a>
+                                            </button>
                                         )}
                                     </div>
                                 </div>
@@ -269,6 +360,14 @@ export const VerificationTab: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Reusable History Document Preview Modal */}
+            <FilePreviewDialog
+                isOpen={historyPreviewOpen}
+                onClose={() => setHistoryPreviewOpen(false)}
+                url={historyPreviewUrl}
+                fileName={historyPreviewName}
+            />
         </div>
     );
 };
