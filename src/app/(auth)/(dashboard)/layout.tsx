@@ -383,7 +383,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </div>
                         {profile.kycStatus !== 'pending' && (
                             <Link
-                                href="/settings"
+                                href="/settings/verification"
                                 className="px-4.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500 text-white transition font-bold shrink-0 text-[10.5px] uppercase tracking-wider"
                             >
                                 Verify Now
