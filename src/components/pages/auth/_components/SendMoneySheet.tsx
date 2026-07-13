@@ -19,6 +19,7 @@ import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
 import { Switch } from '@/components/ui/Switch'
 import { cn } from '@/lib/utils'
+import { NumberInput } from '@/components/ui/NumberInput'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
@@ -482,10 +483,9 @@ export const SendMoneySheet: React.FC = () => {
                         <div className="bg-[#0C1224] border border-white/10 rounded-2xl p-5 text-center relative select-none">
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Enter Amount</span>
                             <div className="flex items-center justify-center space-x-1 py-1">
-                                <input 
-                                    type="number"
+                                <NumberInput
                                     value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
+                                    onChange={setAmount}
                                     placeholder="0.00"
                                     className="bg-transparent border-none focus:outline-none focus:ring-0 text-center text-white font-mono font-black text-3.5xl placeholder-slate-700 w-full max-w-[240px] leading-none"
                                 />

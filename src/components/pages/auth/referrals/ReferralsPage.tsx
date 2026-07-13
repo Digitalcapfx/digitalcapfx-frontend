@@ -49,7 +49,7 @@ export const ReferralsPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 mx-auto px-4 md:px-8 py-6 text-left">
+        <div className="space-y-6 mx-auto text-left">
             <div>
                 <h1 className="font-satoshi font-black text-2xl text-white tracking-tight">
                     Referrals & Rewards

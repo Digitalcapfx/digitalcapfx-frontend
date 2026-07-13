@@ -13,6 +13,7 @@ import { useCardStore } from '@/store/cardStore'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
 import { cn } from '@/lib/utils'
+import { NumberInput } from '@/components/ui/NumberInput'
 import { useQuery } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 
@@ -157,10 +158,9 @@ export const FundCardSheet: React.FC = () => {
                                     {card.currency === 'USD' && (
                                         <span className="text-sm font-bold text-slate-550 font-mono select-none">$</span>
                                     )}
-                                    <input 
-                                        type="number"
+                                    <NumberInput 
                                         value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
+                                        onChange={setAmount}
                                         placeholder="0.00"
                                         className="w-24 bg-transparent border-none focus:outline-none focus:ring-0 text-right text-white font-mono font-black text-sm placeholder-slate-700"
                                     />

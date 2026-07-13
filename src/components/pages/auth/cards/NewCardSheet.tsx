@@ -5,6 +5,7 @@ import { Check, ChevronDown } from 'lucide-react'
 import { useCardStore } from '@/store/cardStore'
 import { Sheet } from '@/components/ui/Sheet'
 import { cn } from '@/lib/utils'
+import { NumberInput } from '@/components/ui/NumberInput'
 
 const CURRENCIES = [
     { code: 'USD', name: 'US Dollar' },
@@ -127,10 +128,9 @@ export const NewCardSheet: React.FC = () => {
                             {currency === 'USD' && (
                                 <span className="absolute left-4.5 font-mono text-xs text-slate-550 font-bold">$</span>
                             )}
-                            <input 
-                                type="number"
+                            <NumberInput 
                                 value={limit}
-                                onChange={(e) => setLimit(e.target.value)}
+                                onChange={setLimit}
                                 placeholder="0.00"
                                 className={cn(
                                     "bg-transparent border-none focus:outline-none focus:ring-0 py-3.5 text-xs text-white placeholder-slate-650 w-full font-mono",

@@ -10,6 +10,8 @@ const QuickActions: React.FC = () => {
     const openSend = useTransactionStore((state) => state.openSend);
     const openReceive = useTransactionStore((state) => state.openReceive);
 
+    const openInstant = useTransactionStore((state) => state.openInstant);
+
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 select-none">
             <button 
@@ -39,7 +41,10 @@ const QuickActions: React.FC = () => {
                 </div>
                 <span>Exchange</span>
             </button>
-            <button className="bg-[#0C1224] border border-white/5 rounded-2xl p-4 flex items-center justify-center space-x-3 text-slate-300 hover:text-white hover:border-white/10 hover:bg-white/[0.02] transition duration-200 font-semibold text-sm cursor-pointer">
+            <button 
+                onClick={openInstant}
+                className="bg-[#0C1224] border border-white/5 rounded-2xl p-4 flex items-center justify-center space-x-3 text-slate-300 hover:text-white hover:border-white/10 hover:bg-white/[0.02] transition duration-200 font-semibold text-sm cursor-pointer"
+            >
                 <div className="w-8 h-8 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400">
                     <Zap className="h-4 w-4" />
                 </div>

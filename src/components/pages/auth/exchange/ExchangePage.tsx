@@ -15,6 +15,7 @@ import {
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
 import { cn } from '@/lib/utils'
+import { NumberInput } from '@/components/ui/NumberInput'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { exchangeService, QuoteData } from '@/services/exchange.service'
@@ -350,7 +351,7 @@ export const ExchangePage: React.FC = () => {
                                 <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">From</span>
                                 <div className="relative">
                                     <div
-                                        className="bg-[#0C1224] border border-white/10 rounded-2xl p-4 flex items-center justify-between transition focus-within:border-primary-500/50"
+                                        className="bg-[#0C1224] border border-white/10 rounded-2xl p-4 flex-wrap flex items-center justify-between transition focus-within:border-primary-500/50"
                                     >
                                         <div
                                             onClick={() => setIsFromDropdownOpen(!isFromDropdownOpen)}
@@ -364,21 +365,20 @@ export const ExchangePage: React.FC = () => {
                                         </div>
 
                                         <div className="flex flex-col items-end shrink-0">
-                                            <input
-                                                type="number"
+                                            <NumberInput
                                                 value={fromAmount}
-                                                onChange={(e) => setFromAmount(e.target.value)}
+                                                onChange={setFromAmount}
                                                 placeholder="0.00"
-                                                className="w-40 bg-transparent border-none focus:outline-none focus:ring-0 text-right text-white font-mono font-black text-xl placeholder-slate-700 leading-none"
+                                                className="bg-transparent border-none focus:outline-none focus:ring-0 text-right text-white font-mono font-black text-xl placeholder-slate-700 leading-none"
                                             />
                                         </div>
                                     </div>
 
                                     {/* Overlay to close dropdown when clicking outside */}
                                     {isFromDropdownOpen && (
-                                        <div 
-                                            className="fixed inset-0 z-20" 
-                                            onClick={() => setIsFromDropdownOpen(false)} 
+                                        <div
+                                            className="fixed inset-0 z-20"
+                                            onClick={() => setIsFromDropdownOpen(false)}
                                         />
                                     )}
 
@@ -425,8 +425,8 @@ export const ExchangePage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Center Swap Buttons */}
-                            <div className="absolute left-1/2 top-[108px] -translate-x-1/2 -translate-y-1/2 z-10">
+                            {/* Center Swap Button */}
+                            <div className="relative h-2 flex items-center justify-center z-10 select-none">
                                 <button
                                     type="button"
                                     onClick={handleSwap}
@@ -441,7 +441,7 @@ export const ExchangePage: React.FC = () => {
                                 <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">To</span>
                                 <div className="relative">
                                     <div
-                                        className="bg-[#0C1224] border border-white/10 rounded-2xl p-4 flex items-center justify-between transition focus-within:border-primary-500/50"
+                                        className="bg-[#0C1224] border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between transition focus-within:border-primary-500/50"
                                     >
                                         <div
                                             onClick={() => setIsToDropdownOpen(!isToDropdownOpen)}
@@ -463,9 +463,9 @@ export const ExchangePage: React.FC = () => {
 
                                     {/* Overlay to close dropdown when clicking outside */}
                                     {isToDropdownOpen && (
-                                        <div 
-                                            className="fixed inset-0 z-20" 
-                                            onClick={() => setIsToDropdownOpen(false)} 
+                                        <div
+                                            className="fixed inset-0 z-20"
+                                            onClick={() => setIsToDropdownOpen(false)}
                                         />
                                     )}
 

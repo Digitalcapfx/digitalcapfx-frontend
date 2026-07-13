@@ -15,6 +15,7 @@ import { useTransactionStore } from '@/store/transactionStore'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
 import { cn } from '@/lib/utils'
+import { NumberInput } from '@/components/ui/NumberInput'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
@@ -302,17 +303,12 @@ export const ReceiveMoneySheet: React.FC = () => {
                                     <div className="absolute w-10 h-10 rounded-full bg-[#080D1C] flex items-center justify-center border-4 border-white shadow-md">
                                         <CurrencyIcon code={activeWallet.code} size="sm" className="border-none shadow-none" />
                                     </div>
-                                    <svg className="w-full h-full text-slate-900" viewBox="0 0 100 100" fill="currentColor">
-                                        <path d="M 0,0 L 25,0 L 25,7 L 7,7 L 7,25 L 0,25 Z M 75,0 L 100,0 L 100,25 L 93,25 L 93,7 L 75,7 Z M 0,75 L 25,75 L 25,93 L 7,93 L 7,75 L 0,75 Z M 75,93 L 100,93 L 100,75 L 93,75 L 93,93 L 75,93 Z" />
-                                        <path d="M 12,12 L 25,12 L 25,25 L 12,25 Z M 75,12 L 88,12 L 88,25 L 75,25 Z M 12,75 L 25,75 L 25,88 L 12,88 Z" />
-                                        <circle cx="35" cy="18" r="3" /><circle cx="50" cy="18" r="3" /><circle cx="62" cy="18" r="3" />
-                                        <circle cx="35" cy="35" r="3" /><circle cx="50" cy="35" r="3" /><circle cx="62" cy="35" r="3" />
-                                        <circle cx="35" cy="50" r="3" /><circle cx="50" cy="50" r="3" /><circle cx="62" cy="50" r="3" />
-                                        <circle cx="35" cy="62" r="3" /><circle cx="50" cy="62" r="3" /><circle cx="62" cy="62" r="3" />
-                                        <circle cx="18" cy="35" r="3" /><circle cx="18" cy="50" r="3" /><circle cx="18" cy="62" r="3" />
-                                        <circle cx="82" cy="35" r="3" /><circle cx="82" cy="50" r="3" /><circle cx="82" cy="62" r="3" />
-                                        <circle cx="35" cy="82" r="3" /><circle cx="50" cy="82" r="3" /><circle cx="62" cy="82" r="3" />
-                                    </svg>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img 
+                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(address)}`} 
+                                        alt="Wallet/Account QR Code" 
+                                        className="w-full h-full rounded-lg"
+                                    />
                                 </div>
                                 <span className="text-[10px] text-slate-550 font-bold tracking-wider uppercase block">
                                     Your {activeWallet.code} {isCrypto ? 'address' : 'bank details'}
@@ -374,12 +370,11 @@ export const ReceiveMoneySheet: React.FC = () => {
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Deposit Amount ({activeWallet.code})*</span>
-                                        <input 
-                                            type="number"
+                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Deposit Amount ({activeWallet.code})*</span>
+                                        <NumberInput
                                             required
                                             value={depositAmount}
-                                            onChange={(e) => setDepositAmount(e.target.value)}
+                                            onChange={setDepositAmount}
                                             placeholder="0"
                                             className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-primary-500/50 w-full font-mono"
                                         />

@@ -137,7 +137,7 @@ export const SupportPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 mx-auto px-4 md:px-8 py-6 text-left">
+        <div className="space-y-6 mx-auto text-left">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="font-satoshi font-black text-2xl text-white tracking-tight">
@@ -198,31 +198,49 @@ export const SupportPage: React.FC = () => {
                             </select>
                         </div>
 
-                        <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6.5 shadow-xl space-y-3">
+                        <div className="space-y-4">
                             {faqsQuery.isLoading ? (
-                                <div className="py-16 flex items-center justify-center space-x-2 text-xs text-slate-500">
+                                <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6.5 shadow-xl py-16 flex items-center justify-center space-x-2 text-xs text-slate-500">
                                     <Loader2 className="h-4 w-4 animate-spin text-primary-400" />
                                     <span>Loading FAQ database...</span>
                                 </div>
                             ) : filteredFAQs.length === 0 ? (
-                                <p className="text-xs text-slate-500 py-8 text-center select-none">No FAQs found matching keyword.</p>
+                                <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6.5 shadow-xl">
+                                    <p className="text-xs text-slate-500 py-8 text-center select-none">No FAQs found matching keyword.</p>
+                                </div>
                             ) : (
                                 filteredFAQs.map((faq) => {
                                     const isExpanded = expandedFaqId === faq.id;
                                     return (
-                                        <div key={faq.id} className="border-b border-white/[0.03] last:border-b-0 pb-3 last:pb-0">
+                                        <div
+                                            key={faq.id}
+                                            className="bg-[#0C1224] border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 hover:bg-white/[0.02] transition-all duration-300 shadow shadow-black/20 group"
+                                        >
                                             <button
                                                 onClick={() => setExpandedFaqId(isExpanded ? null : faq.id)}
-                                                className="w-full flex items-center justify-between text-left py-2 font-bold text-white text-xs hover:text-primary-400 transition"
+                                                className="w-full px-5 py-4.5 flex items-center justify-between font-satoshi font-bold text-xs text-white focus:outline-none select-none text-left cursor-pointer transition duration-200"
                                             >
                                                 <span>{faq.question}</span>
-                                                {isExpanded ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
+                                                <div className="p-1 rounded-full bg-white/5 border border-white/10 text-slate-400 group-hover:text-white flex items-center justify-center shrink-0 ml-4 transition duration-200">
+                                                    {isExpanded ? (
+                                                        <ChevronUp className="h-3.5 w-3.5" />
+                                                    ) : (
+                                                        <ChevronDown className="h-3.5 w-3.5" />
+                                                    )}
+                                                </div>
                                             </button>
-                                            {isExpanded && (
-                                                <p className="text-[11px] text-slate-400 leading-relaxed py-1.5 animate-in slide-in-from-top-1 duration-200">
-                                                    {faq.answer}
-                                                </p>
-                                            )}
+
+                                            {/* Animated Answer height drawer */}
+                                            <div className={cn(
+                                                "grid transition-all duration-300 ease-in-out",
+                                                isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                                            )}>
+                                                <div className="overflow-hidden">
+                                                    <p className="px-5 pb-5 text-[11px] text-slate-400 leading-relaxed font-sans border-t border-white/5 pt-3.5">
+                                                        {faq.answer}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                     );
                                 })

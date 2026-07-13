@@ -26,6 +26,7 @@ import SendMoneySheet from '@/components/pages/auth/_components/SendMoneySheet'
 import ReceiveMoneySheet from '@/components/pages/auth/_components/ReceiveMoneySheet'
 import FundCardSheet from '@/components/pages/auth/cards/FundCardSheet'
 import NewCardSheet from '@/components/pages/auth/cards/NewCardSheet'
+import PhoneSendSheet from '@/components/pages/auth/_components/PhoneSendSheet'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { profileService } from '@/services/profile.service'
 import { authService } from '@/services/auth.service'
@@ -402,6 +403,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <ReceiveMoneySheet />
                 <FundCardSheet />
                 <NewCardSheet />
+                <PhoneSendSheet />
 
             </div>
 
