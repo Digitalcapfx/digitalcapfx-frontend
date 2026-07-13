@@ -89,17 +89,21 @@ const Footer = () => {
 
                 {/* Brand Column */}
                 <div className="col-span-12 lg:col-span-4 space-y-6">
-                    <Link href="/" className="inline-block">
-                        <Image
-                            src="/DFXLogo.svg"
-                            alt="DigitalCap FX Logo"
-                            width={160}
-                            height={36}
-                            className="h-8 w-auto"
-                        />
-                    </Link>
+                    <div>
+
+                        <Link href="/" className="inline-block">
+                            <Image
+                                src="/DFXLogo.svg"
+                                alt="DigitalCap FX Logo"
+                                width={160}
+                                height={36}
+                                className="h-8 w-auto"
+                            />
+                        </Link>
+                        <p className='text-[10px] font-bold -mt-1'>Your bridge to the world of payments</p>
+                    </div>
                     <p className="text-sm leading-relaxed text-slate-400 max-w-sm font-sans">
-                        Banking without borders. Hold, send, exchange and spend across fiat, stablecoins, and crypto — all in one account.
+                        Banking without borders. Hold, send, exchange and spend across fiat, stablecoins — all in one account.
                     </p>
                     <div className="flex items-center space-x-3">
                         {SOCIAL_LINKS.map((social) => {

@@ -28,7 +28,7 @@ const NavBar = () => {
         <nav className=" flex items-center justify-between h-20 w-full backdrop-blur-md fixed top-0 z-50 border-b border-white/6">
 
             {/* Logo */}
-            <div className="flex items-center">
+            <div className="items-center">
                 <Link href="/" className="flex items-center">
                     <Image
                         src="/DFXLogo.svg"
@@ -39,6 +39,7 @@ const NavBar = () => {
                         className="h-6 w-auto"
                     />
                 </Link>
+                <p className='text-[8px] font-bold mt-0.5'>Your bridge to the world of payments</p>
             </div>
 
             {/* Nav Menu for Desktop */}

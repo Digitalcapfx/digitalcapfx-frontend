@@ -60,7 +60,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
                     </div>
                     <div className="text-right">
                         <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Balance</span>
-                        <span className="text-sm font-extrabold text-white font-mono mt-0.5 block">${balanceUsdc} <span className="text-[10px] text-slate-400">USDC</span></span>
+                        <span className="text-sm font-extrabold text-white font-mono mt-0.5 block">${balanceUsdc} <span className="text-[10px] text-slate-400">iUSD</span></span>
                     </div>
                 </div>
             )}
@@ -70,7 +70,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
                 {isSheet && (
                     <div className="flex justify-between items-center select-none pb-2 mb-2 border-b border-white/5">
                         <span className="text-xs font-bold text-slate-400">Stablecoin Balance</span>
-                        <span className="text-sm font-extrabold text-white font-mono">${balanceUsdc} <span className="text-[10px] text-slate-400">USDC</span></span>
+                        <span className="text-sm font-extrabold text-white font-mono">${balanceUsdc} <span className="text-[10px] text-slate-400">iUSD</span></span>
                     </div>
                 )}
 

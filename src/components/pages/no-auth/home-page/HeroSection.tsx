@@ -15,7 +15,7 @@ const BENEFITS = [
 const HeroSection = () => {
     return (
         <section className="w-full max-w-full overflow-hidden">
-            <main className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center  py-12 lg:py-32">
+            <main className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center  py-12 pt-24 lg:py-32">
                 {/* Left Content Column */}
                 <div className="col-span-1 lg:col-span-6 space-y-6 text-left min-w-0">
 
@@ -34,7 +34,7 @@ const HeroSection = () => {
                             <span className="bg-brand-gradient bg-clip-text text-transparent">reimagined.</span>
                         </h1>
                         <p className="text-[#6D778A] text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl font-sans">
-                            One account for fiat, stablecoins, and crypto. Send, receive, exchange, and spend – all from a single, beautifully designed platform.
+                            One account for fiat, stablecoins. Send, receive, exchange, and spend – all from a single, beautifully designed platform.
                         </p>
                     </div>
 
