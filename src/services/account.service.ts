@@ -2,12 +2,12 @@ import { BaseService } from './base.service';
 
 export interface AccountData {
   id: string;
-  account_number: string;
+  accountNumber: string;
   balance: string;
-  available_balance: string;
+  availableBalance: string;
   currency: string;
   status: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface AccountListResponse {
@@ -16,8 +16,8 @@ export interface AccountListResponse {
 }
 
 export interface CryptoBalanceData {
-  balance_usdc: string;
-  wallet_address: string;
+  balanceUsdc: string;
+  walletAddress: string;
 }
 
 export interface CryptoBalanceResponse {
@@ -26,9 +26,9 @@ export interface CryptoBalanceResponse {
 }
 
 export interface CaasWalletData {
-  caas_wallet_id: string;
-  abstraction_address: string;
-  created_at: string;
+  caasWalletId: string;
+  abstractionAddress: string;
+  createdAt: string;
 }
 
 export interface CaasWalletResponse {
@@ -59,6 +59,26 @@ class AccountService extends BaseService {
 
   async getTransactionDetails(currency: string, id: string): Promise<{ success: boolean; data: any }> {
     const response = await this.api.get(`/accounts/${currency}/transactions/${id}`);
+    return response.data;
+  }
+
+  async getFiatWalletDetail(currency: string): Promise<{ success: boolean; data: any }> {
+    const response = await this.api.get(`/wallets/fiat/${currency}`);
+    return response.data;
+  }
+
+  async getFiatWalletTransactions(currency: string): Promise<{ success: boolean; data: any[] }> {
+    const response = await this.api.get(`/wallets/fiat/${currency}/transactions`);
+    return response.data;
+  }
+
+  async getStablecoinWalletDetail(symbol: string): Promise<{ success: boolean; data: any }> {
+    const response = await this.api.get(`/wallets/stablecoin/${symbol}`);
+    return response.data;
+  }
+
+  async getStablecoinWalletTransactions(symbol: string): Promise<{ success: boolean; data: any[] }> {
+    const response = await this.api.get(`/wallets/stablecoin/${symbol}/transactions`);
     return response.data;
   }
 }

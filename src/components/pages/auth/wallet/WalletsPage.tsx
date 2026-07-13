@@ -21,6 +21,11 @@ export interface Wallet {
     rawBalance: number;
     accountNumber?: string;
     walletAddress?: string;
+    iban?: string;
+    bic?: string;
+    routingNumber?: string;
+    swiftCode?: string;
+    bankName?: string;
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
@@ -72,13 +77,13 @@ const WalletsPage: React.FC = () => {
     // Map stablecoin wallet
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         const d = cryptoQuery.data.data;
-        const balNum = parseFloat(d.balance_usdc || '0');
+        const balNum = parseFloat(d.balanceUsdc || '0');
         walletsList.push({
             id: 'usdc',
             name: CURRENCY_NAMES.USDC,
             code: 'USDC',
             type: 'stablecoin',
-            balance: formatBalance(d.balance_usdc, 'USDC'),
+            balance: formatBalance(d.balanceUsdc, 'USDC'),
             rawBalance: balNum,
         });
     }
@@ -151,14 +156,14 @@ const WalletsPage: React.FC = () => {
                         <ArrowDownLeft className="h-4.5 w-4.5 text-emerald-400" />
                         <span>Receive</span>
                     </button>
-                    <Button
+                    {/* <Button
                         onClick={handleCreateWallet}
                         variant="primary"
                         className="rounded-full h-[40px] px-5 text-xs font-bold font-sans shadow-lg shadow-primary-500/10 active:scale-95 transition-all"
                         leftIcon={<Plus className="h-4.5 w-4.5" />}
                     >
                         Create Wallet
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
 

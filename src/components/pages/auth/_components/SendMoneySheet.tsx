@@ -128,9 +128,9 @@ export const SendMoneySheet: React.FC = () => {
             name: CURRENCY_NAMES.USDC,
             code: 'USDC',
             type: 'stablecoin',
-            balance: formatBalance(d.balance_usdc, 'USDC'),
-            rawBalance: parseFloat(d.balance_usdc || '0'),
-            walletAddress: d.wallet_address,
+            balance: formatBalance(d.balanceUsdc, 'USDC'),
+            rawBalance: parseFloat(d.balanceUsdc || '0'),
+            walletAddress: d.walletAddress,
         });
     }
 
@@ -144,7 +144,7 @@ export const SendMoneySheet: React.FC = () => {
                 type: 'fiat',
                 balance: formatBalance(acc.balance, acc.currency),
                 rawBalance: parseFloat(acc.balance || '0'),
-                accountNumber: acc.account_number,
+                accountNumber: acc.accountNumber,
             });
         });
     }
@@ -210,7 +210,7 @@ export const SendMoneySheet: React.FC = () => {
 
     // Mutation to preview / create quote for bank withdrawal
     const quoteMutation = useMutation({
-        mutationFn: (payload: { amount: number; currency: string }) => withdrawalService.createWithdrawalQuote(payload),
+        mutationFn: (payload: { amount: number; currency: string; source_currency?: string }) => withdrawalService.createWithdrawalQuote(payload),
         onSuccess: (res) => {
             if (res?.success && res?.data) {
                 setQuoteDetails({
@@ -233,9 +233,11 @@ export const SendMoneySheet: React.FC = () => {
 
         // Fetch rates preview if it is a standard wire/bank withdrawal (not crypto and not mobile money and not internal)
         if (!isCrypto && !isMobileMoney && !isInternal) {
+            const destCurrency = recipientType === 'saved' ? activeBeneficiary?.currency : activeWallet.code;
             quoteMutation.mutate({
                 amount: parseFloat(amount),
-                currency: activeWallet.code
+                currency: destCurrency,
+                source_currency: activeWallet.code
             });
         } else {
             setStep(2);
@@ -263,7 +265,7 @@ export const SendMoneySheet: React.FC = () => {
 
     // Payout and transfer mutations
     const sendCryptoMutation = useMutation({
-        mutationFn: (payload: { receiver_phone: string; amount: string }) => transferService.sendCrypto(payload),
+        mutationFn: (payload: { receiver_phone: string; amount: string; token: 'USDC' | 'USDT' }) => transferService.sendCrypto(payload),
         onSuccess: (data) => {
             if (data?.success && data?.data) {
                 setTxRef(data.data.reference || data.data.transaction_hash || 'TXN-OK');
@@ -284,7 +286,7 @@ export const SendMoneySheet: React.FC = () => {
     });
 
     const withdrawMutation = useMutation({
-        mutationFn: (payload: { amount: number; currency: string; beneficiaryId: string }) =>
+        mutationFn: (payload: { amount: number; currency: string; beneficiaryId: string; source_currency?: string }) =>
             withdrawalService.initiateWithdrawal(payload),
         onSuccess: (data) => {
             if (data?.success && data?.data) {
@@ -339,6 +341,7 @@ export const SendMoneySheet: React.FC = () => {
             sendCryptoMutation.mutate({
                 receiver_phone: cryptoAddress,
                 amount: amount,
+                token: activeWallet.code as 'USDC' | 'USDT',
             });
         } else if (isMobileMoney) {
             const phoneVal = recipientType === 'saved' ? activeBeneficiary?.accountNumber : accountNumber;
@@ -385,7 +388,8 @@ export const SendMoneySheet: React.FC = () => {
             withdrawMutation.mutate({
                 amount: parseFloat(amount),
                 currency: activeWallet.code,
-                beneficiaryId
+                beneficiaryId,
+                source_currency: activeWallet.code
             });
         }
     };
@@ -435,6 +439,14 @@ export const SendMoneySheet: React.FC = () => {
                                     </div>
                                     <ChevronDown className="h-4 w-4 text-slate-500" />
                                 </div>
+
+                                 {/* Overlay to close dropdown when clicking outside */}
+                                {isDropdownOpen && (
+                                    <div 
+                                        className="fixed inset-0 z-20" 
+                                        onClick={() => setIsDropdownOpen(false)} 
+                                    />
+                                )}
 
                                 {/* Dropdown FROM selections */}
                                 {isDropdownOpen && (

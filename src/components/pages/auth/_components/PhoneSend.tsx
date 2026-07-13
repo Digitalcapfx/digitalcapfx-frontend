@@ -29,7 +29,7 @@ const PhoneSend: React.FC = () => {
 
     return (
         <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 text-left shadow-xl space-y-6">
-            
+
             {/* Header banner */}
             <div className="flex justify-between items-center select-none pb-4 border-b border-white/5">
                 <div className="flex items-center space-x-3">
@@ -48,8 +48,8 @@ const PhoneSend: React.FC = () => {
             </div>
 
             {/* Number input form */}
-            <form onSubmit={handleSend} className="space-y-4 max-w-xl">
-                <PhoneInput 
+            <form onSubmit={handleSend} className="space-y-4">
+                <PhoneInput
                     label="Who are you sending to?"
                     value={phoneNumber}
                     onChange={(val) => {
@@ -65,7 +65,7 @@ const PhoneSend: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-550 uppercase tracking-widest block">Recent</span>
                     <div className="flex items-center space-x-3">
                         {RECENT_RECIPIENTS.map((rec) => (
-                            <button 
+                            <button
                                 key={rec.name}
                                 type="button"
                                 onClick={() => {

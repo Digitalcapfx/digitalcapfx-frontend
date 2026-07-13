@@ -63,12 +63,12 @@ const WalletCarousel: React.FC = () => {
     // Push USDC if loaded
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         const d = cryptoQuery.data.data;
-        const addr = d.wallet_address || '';
+        const addr = d.walletAddress || '';
         const shortAddr = addr ? addr.slice(-4) : 'SCW';
         wallets.push({
             currency: 'USDC',
             cardNum: shortAddr,
-            amount: formatBalance(d.balance_usdc, 'USDC'),
+            amount: formatBalance(d.balanceUsdc, 'USDC'),
             bg: getCardBg('USDC'),
         });
     }
@@ -76,7 +76,7 @@ const WalletCarousel: React.FC = () => {
     // Push fiat accounts
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
         fiatQuery.data.data.forEach((acc) => {
-            const num = acc.account_number || '';
+            const num = acc.accountNumber || '';
             const shortNum = num ? num.slice(-4) : 'DFX';
             wallets.push({
                 currency: acc.currency,
@@ -95,7 +95,7 @@ const WalletCarousel: React.FC = () => {
             <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block select-none">
                 My Wallets
             </span>
-            
+
             {isLoading && wallets.length === 0 ? (
                 <div className="flex space-x-4 pb-2 overflow-x-auto scrollbar-none">
                     {[1, 2, 3].map((idx) => (
@@ -103,16 +103,16 @@ const WalletCarousel: React.FC = () => {
                     ))}
                 </div>
             ) : (
-                <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-none select-none">
+                <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-none select-none flex-wrap gap-4">
                     {wallets.map((card) => (
-                        <div 
+                        <div
                             key={card.currency}
                             onClick={() => {
                                 setBackPath('/dashboard');
                                 router.push(`/wallets/${card.currency.toLowerCase()}`);
                             }}
                             className={cn(
-                                "w-[200px] h-[130px] rounded-2xl p-5 border flex flex-col justify-between shrink-0 hover:scale-[1.02] transition duration-200 cursor-pointer shadow-lg group",
+                                "w-[200px] h-[130px] rounded-2xl p-5 flex-1 border flex flex-col justify-between shrink-0 hover:scale-[1.02] transition duration-200 cursor-pointer shadow-lg group",
                                 card.bg
                             )}
                         >
@@ -121,7 +121,7 @@ const WalletCarousel: React.FC = () => {
                                     <CurrencyIcon code={card.currency} size="sm" className="border-none shadow-none bg-white/10" />
                                     <span className="text-sm font-bold tracking-wider text-white group-hover:text-white/95">{card.currency}</span>
                                 </div>
-                                <span className="text-[10px] opacity-60 font-mono text-white pt-1">**** {card.cardNum}</span>
+                                <span className="text-[10px] opacity-60 font-mono text-white pt-1 whitespace-nowrap">**** {card.cardNum}</span>
                             </div>
                             <div className="text-xl font-extrabold font-satoshi text-white tracking-tight">
                                 {card.amount}

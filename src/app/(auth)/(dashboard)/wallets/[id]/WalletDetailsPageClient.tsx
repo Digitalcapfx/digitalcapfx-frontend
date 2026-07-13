@@ -39,48 +39,46 @@ const formatBalance = (amount: string | number, currency: string) => {
 
 export default function WalletDetailsPageClient({ id }: WalletDetailsPageClientProps) {
     const router = useRouter();
-
-    // React Query Queries
-    const fiatQuery = useQuery({
-        queryKey: ['accounts'],
-        queryFn: () => accountService.getAccounts(),
-    });
-
-    const cryptoQuery = useQuery({
-        queryKey: ['cryptoBalances'],
-        queryFn: () => accountService.getCryptoBalances(),
-    });
-
-    const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading;
-
-    // Find dynamic wallet details
-    let activeWallet: Wallet | null = null;
     const searchId = id.toUpperCase();
+    const isCrypto = searchId === 'USDC';
 
-    if (searchId === 'USDC' && cryptoQuery.data?.success && cryptoQuery.data.data) {
-        const d = cryptoQuery.data.data;
+    // Fetch live wallet header details from specific fiat/stablecoin endpoint
+    const detailQuery = useQuery({
+        queryKey: ['walletDetail', searchId],
+        queryFn: () => isCrypto
+            ? accountService.getStablecoinWalletDetail('USDC')
+            : accountService.getFiatWalletDetail(searchId),
+    });
+
+    // Fetch live transactions for specific fiat/stablecoin endpoint
+    const txQuery = useQuery({
+        queryKey: ['walletTransactions', searchId],
+        queryFn: () => isCrypto
+            ? accountService.getStablecoinWalletTransactions('USDC')
+            : accountService.getFiatWalletTransactions(searchId),
+    });
+
+    const isLoading = detailQuery.isLoading || txQuery.isLoading;
+
+    let activeWallet: Wallet | null = null;
+    if (detailQuery.data?.success && detailQuery.data.data) {
+        const d = detailQuery.data.data;
+        const curCode = (isCrypto ? 'USDC' : d.currency) || searchId;
         activeWallet = {
-            id: 'usdc',
-            name: CURRENCY_NAMES.USDC,
-            code: 'USDC',
-            type: 'stablecoin',
-            balance: formatBalance(d.balance_usdc, 'USDC'),
-            rawBalance: parseFloat(d.balance_usdc || '0'),
-            walletAddress: d.wallet_address,
+            id: curCode.toLowerCase(),
+            name: CURRENCY_NAMES[curCode] || curCode,
+            code: curCode,
+            type: isCrypto ? 'stablecoin' : 'fiat',
+            balance: formatBalance(d.balance || d.balanceUsdc || '0', curCode),
+            rawBalance: parseFloat(d.balance || d.balanceUsdc || '0'),
+            walletAddress: d.walletAddress,
+            accountNumber: d.accountNumber,
+            iban: d.iban,
+            bic: d.bic,
+            routingNumber: d.routingNumber,
+            swiftCode: d.swiftCode || d.bic,
+            bankName: d.bankName,
         };
-    } else if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
-        const acc = fiatQuery.data.data.find(a => a.currency.toUpperCase() === searchId);
-        if (acc) {
-            activeWallet = {
-                id: acc.currency.toLowerCase(),
-                name: CURRENCY_NAMES[acc.currency] || acc.currency,
-                code: acc.currency,
-                type: 'fiat',
-                balance: formatBalance(acc.balance, acc.currency),
-                rawBalance: parseFloat(acc.balance || '0'),
-                accountNumber: acc.account_number,
-            };
-        }
     }
 
     const onBack = () => {
@@ -92,7 +90,7 @@ export default function WalletDetailsPageClient({ id }: WalletDetailsPageClientP
         return (
             <div className="text-center py-16 min-h-[400px] flex flex-col items-center justify-center space-y-4">
                 <div className="w-10 h-10 border-4 border-t-primary-500 border-white/10 rounded-full animate-spin"></div>
-                <p className="text-xs text-slate-500 font-sans">Retrieving wallet credentials...</p>
+                <p className="text-xs text-slate-500 font-sans">Retrieving wallet details...</p>
             </div>
         );
     }
@@ -101,7 +99,7 @@ export default function WalletDetailsPageClient({ id }: WalletDetailsPageClientP
         return (
             <div className="text-center py-16 min-h-[400px] flex flex-col items-center justify-center space-y-4">
                 <h3 className="text-lg font-bold text-white font-satoshi">Wallet not found</h3>
-                <p className="text-xs text-slate-500 font-sans">The wallet currency code you requested could not be loaded.</p>
+                <p className="text-xs text-slate-550 font-sans">The wallet currency code you requested could not be loaded.</p>
                 <button
                     onClick={() => router.push('/wallets')}
                     className="text-xs font-bold text-primary-400 hover:text-primary-350 hover:underline bg-[#0C1224] border border-white/5 px-4 py-2 rounded-xl cursor-pointer"
@@ -112,9 +110,14 @@ export default function WalletDetailsPageClient({ id }: WalletDetailsPageClientP
         );
     }
 
+    const transactionsList = txQuery.data?.success && Array.isArray(txQuery.data.data)
+        ? txQuery.data.data
+        : [];
+
     return (
         <WalletDetails
             wallet={activeWallet}
+            initialTransactions={transactionsList}
             onBack={onBack}
         />
     );

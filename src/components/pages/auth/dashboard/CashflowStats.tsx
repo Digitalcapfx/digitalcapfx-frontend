@@ -7,7 +7,8 @@ import { insightsService } from '@/services/insights.service'
 import { cn } from '@/lib/utils'
 
 const formatCurrency = (val: number) => {
-    return '$' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const value = val ?? 0;
+    return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 const CashflowStats: React.FC = () => {

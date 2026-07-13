@@ -1,14 +1,14 @@
 'use client'
 
 import React, { useState } from 'react'
-import { 
-    Clock, 
-    ArrowUpRight, 
-    ArrowDownLeft, 
-    RefreshCw, 
-    LogIn, 
-    Shield, 
-    CreditCard, 
+import {
+    Clock,
+    ArrowUpRight,
+    ArrowDownLeft,
+    RefreshCw,
+    LogIn,
+    Shield,
+    CreditCard,
     Search,
     AlertCircle
 } from 'lucide-react'
@@ -68,11 +68,11 @@ export const ActivityPage: React.FC = () => {
 
     // Filter list
     const filteredFeed = feedList.filter((item) => {
-        const matchesSearch = 
+        const matchesSearch =
             item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
             item.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
             item.type.toLowerCase().includes(searchQuery.toLowerCase());
-        
+
         const matchesType = selectedType === 'all' || item.type.toLowerCase() === selectedType.toLowerCase();
 
         return matchesSearch && matchesType;
@@ -81,7 +81,7 @@ export const ActivityPage: React.FC = () => {
     const categories = ['all', 'transfer', 'deposit', 'exchange', 'login', 'security', 'card'];
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto px-4 md:px-8 py-6 text-left">
+        <div className="space-y-6 mx-auto px-4 md:px-8 py-6 text-left">
             <div>
                 <h1 className="font-satoshi font-black text-2xl text-white tracking-tight">
                     Activity History
@@ -95,7 +95,7 @@ export const ActivityPage: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="relative max-w-xs w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-550" />
-                    <input 
+                    <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -109,11 +109,10 @@ export const ActivityPage: React.FC = () => {
                         <button
                             key={cat}
                             onClick={() => setSelectedType(cat)}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider select-none cursor-pointer transition duration-200 border border-white/5 ${
-                                selectedType === cat
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider select-none cursor-pointer transition duration-200 border border-white/5 ${selectedType === cat
                                     ? 'bg-primary-500 text-white shadow-md shadow-primary-500/10'
                                     : 'bg-[#0C1224] text-slate-400 hover:text-white'
-                            }`}
+                                }`}
                         >
                             {cat}
                         </button>
@@ -132,7 +131,7 @@ export const ActivityPage: React.FC = () => {
                     <div className="py-16 flex flex-col items-center justify-center space-y-3 text-center">
                         <AlertCircle className="h-8 w-8 text-rose-500" />
                         <span className="text-xs text-rose-455 font-bold">Failed to load system activity.</span>
-                        <button 
+                        <button
                             onClick={() => refetch()}
                             className="text-xs font-bold text-primary-400 hover:underline cursor-pointer"
                         >

@@ -2,8 +2,8 @@ import { BaseService } from './base.service';
 
 export interface ExchangeRateData {
   rate: number;
-  source_currency: string;
-  target_currency: string;
+  from: string;
+  to: string;
 }
 
 export interface ExchangeRateResponse {
@@ -12,19 +12,19 @@ export interface ExchangeRateResponse {
 }
 
 export interface QuoteRequest {
-  source_currency: string;
-  target_currency: string;
+  from: string;
+  to: string;
   amount: number;
-  is_source: boolean;
+  side: 'SELL' | 'BUY';
 }
 
 export interface QuoteData {
-  quote_id: string;
+  quoteId: string;
   rate: number;
-  source_amount: string;
-  target_amount: string;
-  fee: string;
-  expires_at: string;
+  sourceAmount: number;
+  targetAmount: number;
+  fee: number;
+  expiresAt: string;
 }
 
 export interface QuoteResponse {
@@ -34,22 +34,26 @@ export interface QuoteResponse {
 }
 
 export interface ExecuteExchangeRequest {
-  quote_id: string;
+  from: string;
+  to: string;
+  amount: number;
+  side: 'SELL' | 'BUY';
+  quoteId?: string;
 }
 
 export interface ExecuteExchangeResponse {
   success: boolean;
   data?: {
-    transaction_id: string;
+    transactionId: string;
     status: string;
   };
   error?: any;
 }
 
 class ExchangeService extends BaseService {
-  async getRate(source: string, target: string): Promise<ExchangeRateResponse> {
+  async getRate(from: string, to: string): Promise<ExchangeRateResponse> {
     const response = await this.api.get('/exchange/rate', {
-      params: { source, target },
+      params: { from, to },
     });
     return response.data;
   }

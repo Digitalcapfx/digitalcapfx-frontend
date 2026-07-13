@@ -1,14 +1,14 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { 
-    ArrowUpDown, 
-    TrendingUp, 
-    TrendingDown, 
-    Check, 
-    ChevronDown, 
-    Info, 
-    X, 
+import {
+    ArrowUpDown,
+    TrendingUp,
+    TrendingDown,
+    Check,
+    ChevronDown,
+    Info,
+    X,
     CheckCircle2,
     RefreshCw
 } from 'lucide-react'
@@ -65,19 +65,19 @@ const LIVE_RATES = [
 export const ExchangePage: React.FC = () => {
     const queryClient = useQueryClient();
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-    
+
     // Core selection states
     const [fromWalletId, setFromWalletId] = useState<string>('usd');
     const [toWalletId, setToWalletId] = useState<string>('eur');
-    
+
     // Dropdown open control
     const [isFromDropdownOpen, setIsFromDropdownOpen] = useState(false);
     const [isToDropdownOpen, setIsToDropdownOpen] = useState(false);
-    
+
     // Amount values
     const [fromAmount, setFromAmount] = useState('100');
     const [toAmount, setToAmount] = useState('');
-    
+
     // Live countdown timer for preview quote
     const [timer, setTimer] = useState(30);
     const [rateMultiplier, setRateMultiplier] = useState(1.0);
@@ -113,8 +113,8 @@ export const ExchangePage: React.FC = () => {
             name: CURRENCY_NAMES.USDC,
             code: 'USDC',
             type: 'stablecoin',
-            balance: formatBalance(d.balance_usdc, 'USDC'),
-            rawBalance: parseFloat(d.balance_usdc || '0'),
+            balance: formatBalance(d.balanceUsdc, 'USDC'),
+            rawBalance: parseFloat(d.balanceUsdc || '0'),
         });
     }
 
@@ -226,10 +226,10 @@ export const ExchangePage: React.FC = () => {
     // Mutations
     const createQuoteMutation = useMutation({
         mutationFn: () => exchangeService.createQuote({
-            source_currency: fromWallet.code,
-            target_currency: toWallet.code,
+            from: fromWallet.code,
+            to: toWallet.code,
             amount: parseFloat(fromAmount),
-            is_source: true,
+            side: 'SELL',
         }),
         onSuccess: (data) => {
             if (data?.success && data.data) {
@@ -248,7 +248,13 @@ export const ExchangePage: React.FC = () => {
     });
 
     const executeExchangeMutation = useMutation({
-        mutationFn: (quoteId: string) => exchangeService.executeExchange({ quote_id: quoteId }),
+        mutationFn: (quoteId: string) => exchangeService.executeExchange({
+            from: fromWallet.code,
+            to: toWallet.code,
+            amount: parseFloat(fromAmount),
+            side: 'SELL',
+            quoteId: quoteId,
+        }),
         onSuccess: (data) => {
             if (data?.success) {
                 setIsConfirmOpen(false);
@@ -282,8 +288,8 @@ export const ExchangePage: React.FC = () => {
     };
 
     const handleConfirmExchange = () => {
-        if (confirmQuote?.quote_id) {
-            executeExchangeMutation.mutate(confirmQuote.quote_id);
+        if (confirmQuote?.quoteId) {
+            executeExchangeMutation.mutate(confirmQuote.quoteId);
         }
     };
 
@@ -299,8 +305,8 @@ export const ExchangePage: React.FC = () => {
         ? exchangeHistoryQuery.data.data
         : [];
 
-    const recentExchanges = rawHistory.length > 0 
-        ? rawHistory.slice(0, 5) 
+    const recentExchanges = rawHistory.length > 0
+        ? rawHistory.slice(0, 5)
         : [
             { id: 'mock-1', fromCode: 'USD', toCode: 'EUR', fromVal: '$100', toVal: '€92.40', date: 'Just now', rate: '0.9240' },
             { id: 'mock-2', fromCode: 'EUR', toCode: 'GBP', fromVal: '€500', toVal: '£420.50', date: 'Yesterday', rate: '0.8410' },
@@ -319,7 +325,7 @@ export const ExchangePage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            
+
             <div className="space-y-6 text-left">
                 {/* Header Area */}
                 <div className="space-y-1 select-none">
@@ -333,20 +339,20 @@ export const ExchangePage: React.FC = () => {
 
                 {/* Layout Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-                    
+
                     {/* Left Column Form (3/5 width) */}
                     <form onSubmit={handleConvert} className="lg:col-span-3 space-y-5">
-                        
+
                         <div className="bg-[#080D1E] border border-white/5 rounded-3xl p-6.5 relative space-y-5 shadow-2xl">
-                            
+
                             {/* FROM Input Card */}
                             <div className="space-y-2 text-left">
                                 <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">From</span>
                                 <div className="relative">
-                                    <div 
+                                    <div
                                         className="bg-[#0C1224] border border-white/10 rounded-2xl p-4 flex items-center justify-between transition focus-within:border-primary-500/50"
                                     >
-                                        <div 
+                                        <div
                                             onClick={() => setIsFromDropdownOpen(!isFromDropdownOpen)}
                                             className="flex items-center space-x-2.5 cursor-pointer select-none"
                                         >
@@ -358,7 +364,7 @@ export const ExchangePage: React.FC = () => {
                                         </div>
 
                                         <div className="flex flex-col items-end shrink-0">
-                                            <input 
+                                            <input
                                                 type="number"
                                                 value={fromAmount}
                                                 onChange={(e) => setFromAmount(e.target.value)}
@@ -367,6 +373,14 @@ export const ExchangePage: React.FC = () => {
                                             />
                                         </div>
                                     </div>
+
+                                    {/* Overlay to close dropdown when clicking outside */}
+                                    {isFromDropdownOpen && (
+                                        <div 
+                                            className="fixed inset-0 z-20" 
+                                            onClick={() => setIsFromDropdownOpen(false)} 
+                                        />
+                                    )}
 
                                     {/* Dropdown Menu FROM */}
                                     {isFromDropdownOpen && (
@@ -398,7 +412,7 @@ export const ExchangePage: React.FC = () => {
                                 </div>
                                 <div className="flex justify-between items-center text-[10px] text-slate-555 font-bold select-none px-1">
                                     <span>Wallet balance: {fromWallet.balance}</span>
-                                    <button 
+                                    <button
                                         type="button"
                                         onClick={() => {
                                             const num = fromWallet.rawBalance;
@@ -413,7 +427,7 @@ export const ExchangePage: React.FC = () => {
 
                             {/* Center Swap Buttons */}
                             <div className="absolute left-1/2 top-[108px] -translate-x-1/2 -translate-y-1/2 z-10">
-                                <button 
+                                <button
                                     type="button"
                                     onClick={handleSwap}
                                     className="w-9 h-9 rounded-full bg-[#0C1224] border border-white/10 hover:border-white/20 text-slate-400 hover:text-white flex items-center justify-center transition duration-200 cursor-pointer shadow-lg active:scale-90"
@@ -426,10 +440,10 @@ export const ExchangePage: React.FC = () => {
                             <div className="space-y-2 text-left">
                                 <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">To</span>
                                 <div className="relative">
-                                    <div 
+                                    <div
                                         className="bg-[#0C1224] border border-white/10 rounded-2xl p-4 flex items-center justify-between transition focus-within:border-primary-500/50"
                                     >
-                                        <div 
+                                        <div
                                             onClick={() => setIsToDropdownOpen(!isToDropdownOpen)}
                                             className="flex items-center space-x-2.5 cursor-pointer select-none"
                                         >
@@ -446,6 +460,14 @@ export const ExchangePage: React.FC = () => {
                                             </span>
                                         </div>
                                     </div>
+
+                                    {/* Overlay to close dropdown when clicking outside */}
+                                    {isToDropdownOpen && (
+                                        <div 
+                                            className="fixed inset-0 z-20" 
+                                            onClick={() => setIsToDropdownOpen(false)} 
+                                        />
+                                    )}
 
                                     {/* Dropdown Menu TO */}
                                     {isToDropdownOpen && (
@@ -537,7 +559,7 @@ export const ExchangePage: React.FC = () => {
 
                     {/* Right Column Rates/Conversions (2/5 width) */}
                     <div className="lg:col-span-2 space-y-6">
-                        
+
                         {/* Live Rates panel */}
                         <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 shadow-xl space-y-4">
                             <div className="flex justify-between items-center select-none pb-1 border-b border-white/[0.03]">
@@ -576,15 +598,15 @@ export const ExchangePage: React.FC = () => {
                                     <div key={conv.id} className="flex justify-between items-center text-xs">
                                         <div className="flex items-center space-x-2.5 min-w-0">
                                             <div className="flex items-center -space-x-1.5 shrink-0">
-                                                <CurrencyIcon code={conv.fromCode || conv.source_currency || 'USD'} size="sm" />
-                                                <CurrencyIcon code={conv.toCode || conv.target_currency || 'EUR'} size="sm" />
+                                                <CurrencyIcon code={conv.fromCode || conv.sourceCurrency || 'USD'} size="sm" />
+                                                <CurrencyIcon code={conv.toCode || conv.targetCurrency || 'EUR'} size="sm" />
                                             </div>
                                             <div className="text-left">
                                                 <span className="font-bold text-white block leading-tight">
-                                                    {conv.fromVal || formatBalance(conv.source_amount || '0', conv.source_currency || 'USD')} → {conv.toVal || formatBalance(conv.target_amount || '0', conv.target_currency || 'EUR')}
+                                                    {conv.fromVal || formatBalance(conv.sourceAmount || '0', conv.sourceCurrency || 'USD')} → {conv.toVal || formatBalance(conv.targetAmount || '0', conv.targetCurrency || 'EUR')}
                                                 </span>
                                                 <span className="text-[9px] text-slate-500 font-bold block mt-0.5 select-none">
-                                                    {conv.date || new Date(conv.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • Rate {conv.rate}
+                                                    {conv.date || (conv.createdAt ? new Date(conv.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A')} • Rate {conv.rate}
                                                 </span>
                                             </div>
                                         </div>
@@ -631,13 +653,13 @@ export const ExchangePage: React.FC = () => {
                                 <div className="flex justify-between items-center">
                                     <span className="text-slate-400 font-semibold">You Sell</span>
                                     <span className="font-extrabold text-white font-mono text-sm">
-                                        {formatBalance(confirmQuote.source_amount, fromWallet.code)}
+                                        {formatBalance(confirmQuote.sourceAmount, fromWallet.code)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-slate-400 font-semibold">You Receive</span>
                                     <span className="font-extrabold text-emerald-400 font-mono text-sm">
-                                        {formatBalance(confirmQuote.target_amount, toWallet.code)}
+                                        {formatBalance(confirmQuote.targetAmount, toWallet.code)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
@@ -688,7 +710,7 @@ export const ExchangePage: React.FC = () => {
                 onClose={handleCloseSuccess}
             >
                 <div className="space-y-6 flex flex-col justify-between h-full text-center">
-                    
+
                     {/* Success Header */}
                     <div className="space-y-6 select-none pt-8">
                         <div className="relative inline-flex items-center justify-center">
@@ -702,16 +724,16 @@ export const ExchangePage: React.FC = () => {
                             <span className="text-[10px] font-bold text-emerald-400 tracking-[0.2em] uppercase font-mono block">
                                 Exchange Successful
                             </span>
-                            
+
                             <div className="flex items-center justify-center space-x-2 text-2xl font-black text-white font-satoshi">
                                 <CurrencyIcon code={fromWallet.code} size="sm" />
                                 <span>{parseFloat(fromAmount).toLocaleString()} {fromWallet.code}</span>
                             </div>
-                            
+
                             <span className="text-[9px] font-bold text-slate-555 uppercase tracking-widest block py-0.5 select-none">
                                 Exchanged to
                             </span>
-                            
+
                             <div className="flex items-center justify-center space-x-2 text-2.5xl font-black text-emerald-400 font-satoshi">
                                 <CurrencyIcon code={toWallet.code} size="sm" />
                                 <span>{parseFloat(toAmount).toLocaleString()} {toWallet.code}</span>
@@ -752,7 +774,7 @@ export const ExchangePage: React.FC = () => {
                     >
                         Done
                     </button>
-                    
+
                 </div>
             </Sheet>
 

@@ -59,6 +59,24 @@ export class SupportService extends BaseService {
 
   async getLinks(): Promise<LinksResponse> {
     const response = await this.api.get('/support/links');
+    if (response.data?.success && response.data?.data) {
+      const d = response.data.data;
+      const linksArray: SupportLink[] = Object.entries(d).map(([key, value]) => {
+        const id = key.replace(/_?url/i, '');
+        const name = id
+          .replace(/([A-Z])/g, ' $1')
+          .split(/[\s_]+/)
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+          .trim();
+        return {
+          id,
+          name,
+          url: String(value)
+        };
+      });
+      response.data.data = linksArray;
+    }
     return response.data;
   }
 

@@ -19,8 +19,6 @@ import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Wallet } from './WalletsPage'
 import { useTransactionStore } from '@/store/transactionStore'
 import { cn } from '@/lib/utils'
-import { useQuery } from '@tanstack/react-query'
-import { transferService } from '@/services/transfer.service'
 
 const formatBalance = (amount: string | number, currency: string) => {
     const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
@@ -88,6 +86,7 @@ const ActivityChart: React.FC = () => {
 
 interface WalletDetailsProps {
     wallet: Wallet;
+    initialTransactions?: any[];
     onBack: () => void;
 }
 
@@ -101,7 +100,7 @@ interface Transaction {
     status: 'completed' | 'failed';
 }
 
-const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, onBack }) => {
+const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactions = [], onBack }) => {
     const router = useRouter();
     const [revealDetails, setRevealDetails] = useState(false);
     const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -115,45 +114,38 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, onBack }) => {
     };
 
     // Bank Account details strings
-    const ibanValue = wallet.accountNumber || 'GB29 NMBK 8832 9012 3442 12';
-    const ibanMasked = wallet.accountNumber 
-        ? `${wallet.accountNumber.slice(0, 4)} **** **** **** **`
+    const rawIban = wallet.iban || wallet.accountNumber || '';
+    const ibanValue = rawIban || 'GB29 NMBK 8832 9012 3442 12';
+    const ibanMasked = rawIban 
+        ? `${rawIban.slice(0, 4)} **** **** **** **`
         : 'GB29 NMBK **** **** **** **';
-    const swiftValue = 'NWBKGB2L';
-    const routingValue = '021000021';
+    const swiftValue = wallet.swiftCode || wallet.bic || 'NWBKGB2L';
+    const routingValue = wallet.routingNumber || '021000021';
     const cryptoAddressValue = wallet.walletAddress || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
     const cryptoAddressMasked = wallet.walletAddress
         ? `${wallet.walletAddress.slice(0, 6)}...${wallet.walletAddress.slice(-5)}`
         : '0x71C7...8976F';
 
-    // React Query Activity Log
-    const activityQuery = useQuery({
-        queryKey: ['activity'],
-        queryFn: () => transferService.getActivity(),
-    });
-
     // Map and filter transactions for this wallet
-    const filteredTxs = (activityQuery.data?.success && Array.isArray(activityQuery.data.data))
-        ? activityQuery.data.data
-            .filter((tx) => tx.currency.toUpperCase() === wallet.code.toUpperCase())
-            .map((tx) => {
-                const isIncoming = tx.type.toLowerCase().includes('deposit') || 
-                                   tx.type.toLowerCase().includes('receive') || 
-                                   tx.type.toLowerCase().includes('fund') || 
-                                   (tx.type.toLowerCase() === 'exchange' && parseFloat(tx.amount) > 0);
-                
-                const amtFormatted = (isIncoming ? '+' : '-') + formatBalance(Math.abs(parseFloat(tx.amount)), wallet.code);
-                
-                return {
-                    id: tx.id,
-                    title: tx.description || `${tx.type} transaction`,
-                    subtitle: `${tx.type} • ${new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
-                    amount: amtFormatted,
-                    isIncoming,
-                    status: tx.status.toLowerCase() === 'completed' ? 'completed' as const : 'failed' as const,
-                };
-            })
-            .slice(0, 10)
+    const filteredTxs = Array.isArray(initialTransactions) && initialTransactions.length > 0
+        ? initialTransactions.map((tx) => {
+            const isIncoming = tx.type.toLowerCase().includes('deposit') || 
+                               tx.type.toLowerCase().includes('receive') || 
+                               tx.type.toLowerCase().includes('fund') || 
+                               (tx.type.toLowerCase() === 'exchange' && parseFloat(tx.amount) > 0);
+            
+            const amtFormatted = (isIncoming ? '+' : '-') + formatBalance(Math.abs(parseFloat(tx.amount)), wallet.code);
+            
+            return {
+                id: tx.id,
+                title: tx.description || `${tx.type} transaction`,
+                subtitle: `${tx.type} • ${new Date(tx.createdAt || tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+                amount: amtFormatted,
+                isIncoming,
+                status: tx.status?.toLowerCase() === 'completed' ? 'completed' as const : 'failed' as const,
+            };
+        })
+        .slice(0, 10)
         : [];
 
     const displayBalance = wallet.balance;
@@ -263,11 +255,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, onBack }) => {
 
                         {/* List items */}
                         <div className="space-y-4">
-                            {activityQuery.isLoading ? (
-                                <div className="text-center py-6 text-xs text-slate-500 font-sans">
-                                    Loading history...
-                                </div>
-                            ) : filteredTxs.length > 0 ? (
+                            {filteredTxs.length > 0 ? (
                                 filteredTxs.map((tx) => (
                                     <div key={tx.id} className="flex items-center justify-between py-1 border-b border-white/[0.03] last:border-b-0">
                                         <div className="flex items-center space-x-3.5 min-w-0">

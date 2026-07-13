@@ -48,12 +48,16 @@ export class AuthService extends BaseService {
   }
 
   async forgotPin(emailOrPhone: string) {
-    const response = await this.api.post('/auth/forgot-pin', { emailOrPhone });
+    const response = await this.api.post('/auth/forgot-pin', { email_or_phone: emailOrPhone });
     return response.data;
   }
 
   async resetPin(payload: { emailOrPhone: string; code: string; newPin: string }) {
-    const response = await this.api.post('/auth/reset-pin', payload);
+    const response = await this.api.post('/auth/reset-pin', {
+      email_or_phone: payload.emailOrPhone,
+      code: payload.code,
+      new_pin: payload.newPin
+    });
     return response.data;
   }
 

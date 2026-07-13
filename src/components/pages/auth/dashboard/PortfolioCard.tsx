@@ -29,7 +29,7 @@ const PortfolioCard: React.FC = () => {
 
     let totalUsd = 0;
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
-        totalUsd += parseFloat(cryptoQuery.data.data.balance_usdc || '0');
+        totalUsd += parseFloat(cryptoQuery.data.data.balanceUsdc || '0');
     }
 
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {

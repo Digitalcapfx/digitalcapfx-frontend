@@ -1,15 +1,15 @@
 'use client'
 
 import React, { useState } from 'react'
-import { 
-    HelpCircle, 
-    MessageSquare, 
-    Send, 
-    Plus, 
-    ChevronDown, 
-    ChevronUp, 
-    Loader2, 
-    AlertCircle, 
+import {
+    HelpCircle,
+    MessageSquare,
+    Send,
+    Plus,
+    ChevronDown,
+    ChevronUp,
+    Loader2,
+    AlertCircle,
     ExternalLink,
     Clock,
     User,
@@ -25,7 +25,7 @@ import { toast } from 'sonner'
 
 export const SupportPage: React.FC = () => {
     const queryClient = useQueryClient();
-    
+
     // Tab selector: 'faq' | 'tickets'
     const [activeTab, setActiveTab] = useState<'faq' | 'tickets'>('faq');
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -137,7 +137,7 @@ export const SupportPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto px-4 md:px-8 py-6 text-left">
+        <div className="space-y-6 mx-auto px-4 md:px-8 py-6 text-left">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="font-satoshi font-black text-2xl text-white tracking-tight">
@@ -178,7 +178,7 @@ export const SupportPage: React.FC = () => {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="relative flex-1">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-550" />
-                                <input 
+                                <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -241,8 +241,8 @@ export const SupportPage: React.FC = () => {
                         ) : (
                             <div className="space-y-3">
                                 {linksQuery.data?.success && Array.isArray(linksQuery.data.data) && linksQuery.data.data.map(link => (
-                                    <a 
-                                        key={link.id} 
+                                    <a
+                                        key={link.id}
                                         href={link.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
@@ -263,7 +263,7 @@ export const SupportPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
                     {/* Tickets List */}
                     <div className="space-y-4 flex flex-col h-full min-h-[500px]">
-                        <Button 
+                        <Button
                             onClick={() => setIsCreateOpen(true)}
                             className="w-full rounded-xl py-3 text-xs font-bold"
                             leftIcon={<Plus className="h-4 w-4" />}
@@ -337,7 +337,7 @@ export const SupportPage: React.FC = () => {
                                         activeTicket.messages.map((msg) => {
                                             const isAgent = msg.senderType === 'agent';
                                             return (
-                                                <div 
+                                                <div
                                                     key={msg.id}
                                                     className={cn(
                                                         "flex space-x-3.5 max-w-[85%]",
@@ -405,13 +405,13 @@ export const SupportPage: React.FC = () => {
             {isCreateOpen && (
                 <div className="fixed inset-0 bg-black/85 backdrop-blur-[8px] z-[999] flex items-center justify-center p-4 animate-in fade-in duration-200">
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6.5 max-w-sm w-full shadow-2xl relative space-y-5 text-left animate-in zoom-in-95 duration-200">
-                        <button 
-                            onClick={() => setIsCreateOpen(false)} 
+                        <button
+                            onClick={() => setIsCreateOpen(false)}
                             className="absolute top-4.5 right-4.5 p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/5 transition"
                         >
                             <X className="h-5 w-5" />
                         </button>
-                        
+
                         <div className="space-y-1">
                             <h4 className="font-satoshi font-black text-base text-white flex items-center space-x-2">
                                 <MessageSquare className="h-5 w-5 text-primary-400" />
@@ -425,7 +425,7 @@ export const SupportPage: React.FC = () => {
                         <form onSubmit={handleCreateSubmit} className="space-y-4">
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Subject*</label>
-                                <input 
+                                <input
                                     type="text"
                                     required
                                     value={newTicket.subject}
@@ -437,7 +437,7 @@ export const SupportPage: React.FC = () => {
 
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Category</label>
-                                <select 
+                                <select
                                     value={newTicket.category}
                                     onChange={(e) => setNewTicket({ ...newTicket, category: e.target.value })}
                                     className="bg-[#0C1224] border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none w-full cursor-pointer"

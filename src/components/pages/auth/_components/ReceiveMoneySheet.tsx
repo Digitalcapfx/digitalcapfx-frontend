@@ -93,9 +93,9 @@ export const ReceiveMoneySheet: React.FC = () => {
             name: CURRENCY_NAMES.USDC,
             code: 'USDC',
             type: 'stablecoin',
-            balance: formatBalance(d.balance_usdc, 'USDC'),
-            rawBalance: parseFloat(d.balance_usdc || '0'),
-            walletAddress: d.wallet_address,
+            balance: formatBalance(d.balanceUsdc, 'USDC'),
+            rawBalance: parseFloat(d.balanceUsdc || '0'),
+            walletAddress: d.walletAddress,
         });
     }
 
@@ -109,7 +109,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                 type: 'fiat',
                 balance: formatBalance(acc.balance, acc.currency),
                 rawBalance: parseFloat(acc.balance || '0'),
-                accountNumber: acc.account_number,
+                accountNumber: acc.accountNumber,
             });
         });
     }
@@ -164,7 +164,7 @@ export const ReceiveMoneySheet: React.FC = () => {
 
     // MoMo Fund Mutation
     const fundMutation = useMutation({
-        mutationFn: (payload: { amount: number; currency: 'XOF' | 'XAF'; operator: string; phone: string }) => transferService.fundAccount(payload),
+        mutationFn: (payload: { amount: number; currency: 'XOF' | 'XAF'; operator: string; phone: string; token?: 'USDC' | 'USDT' }) => transferService.fundAccount(payload),
         onSuccess: (data) => {
             if (data?.success) {
                 setDepositSuccess(true);
@@ -189,6 +189,7 @@ export const ReceiveMoneySheet: React.FC = () => {
             currency: activeWallet.code as 'XOF' | 'XAF',
             operator,
             phone,
+            token: 'USDC',
         });
     };
 
@@ -221,6 +222,14 @@ export const ReceiveMoneySheet: React.FC = () => {
                                 </div>
                                 <ChevronDown className="h-4 w-4 text-slate-500" />
                             </div>
+
+                            {/* Overlay to close dropdown when clicking outside */}
+                            {isDropdownOpen && (
+                                <div 
+                                    className="fixed inset-0 z-20" 
+                                    onClick={() => setIsDropdownOpen(false)} 
+                                />
+                            )}
 
                             {/* Dropdown Options */}
                             {isDropdownOpen && (

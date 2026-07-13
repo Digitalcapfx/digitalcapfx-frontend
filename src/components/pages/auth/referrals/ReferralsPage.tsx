@@ -1,16 +1,16 @@
 'use client'
 
 import React from 'react'
-import { 
-    Gift, 
-    Users, 
-    Coins, 
-    Copy, 
-    Check, 
-    Share2, 
-    TrendingUp, 
-    RefreshCw, 
-    AlertCircle 
+import {
+    Gift,
+    Users,
+    Coins,
+    Copy,
+    Check,
+    Share2,
+    TrendingUp,
+    RefreshCw,
+    AlertCircle
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { referralService } from '@/services/referral.service'
@@ -49,7 +49,7 @@ export const ReferralsPage: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto px-4 md:px-8 py-6 text-left">
+        <div className="space-y-6 mx-auto px-4 md:px-8 py-6 text-left">
             <div>
                 <h1 className="font-satoshi font-black text-2xl text-white tracking-tight">
                     Referrals & Rewards
@@ -104,7 +104,7 @@ export const ReferralsPage: React.FC = () => {
             {/* Invite Program Box */}
             <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 md:p-8 shadow-xl flex flex-col lg:flex-row items-center justify-between gap-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-80 h-80 bg-primary-500/5 rounded-full blur-[100px] pointer-events-none"></div>
-                
+
                 <div className="space-y-3.5 max-w-lg text-left">
                     <h3 className="font-satoshi font-black text-lg text-white">Share the Wealth</h3>
                     <p className="text-slate-400 text-xs font-semibold leading-relaxed">
@@ -114,7 +114,7 @@ export const ReferralsPage: React.FC = () => {
                         <div className="bg-black/35 border border-white/10 rounded-xl px-4 py-3 flex items-center justify-between font-mono text-xs text-white flex-1 select-all">
                             <span>DFX-REF-{referralCode}</span>
                         </div>
-                        <Button 
+                        <Button
                             onClick={handleCopy}
                             className="rounded-xl h-[44px] text-xs font-bold px-6 shrink-0"
                             leftIcon={<Copy className="h-4 w-4" />}

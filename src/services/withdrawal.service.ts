@@ -26,6 +26,7 @@ export interface CreateBeneficiaryRequest {
 export interface WithdrawalQuoteRequest {
   amount: number;
   currency: string;
+  source_currency?: string;
 }
 
 export interface WithdrawalQuoteData {
@@ -45,6 +46,7 @@ export interface InitiateWithdrawalRequest {
   amount: number;
   currency: string;
   beneficiaryId: string;
+  source_currency?: string;
 }
 
 export interface Hub2TransferRequest {
@@ -52,6 +54,8 @@ export interface Hub2TransferRequest {
   currency: 'XOF' | 'XAF';
   phone: string;
   operator: string;
+  direction?: 'collection' | 'disbursement';
+  payment_method?: string;
 }
 
 export interface InternalTransferRequest {
@@ -63,11 +67,41 @@ export interface InternalTransferRequest {
 export class WithdrawalService extends BaseService {
   async getBeneficiaries(): Promise<BeneficiariesResponse> {
     const response = await this.api.get('/withdrawals/beneficiaries');
+    if (response.data?.success && Array.isArray(response.data?.data)) {
+      response.data.data = response.data.data.map((d: any) => ({
+        id: d.id,
+        name: d.label || d.name,
+        accountNumber: d.account_number || d.accountNumber,
+        bankName: d.bank_name || d.bankName,
+        currency: d.destination_currency || d.currency,
+        country: d.country,
+        createdAt: d.createdAt
+      }));
+    }
     return response.data;
   }
 
   async createBeneficiary(payload: CreateBeneficiaryRequest): Promise<{ success: boolean; data: Beneficiary }> {
-    const response = await this.api.post('/withdrawals/beneficiaries', payload);
+    const response = await this.api.post('/withdrawals/beneficiaries', {
+      label: payload.name,
+      account_number: payload.accountNumber,
+      bank_name: payload.bankName,
+      destination_currency: payload.currency,
+      country: payload.country,
+      type: 'bank'
+    });
+    if (response.data?.success && response.data?.data) {
+      const d = response.data.data;
+      response.data.data = {
+        id: d.id,
+        name: d.label || d.name,
+        accountNumber: d.account_number || d.accountNumber,
+        bankName: d.bank_name || d.bankName,
+        currency: d.destination_currency || d.currency,
+        country: d.country,
+        createdAt: d.createdAt
+      };
+    }
     return response.data;
   }
 
@@ -77,17 +111,45 @@ export class WithdrawalService extends BaseService {
   }
 
   async createWithdrawalQuote(payload: WithdrawalQuoteRequest): Promise<WithdrawalQuoteResponse> {
-    const response = await this.api.post('/withdrawals/quote', payload);
+    const source_currency = payload.source_currency || payload.currency || 'USD';
+    const destination_currency = payload.currency || 'USD';
+    const response = await this.api.post('/withdrawals/quote', {
+      source_amount: payload.amount,
+      source_currency,
+      destination_currency,
+      destination_type: 'bank'
+    });
+    if (response.data && response.data.success !== false) {
+      const d = response.data.data || response.data;
+      return {
+        success: true,
+        data: {
+          quoteId: d.quote_id || d.quoteId || '',
+          fee: d.fee || 0,
+          rate: d.rate || 1,
+          totalAmount: d.target_amount || d.totalAmount || d.source_amount || 0,
+          expiryAt: d.expires_at || d.expiryAt || ''
+        }
+      };
+    }
     return response.data;
   }
 
   async initiateWithdrawal(payload: InitiateWithdrawalRequest): Promise<{ success: boolean; data: { reference: string; status: string } }> {
-    const response = await this.api.post('/withdrawals', payload);
+    const response = await this.api.post('/withdrawals', {
+      beneficiary_id: payload.beneficiaryId,
+      source_amount: payload.amount,
+      source_currency: payload.source_currency || payload.currency || 'USD'
+    });
     return response.data;
   }
 
   async transferHub2(payload: Hub2TransferRequest): Promise<{ success: boolean; data: { reference: string; status: string } }> {
-    const response = await this.api.post('/transfers/hub2', payload);
+    const response = await this.api.post('/transfers/hub2', {
+      direction: 'disbursement',
+      payment_method: 'mobile_money',
+      ...payload
+    });
     return response.data;
   }
 

@@ -65,8 +65,8 @@ export const FundCardSheet: React.FC = () => {
         walletsList.push({
             name: CURRENCY_NAMES.USDC,
             code: 'USDC',
-            balance: d.balance_usdc + ' USDC',
-            rawBalance: parseFloat(d.balance_usdc || '0'),
+            balance: d.balanceUsdc + ' USDC',
+            rawBalance: parseFloat(d.balanceUsdc || '0'),
         });
     }
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {

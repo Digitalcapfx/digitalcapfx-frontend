@@ -3,6 +3,7 @@ import { BaseService } from './base.service';
 export interface SendCryptoRequest {
   receiver_phone: string;
   amount: string;
+  token?: 'USDC' | 'USDT';
 }
 
 export interface SendCryptoResponse {
@@ -19,6 +20,7 @@ export interface FundAccountRequest {
   currency: 'XOF' | 'XAF';
   operator: string;
   phone: string;
+  token?: 'USDC' | 'USDT';
 }
 
 export interface FundAccountResponse {
@@ -31,8 +33,10 @@ export interface FundAccountResponse {
 }
 
 export interface WithdrawRequest {
-  amount: number;
-  phone: string;
+  amount: string;
+  payout_mobile: string;
+  payout_network: string;
+  token?: 'USDC' | 'USDT';
 }
 
 export interface WithdrawResponse {
