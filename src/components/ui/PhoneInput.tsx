@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
-import RPNInput, { getCountryCallingCode, Country } from 'react-phone-number-input'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import RPNInput, { getCountryCallingCode, Country, parsePhoneNumber } from 'react-phone-number-input'
 import flags from 'react-phone-number-input/flags'
 import { Search, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -114,7 +114,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({ value, onChange, options,
                                             "px-2.5 py-1.5 text-xs rounded-lg cursor-pointer transition font-sans flex items-center justify-between",
                                             isSelected 
                                                 ? 'bg-primary-500 text-white font-bold' 
-                                                : 'text-slate-350 hover:bg-white/5 hover:text-white'
+                                                : 'text-slate-355 hover:bg-white/5 hover:text-white'
                                         )}
                                     >
                                         <div className="flex items-center space-x-2 min-w-0">
@@ -134,7 +134,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({ value, onChange, options,
                                 )
                             })
                         ) : (
-                            <div className="text-center py-3 text-xs text-slate-500 font-sans">
+                            <div className="text-center py-3 text-xs text-slate-550 font-sans">
                                 No results found
                             </div>
                         )}
@@ -144,21 +144,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({ value, onChange, options,
         </div>
     );
 };
-
-// Custom Input Element styled to fit inside our container
-const PhoneInputElement = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-    ({ className, ...props }, ref) => (
-        <input
-            ref={ref}
-            className={cn(
-                "w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 px-4 text-sm text-white font-sans placeholder-slate-500 h-full border-0 outline-0 shadow-none",
-                className
-            )}
-            {...props}
-        />
-    )
-);
-PhoneInputElement.displayName = 'PhoneInputElement';
 
 export interface PhoneInputProps {
     value: string;
@@ -173,6 +158,86 @@ export interface PhoneInputProps {
 
 export const PhoneInput = React.forwardRef<any, PhoneInputProps>(
     ({ value, onChange, placeholder = 'Enter phone number', label, error, required = false, disabled = false, className }, ref) => {
+        
+        // Parse current country code from value or fallback to default
+        const getInitialCountry = (val: string): Country => {
+            if (val && val.startsWith('+')) {
+                try {
+                    const parsed = parsePhoneNumber(val);
+                    if (parsed && parsed.country) {
+                        return parsed.country;
+                    }
+                } catch (e) {}
+            }
+            return 'NG';
+        };
+
+        const [country, setCountry] = useState<Country>(() => getInitialCountry(value));
+
+        useEffect(() => {
+            if (value && value.startsWith('+')) {
+                try {
+                    const parsed = parsePhoneNumber(value);
+                    if (parsed && parsed.country) {
+                        setCountry(parsed.country);
+                    }
+                } catch (e) {}
+            }
+        }, [value]);
+
+        // Intercept raw RPNInput value string and strip double-calling code prefixes if any
+        const handleValueChange = (val: string) => {
+            let cleanVal = val || '';
+            if (cleanVal.startsWith('+') && country) {
+                try {
+                    const dialCode = getCountryCallingCode(country);
+                    const doublePrefix = `+${dialCode}${dialCode}`;
+                    if (cleanVal.startsWith(doublePrefix)) {
+                        cleanVal = `+${dialCode}` + cleanVal.slice(doublePrefix.length);
+                    }
+                } catch (e) {}
+            }
+            onChange(cleanVal);
+        };
+
+        // Custom Input Component that slices out the calling code prefix from the text display field
+        const PhoneInputElement = useCallback(
+            React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+                ({ className: inputClassName, value: rawVal, onChange: onRawChange, ...props }, inputRef) => {
+                    let displayVal = (rawVal || '') as string;
+                    if (displayVal && country) {
+                        try {
+                            const dialCode = getCountryCallingCode(country);
+                            const prefixWithPlus = `+${dialCode}`;
+                            if (displayVal.startsWith(prefixWithPlus)) {
+                                displayVal = displayVal.slice(prefixWithPlus.length).trim();
+                            } else if (displayVal.startsWith(dialCode)) {
+                                displayVal = displayVal.slice(dialCode.length).trim();
+                            }
+                            if (displayVal.startsWith('+')) {
+                                displayVal = displayVal.slice(1).trim();
+                            }
+                        } catch (e) {}
+                    }
+
+                    return (
+                        <input
+                            ref={inputRef}
+                            className={cn(
+                                "w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 px-4 text-sm text-white font-sans placeholder-slate-500 h-full border-0 outline-0 shadow-none",
+                                inputClassName
+                            )}
+                            value={displayVal}
+                            onChange={onRawChange}
+                            {...props}
+                        />
+                    );
+                }
+            ),
+            [country]
+        );
+        PhoneInputElement.displayName = 'PhoneInputElement';
+
         return (
             <div className={cn("w-full space-y-1.5 text-left", className)}>
                 {label && (
@@ -189,10 +254,14 @@ export const PhoneInput = React.forwardRef<any, PhoneInputProps>(
                     <RPNInput
                         ref={ref}
                         value={value}
-                        onChange={(val) => onChange(val || '')}
+                        onChange={(val) => handleValueChange(val || '')}
+                        onCountryChange={(c) => {
+                            if (c) setCountry(c);
+                        }}
                         placeholder={placeholder}
                         disabled={disabled}
                         defaultCountry="NG"
+                        international={false}
                         countrySelectComponent={CountrySelect}
                         inputComponent={PhoneInputElement}
                         className="flex items-center w-full h-full"
@@ -210,3 +279,4 @@ export const PhoneInput = React.forwardRef<any, PhoneInputProps>(
 );
 
 PhoneInput.displayName = 'PhoneInput';
+export default PhoneInput;
