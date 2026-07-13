@@ -16,7 +16,7 @@ export const DoneStep: React.FC = () => {
 
   return (
     <div className="space-y-6 text-center lg:text-left animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <BusinessStepper currentStepIndex={5} />
+      <BusinessStepper currentStepIndex={4} />
 
       <div className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-6">
         <div className="relative w-fit mx-auto lg:mx-0">

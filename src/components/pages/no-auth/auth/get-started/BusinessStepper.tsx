@@ -6,7 +6,7 @@ interface BusinessStepperProps {
 }
 
 export const BusinessStepper: React.FC<BusinessStepperProps> = ({ currentStepIndex }) => {
-  const steps = ['Account', 'Business', 'Owner', 'Documents', 'Review', 'Done'];
+  const steps = ['Account', 'Business', 'Documents', 'Review', 'Done'];
   return (
     <div className="flex items-center justify-between w-full max-w-lg mx-auto py-4 select-none">
       {steps.map((label, idx) => {
