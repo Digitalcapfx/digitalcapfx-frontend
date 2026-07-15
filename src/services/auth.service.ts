@@ -61,6 +61,16 @@ export class AuthService extends BaseService {
     return response.data;
   }
 
+  async sendPhoneOtp(phone: string) {
+    const response = await this.api.post('/auth/otp/send', { phone });
+    return response.data;
+  }
+
+  async verifyPhoneOtp(phone: string, code: string) {
+    const response = await this.api.post('/auth/otp/verify', { phone, code });
+    return response.data;
+  }
+
   async login2FA(ref: string, code: string): Promise<any> {
     const response = await this.api.post('/auth/2fa/login', { ref, code });
     return response.data;

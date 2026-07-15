@@ -3,7 +3,7 @@ import { BaseService } from './base.service';
 export interface SecurityStatusResponse {
   success: boolean;
   data: {
-    twoFactorEnabled: boolean;
+    totpEnabled: boolean;
     biometricsEnabled: boolean;
   };
 }
@@ -12,7 +12,7 @@ export interface Setup2FAResponse {
   success: boolean;
   data: {
     secret: string;
-    otpUri: string;
+    uri: string;
   };
 }
 

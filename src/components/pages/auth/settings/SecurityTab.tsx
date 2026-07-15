@@ -35,7 +35,7 @@ export const SecurityTab: React.FC = () => {
     const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
     const [isDisableModalOpen, setIsDisableModalOpen] = useState(false);
     const [otpCode, setOtpCode] = useState('');
-    const [setupData, setSetupData] = useState<{ secret: string; otpUri: string } | null>(null);
+    const [setupData, setSetupData] = useState<{ secret: string; uri: string } | null>(null);
 
     // Mutations for 2FA setup & activation
     const setup2FAMutation = useMutation({
@@ -122,7 +122,7 @@ export const SecurityTab: React.FC = () => {
 
     // Handlers
     const handle2FAToggle = () => {
-        const isEnabled = securityQuery.data?.data?.twoFactorEnabled;
+        const isEnabled = securityQuery.data?.data?.totpEnabled;
         if (isEnabled) {
             setIsDisableModalOpen(true);
         } else {
@@ -152,7 +152,7 @@ export const SecurityTab: React.FC = () => {
         changePinMutation.mutate({ currentPin, newPin });
     };
 
-    const status = securityQuery.data?.data || { twoFactorEnabled: false };
+    const status = securityQuery.data?.data || { totpEnabled: false };
     const sessionsList = devicesQuery.data?.success && Array.isArray(devicesQuery.data.data) 
         ? devicesQuery.data.data 
         : [];
@@ -177,7 +177,7 @@ export const SecurityTab: React.FC = () => {
                         {securityQuery.isLoading ? (
                             <RefreshCw className="h-4.5 w-4.5 text-slate-600 animate-spin" />
                         ) : (
-                            <ToggleSwitch checked={status.twoFactorEnabled} onChange={handle2FAToggle} />
+                            <ToggleSwitch checked={status.totpEnabled} onChange={handle2FAToggle} />
                         )}
                     </div>
                 </div>
@@ -336,7 +336,7 @@ export const SecurityTab: React.FC = () => {
                         {/* QR Code Container */}
                         <div className="flex justify-center bg-white/5 border border-white/10 rounded-2xl p-4.5">
                             <img 
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(setupData.otpUri)}`}
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(setupData.uri)}`}
                                 alt="TOTP QR Code"
                                 className="w-44 h-44 rounded-lg bg-white p-1"
                             />

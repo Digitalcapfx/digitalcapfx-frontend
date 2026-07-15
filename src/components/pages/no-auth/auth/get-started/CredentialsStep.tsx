@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -24,6 +25,7 @@ const COUNTRY_OPTIONS: SelectOption[] = getCountries()
   .sort((a, b) => a.label.localeCompare(b.label));
 
 export const CredentialsStep: React.FC = () => {
+  const router = useRouter();
   const {
     accountType,
     firstName,
@@ -63,8 +65,15 @@ export const CredentialsStep: React.FC = () => {
     mutationFn: (payload: RegisterRequest) => authService.register(payload),
     onSuccess: (data) => {
       if (data?.success) {
-        toast.success('Registration successful! Please verify your email.');
-        setStep('verify');
+        toast.success('Registration successful!');
+        if (data.data?.accountType) {
+          localStorage.setItem('account_type', data.data.accountType);
+        }
+        if (accountType === 'business') {
+          setStep('done');
+        } else {
+          router.push('/dashboard');
+        }
       } else {
         const rawError = data?.error;
         const msg = typeof rawError === 'object'
@@ -227,7 +236,8 @@ export const CredentialsStep: React.FC = () => {
 
         <PhoneInput
           required
-          label="Phone number*"
+          disabled
+          label="Phone number* (Verified)"
           placeholder="Enter phone number"
           value={phone}
           onChange={(val) => {

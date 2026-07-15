@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type SignupStep = 'account-type' | 'business-details' | 'credentials' | 'verify' | 'done';
+export type SignupStep = 'phone-verify' | 'account-type' | 'business-details' | 'credentials' | 'done';
 
 interface RegisterState {
   step: SignupStep;
@@ -38,7 +38,7 @@ interface RegisterState {
 }
 
 const initialState = {
-  step: 'account-type' as SignupStep,
+  step: 'phone-verify' as SignupStep,
   accountType: null,
   companyName: '',
   companyRegNo: '',
