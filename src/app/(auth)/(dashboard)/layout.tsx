@@ -19,7 +19,8 @@ import {
     Clock,
     Gift,
     Menu,
-    X
+    X,
+    Users
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SendMoneySheet from '@/components/pages/auth/_components/SendMoneySheet'
@@ -51,6 +52,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // Verification blocker states
     const [otpCode, setOtpCode] = useState('');
     const [timer, setTimer] = useState(30);
+
+    const [accountType, setAccountType] = useState<'individual' | 'business' | null>(null);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('account_type') as 'individual' | 'business' | null;
+            setAccountType(stored);
+        }
+    }, []);
 
     // Profile Query
     const profileQuery = useQuery({
@@ -206,7 +216,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         );
     }
 
-    const isBusiness = profile?.accountType === 'business';
+    const isBusiness = accountType === 'business';
+    const navigationLinks = [
+        { label: 'Overview', icon: LayoutDashboard, href: '/dashboard' },
+        { label: 'Wallets', icon: Wallet, href: '/wallets' },
+        { label: 'Cards', icon: CreditCard, href: '/cards' },
+        { label: 'Exchange', icon: RefreshCw, href: '/exchange' },
+        { label: 'Activity', icon: Clock, href: '/activity' },
+        ...(isBusiness ? [{ label: 'Teams', icon: Users, href: '/teams' }] : []),
+        { label: 'Referrals', icon: Gift, href: '/referrals' },
+        { label: 'Support Desk', icon: HelpCircle, href: '/support' },
+    ];
     const initials = profile ? `${profile.firstName.slice(0, 1)}${profile.lastName.slice(0, 1)}`.toUpperCase() : 'US';
     const profileName = isBusiness ? (profile?.companyLegalName || 'Company') : `${profile?.firstName} ${profile?.lastName}`;
 
@@ -245,7 +265,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     {/* Navigation Items */}
                     <div className="space-y-1.5 ">
-                        {SIDEBAR_LINKS.map((link) => {
+                        {navigationLinks.map((link) => {
                             const IconComponent = link.icon;
                             const active = pathname === link.href;
                             return (
@@ -440,7 +460,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                             {/* Navigation Items */}
                             <div className="space-y-1.5">
-                                {SIDEBAR_LINKS.map((link) => {
+                                {navigationLinks.map((link) => {
                                     const IconComponent = link.icon;
                                     const active = pathname === link.href;
                                     return (

@@ -34,6 +34,9 @@ const Login = () => {
                     toast.info('2FA verification code required.');
                 } else {
                     toast.success('Logged in successfully!');
+                    if (data?.data?.accountType) {
+                        localStorage.setItem('account_type', data.data.accountType);
+                    }
                     router.push('/dashboard');
                 }
             } else {
@@ -61,6 +64,9 @@ const Login = () => {
         mutationFn: (payload: { ref: string; code: string }) => authService.login2FA(payload.ref, payload.code),
         onSuccess: (data) => {
             toast.success('MFA verification successful! Logged in.');
+            if (data?.data?.accountType) {
+                localStorage.setItem('account_type', data.data.accountType);
+            }
             router.push('/dashboard');
         },
         onError: (err: any) => {
@@ -79,6 +85,9 @@ const Login = () => {
         mutationFn: (token: string) => authService.loginGoogle(token),
         onSuccess: (data) => {
             toast.success('Signed in with Google successfully!');
+            if (data?.data?.accountType) {
+                localStorage.setItem('account_type', data.data.accountType);
+            }
             router.push('/dashboard');
         },
         onError: (err: any) => {
