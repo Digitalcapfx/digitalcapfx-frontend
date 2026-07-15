@@ -28,8 +28,8 @@ const Login = () => {
         onSuccess: (data) => {
             if (data?.success) {
                 // Check if user has 2FA enabled and requires verification
-                if (data.data?.twoFactorRequired) {
-                    setTotpRef(data.data.totpRef || '');
+                if (data.data?.requires2Fa || data.data?.requires_2fa) {
+                    setTotpRef(data.data.ref || '');
                     setIs2FA(true);
                     toast.info('2FA verification code required.');
                 } else {

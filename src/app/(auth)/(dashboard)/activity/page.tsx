@@ -2,7 +2,7 @@ import { ActivityPage } from '@/components/pages/auth/activity/ActivityPage';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Activity Logs | DigitalFX',
+  title: 'Activity Logs | DigitalCapFx',
   description: 'View your account activity audit logs',
 };
 

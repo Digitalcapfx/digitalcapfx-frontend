@@ -55,7 +55,7 @@ export const ReferralsPage: React.FC = () => {
                     Referrals & Rewards
                 </h1>
                 <p className="text-slate-400 text-xs font-semibold mt-1">
-                    Invite friends to DigitalFX and earn reward points on every transaction they make.
+                    Invite friends to DigitalCapFx and earn reward points on every transaction they make.
                 </p>
             </div>
 

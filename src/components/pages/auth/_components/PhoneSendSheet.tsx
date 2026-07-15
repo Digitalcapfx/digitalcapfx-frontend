@@ -13,7 +13,7 @@ export const PhoneSendSheet: React.FC = () => {
             isOpen={isInstantOpen}
             onClose={closeInstant}
             title="Instant Send"
-            description="Send stablecoins to any DigitalFx customer using just their phone number."
+            description="Send stablecoins to any DigitalCapFx customer using just their phone number."
         >
             <PhoneSend isSheet onClose={closeInstant} />
         </Sheet>

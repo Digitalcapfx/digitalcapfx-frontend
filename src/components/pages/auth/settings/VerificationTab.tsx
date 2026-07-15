@@ -37,8 +37,8 @@ export const VerificationTab: React.FC = () => {
         : [];
 
     const kycData = kycStatusQuery.data?.success ? kycStatusQuery.data.data : null;
-    const kycStatus = kycData?.status || 'idle'; // 'idle' | 'pending' | 'approved' | 'rejected'
-    const rejectionReason = kycData?.rejectionReason || '';
+    const kycStatus = kycData?.kycStatus || kycData?.status || 'idle'; // 'idle' | 'pending' | 'approved' | 'rejected'
+    const rejectionReason = kycData?.rejectionReason || kycData?.rejection_reason || '';
 
     // Metamap Initialization Mutation
     const initMetaMapMutation = useMutation({

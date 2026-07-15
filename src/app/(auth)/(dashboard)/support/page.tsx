@@ -1,11 +1,5 @@
-import { SupportPage } from '@/components/pages/auth/support/SupportPage';
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Support Desk | DigitalFX',
-  description: 'Search FAQs or open support tickets',
-};
+import FAQView from '@/components/pages/auth/support/FAQView';
 
 export default function Page() {
-  return <SupportPage />;
+  return <FAQView />;
 }

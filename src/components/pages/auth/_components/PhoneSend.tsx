@@ -121,7 +121,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
 
             {/* Phone send footnotes info */}
             <div className="text-center select-none pt-2 text-[10px] text-slate-550 font-semibold font-sans">
-                Send to any DigitalFx customer — just a phone number, no bank details needed.
+                Send to any DigitalCapFx customer — just a phone number, no bank details needed.
             </div>
         </>
     );

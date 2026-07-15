@@ -2,8 +2,8 @@
     "schemes": [],
     "swagger": "2.0",
     "info": {
-        "description": "DigitalFX is a multi-currency fintech platform for Central/West Africa.\nIt combines fiat accounts (XAF, XOF, USD, GBP, EUR), HD crypto wallets (BIP-44 via Rach WaaS),\nand stablecoin P2P transfers (USDC/USDT via Rach CaaS ERC-4337 SCWs).\nMobile Money deposits and withdrawals are handled via HUB2 (MTN, Orange).",
-        "title": "DigitalFX API",
+        "description": "digitalCapFx is a multi-currency fintech platform for Central/West Africa.\nIt combines fiat accounts (XAF, XOF, USD, GBP, EUR), HD crypto wallets (BIP-44 via Rach WaaS),\nand stablecoin P2P transfers (USDC/USDT via Rach CaaS ERC-4337 SCWs).\nMobile Money deposits and withdrawals are handled via HUB2 (MTN, Orange).",
+        "title": "digitalCapFx API",
         "contact": {
             "name": "Rach Finance Engineering",
             "email": "engineering@rach.finance"
@@ -2518,7 +2518,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Step 4–5 of the Instant USD Account flow. Initiates a HUB2 Mobile Money collection: the customer receives a push-to-pay prompt on their phone. After they approve, HUB2 fires a webhook which triggers DigitalFX to instruct Rach CaaS to convert the XOF/XAF to USDC/USDT and credit the customer's ERC-4337 Smart Contract Wallet. The customer sees their updated balance via GET /crypto/balances once Rach CaaS confirms the fiat and completes the OTC conversion.",
+                "description": "Step 4–5 of the Instant USD Account flow. Initiates a HUB2 Mobile Money collection: the customer receives a push-to-pay prompt on their phone. After they approve, HUB2 fires a webhook which triggers digitalCapFx to instruct Rach CaaS to convert the XOF/XAF to USDC/USDT and credit the customer's ERC-4337 Smart Contract Wallet. The customer sees their updated balance via GET /crypto/balances once Rach CaaS confirms the fiat and completes the OTC conversion.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2575,7 +2575,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Transfers stablecoins (USDT or USDC) from the caller to another DigitalFX user identified by phone number. An FX quote is obtained first, then the CaaS P2P transfer is executed. Amount is in USD-equivalent decimal (e.g. \"50.00\").",
+                "description": "Transfers stablecoins (USDT or USDC) from the caller to another digitalCapFx user identified by phone number. An FX quote is obtained first, then the CaaS P2P transfer is executed. Amount is in USD-equivalent decimal (e.g. \"50.00\").",
                 "consumes": [
                     "application/json"
                 ],
@@ -4979,7 +4979,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Transfers fiat funds between two DigitalFX users using their phone numbers. Both sender and receiver must have an account in the requested currency.",
+                "description": "Transfers fiat funds between two digitalCapFx users using their phone numbers. Both sender and receiver must have an account in the requested currency.",
                 "consumes": [
                     "application/json"
                 ],
@@ -6039,7 +6039,7 @@
         },
         "/webhooks/hub2": {
             "post": {
-                "description": "Receives Mobile Money payment status updates from HUB2. On a COLLECTION SUCCESSFUL event, DigitalFX automatically credits the user's CaaS USDC wallet. The request must carry a valid HMAC-SHA256 signature in the X-Hub2-Signature header.",
+                "description": "Receives Mobile Money payment status updates from HUB2. On a COLLECTION SUCCESSFUL event, digitalCapFx automatically credits the user's CaaS USDC wallet. The request must carry a valid HMAC-SHA256 signature in the X-Hub2-Signature header.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7525,7 +7525,7 @@
                 "doc_url": {
                     "description": "DocURL is the GCS object path or signed URL returned by the upload endpoint",
                     "type": "string",
-                    "example": "https://storage.googleapis.com/digitalfx-kyc-dev/doc.jpg"
+                    "example": "https://storage.googleapis.com/digitalCapFx-kyc-dev/doc.jpg"
                 }
             }
         },

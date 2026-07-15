@@ -6,7 +6,9 @@ export interface DocumentUploadRequest {
 }
 
 export interface KycStatusResponseData {
-  status: 'idle' | 'pending' | 'approved' | 'rejected';
+  status?: 'idle' | 'pending' | 'approved' | 'rejected';
+  kycStatus?: 'idle' | 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
   rejection_reason?: string;
 }
 

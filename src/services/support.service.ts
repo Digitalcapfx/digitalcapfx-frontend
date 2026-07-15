@@ -16,7 +16,7 @@ export interface SupportLink {
 export interface TicketMessage {
   id: string;
   senderType: 'user' | 'agent';
-  message: string;
+  body: string;
   createdAt: string;
 }
 
@@ -42,7 +42,10 @@ export interface LinksResponse {
 
 export interface TicketListResponse {
   success: boolean;
-  data: SupportTicket[];
+  data: {
+    tickets: SupportTicket[];
+    total: number;
+  };
 }
 
 export interface SingleTicketResponse {
@@ -86,7 +89,11 @@ export class SupportService extends BaseService {
   }
 
   async createTicket(payload: { subject: string; category: string; message: string }): Promise<SingleTicketResponse> {
-    const response = await this.api.post('/support/tickets', payload);
+    const response = await this.api.post('/support/tickets', {
+      subject: payload.subject,
+      category: payload.category,
+      body: payload.message
+    });
     return response.data;
   }
 
@@ -96,7 +103,7 @@ export class SupportService extends BaseService {
   }
 
   async sendTicketReply(id: string, message: string): Promise<{ success: boolean; data: TicketMessage }> {
-    const response = await this.api.post(`/support/tickets/${id}/messages`, { message });
+    const response = await this.api.post(`/support/tickets/${id}/messages`, { body:message });
     return response.data;
   }
 }

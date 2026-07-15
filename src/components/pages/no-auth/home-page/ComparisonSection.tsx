@@ -46,7 +46,7 @@ const ComparisonSection = () => {
                         </span>
                     </div>
                     <h2 className="font-satoshi font-black text-3xl sm:text-4xl lg:text-[48px] leading-[1.15] text-white tracking-tight">
-                        Why switch to <span className="bg-brand-gradient bg-clip-text text-transparent">DigitalFx?</span>
+                        Why switch to <span className="bg-brand-gradient bg-clip-text text-transparent">DigitalCapFx?</span>
                     </h2>
                     <p className="text-slate-400 text-sm sm:text-base max-w-lg font-sans">
                         See how we compare to traditional banks. The difference speaks for itself.

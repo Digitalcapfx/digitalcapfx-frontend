@@ -16,8 +16,8 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
             <div className="hidden lg:flex lg:col-span-4 bg-gradient-to-b from-[#081C3A] to-[#050816] p-12 flex-col justify-between border-r border-white/5 min-h-screen sticky top-0 overflow-y-auto select-none">
 
                 {/* Brand Logo */}
-                <div>
-                    <Link href="/">
+                <div className="flex flex-col items-start">
+                    <Link href="/" className="inline-block">
                         <Image
                             src="/DFXLogo.svg"
                             alt="DigitalCap FX Logo"
@@ -27,6 +27,9 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
                             className="h-8 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
                         />
                     </Link>
+                    <p className="text-[10px] font-bold text-white/80 mt-1.5 font-sans tracking-wide select-none">
+                        Your bridge to the world of payments
+                    </p>
                 </div>
 
                 {/* Center Metrics Section */}

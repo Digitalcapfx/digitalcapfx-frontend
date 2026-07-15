@@ -251,7 +251,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <aside className="hidden lg:flex w-[260px] border-r border-white/5 bg-[#080E1E] flex-col justify-between p-6 select-none shrink-0 h-full">
                 <div className="space-y-8">
                     {/* Brand Logo */}
-                    <div>
+                    <div className="flex flex-col items-start">
                         <Link href="/dashboard">
                             <Image
                                 src="/DFXLogo.svg"
@@ -261,6 +261,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 className="h-7 w-auto object-contain cursor-pointer"
                             />
                         </Link>
+                        <p className="text-[9px] font-bold text-slate-500 mt-1.5 font-sans tracking-wide">
+                            Your bridge to the world of payments
+                        </p>
                     </div>
 
                     {/* Navigation Items */}
@@ -440,16 +443,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="relative w-[280px] bg-[#080E1E] border-r border-white/5 flex flex-col justify-between p-6 h-full select-none animate-in slide-in-from-left duration-300 shadow-2xl">
                         <div className="space-y-8">
                             {/* Brand Logo & Close Button */}
-                            <div className="flex items-center justify-between">
-                                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                                    <Image
-                                        src="/DFXLogo.svg"
-                                        alt="DigitalCap Logo"
-                                        width={130}
-                                        height={28}
-                                        className="h-7 w-auto object-contain cursor-pointer"
-                                    />
-                                </Link>
+                            <div className="flex items-center justify-between w-full">
+                                <div className="flex flex-col items-start">
+                                    <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                                        <Image
+                                            src="/DFXLogo.svg"
+                                            alt="DigitalCap Logo"
+                                            width={130}
+                                            height={28}
+                                            className="h-7 w-auto object-contain cursor-pointer"
+                                        />
+                                    </Link>
+                                    <p className="text-[9px] font-bold text-slate-500 mt-1.5 font-sans tracking-wide">
+                                        Your bridge to the world of payments
+                                    </p>
+                                </div>
                                 <button
                                     onClick={() => setMobileMenuOpen(false)}
                                     className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition"

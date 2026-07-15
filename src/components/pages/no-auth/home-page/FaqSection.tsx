@@ -11,7 +11,7 @@ interface FaqItem {
 
 const FAQ_ITEMS: FaqItem[] = [
     {
-        question: 'Is my money safe with DigitalFx?',
+        question: 'Is my money safe with DigitalCapFx?',
         answer: 'Absolutely. All fiat funds are held in segregated accounts at partner banks. We use 256-bit encryption, biometric authentication, and cold storage for digital assets. Your account is protected to the highest industry standards.',
     },
     {
@@ -58,7 +58,7 @@ const FaqSection = () => {
                         Frequently asked <span className="bg-brand-gradient bg-clip-text text-transparent">questions</span>
                     </h2>
                     <p className="text-slate-400 text-sm sm:text-base max-w-lg font-sans">
-                        Everything you need to know about DigitalFx. Can't find an answer? Reach out to our support team.
+                        Everything you need to know about DigitalCapFx. Can't find an answer? Reach out to our support team.
                     </p>
                 </div>
 

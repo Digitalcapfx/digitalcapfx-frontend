@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "NOE-BANK | Premium Web Compliance & Onboarding",
+  title: "DigitalCapFx",
   description: "Next-Generation Hybrid Fiat-Crypto Neo-Banking Platform. Compliant onboarding and identity verification for WAEMU and CEMAC regions.",
 };
 
