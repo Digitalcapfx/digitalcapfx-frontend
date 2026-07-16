@@ -34,7 +34,7 @@ const HeroSection = () => {
                             <span className="bg-brand-gradient bg-clip-text text-transparent">reimagined.</span>
                         </h1>
                         <p className="text-[#6D778A] text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl font-sans">
-                            One account for fiat, stablecoins. Send, receive, exchange, and spend – all from a single, beautifully designed platform.
+                            One account for fiat. Send, receive, exchange, and spend iUSD – all from a single, beautifully designed platform.
                         </p>
                     </div>
 
