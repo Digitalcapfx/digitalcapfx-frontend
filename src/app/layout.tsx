@@ -22,7 +22,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable}`}>
       <head>
-        <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700,900&display=swap" rel="stylesheet" />
+        <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,5" rel="stylesheet" />
+        <link rel="icon" href="/icon.svg" />
       </head>
       <body className="antialiased">
         <QueryProvider>
