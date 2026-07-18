@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { 
-    ChevronDown, 
-    Check, 
-    Copy, 
+import React, { useState, useEffect, useRef } from 'react'
+import {
+    ChevronDown,
+    Check,
+    Copy,
     Share2,
     QrCode,
     CheckCircle2,
@@ -64,7 +64,7 @@ const formatBalance = (amount: string | number, currency: string) => {
 
 const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value }) => {
     const [copied, setCopied] = useState(false);
-    
+
     const handleCopy = () => {
         navigator.clipboard.writeText(value);
         setCopied(true);
@@ -77,7 +77,7 @@ const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value })
                 <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block font-sans">{label}</span>
                 <span className="font-mono text-xs text-white block break-all select-all leading-normal">{value}</span>
             </div>
-            <button 
+            <button
                 type="button"
                 onClick={handleCopy}
                 className="text-slate-500 hover:text-white transition duration-200 cursor-pointer shrink-0"
@@ -102,6 +102,23 @@ export const ReceiveMoneySheet: React.FC = () => {
     const [phone, setPhone] = useState('');
     const [depositAmount, setDepositAmount] = useState('');
     const [depositSuccess, setDepositSuccess] = useState(false);
+
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close select currency dropdown if clicked anywhere else
+    useEffect(() => {
+        const handleOutsideClick = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        };
+        if (isDropdownOpen) {
+            document.addEventListener('mousedown', handleOutsideClick);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, [isDropdownOpen]);
 
     // Queries
     const fiatQuery = useQuery({
@@ -174,7 +191,7 @@ export const ReceiveMoneySheet: React.FC = () => {
     };
 
     const isCrypto = activeWallet.type === 'stablecoin';
-    const address = isCrypto 
+    const address = isCrypto
         ? (activeWallet.walletAddress || '0xSCW1234567890abcdef...')
         : (activeWallet.iban || activeWallet.accountNumberUk || activeWallet.accountNumber || 'Account details loading...');
 
@@ -239,13 +256,13 @@ export const ReceiveMoneySheet: React.FC = () => {
             description="Get paid or top up your account balance"
         >
             <div className="space-y-6 flex flex-col justify-between h-full text-left">
-                
+
                 <div className="space-y-6">
                     {/* Wallet Select Dropdown */}
                     <div className="space-y-2">
                         <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Select Currency</span>
-                        <div className="relative">
-                            <div 
+                        <div className="relative" ref={dropdownRef}>
+                            <div
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                 className="bg-[#0C1224] border border-white/10 hover:border-white/15 rounded-2xl p-4 flex items-center justify-between cursor-pointer transition select-none"
                             >
@@ -263,7 +280,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                             {isDropdownOpen && (
                                 <div className="absolute top-full left-0 right-0 mt-2 bg-[#090E1E] border border-white/10 rounded-2xl overflow-hidden z-50 max-h-60 overflow-y-auto shadow-2xl">
                                     {walletsList.map((w) => (
-                                        <div 
+                                        <div
                                             key={w.id}
                                             onClick={() => {
                                                 setSelectedWalletId(w.id);
@@ -303,8 +320,8 @@ export const ReceiveMoneySheet: React.FC = () => {
                                 onClick={() => setActiveTab('details')}
                                 className={cn(
                                     "flex-1 py-2 text-[11px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                    activeTab === 'details' 
-                                        ? "bg-primary-500 text-white shadow-md" 
+                                    activeTab === 'details'
+                                        ? "bg-primary-500 text-white shadow-md"
                                         : "text-slate-400 hover:text-white"
                                 )}
                             >
@@ -315,8 +332,8 @@ export const ReceiveMoneySheet: React.FC = () => {
                                 onClick={() => setActiveTab('momo')}
                                 className={cn(
                                     "flex-1 py-2 text-[11px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                    activeTab === 'momo' 
-                                        ? "bg-primary-500 text-white shadow-md" 
+                                    activeTab === 'momo'
+                                        ? "bg-primary-500 text-white shadow-md"
                                         : "text-slate-400 hover:text-white"
                                 )}
                             >
@@ -335,9 +352,9 @@ export const ReceiveMoneySheet: React.FC = () => {
                                         <CurrencyIcon code={activeWallet.code} size="sm" className="border-none shadow-none" />
                                     </div>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img 
-                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(address)}`} 
-                                        alt="Wallet/Account QR Code" 
+                                    <img
+                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(address)}`}
+                                        alt="Wallet/Account QR Code"
                                         className="w-full h-full rounded-lg"
                                     />
                                 </div>
@@ -370,6 +387,23 @@ export const ReceiveMoneySheet: React.FC = () => {
                                     </>
                                 )}
                             </div>
+
+                            {isCrypto && (
+                                <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4 flex items-start space-x-3 text-left animate-in slide-in-from-bottom duration-300">
+                                    <Info className="h-5 w-5 text-primary-400 shrink-0 mt-0.5" />
+                                    <div className="space-y-2">
+                                        <span className="text-xs font-bold text-white block">How to Receive Instant USD (iUSD)</span>
+                                        <ul className="text-[10px] text-slate-400 leading-normal space-y-1.5 list-disc list-inside font-sans">
+                                            <li>
+                                                <span className="font-bold text-white">Internal Transfers:</span> Other DigitalFX users can instantly send you <span className="font-semibold text-white">iUSD</span> using your registered phone number.
+                                            </li>
+                                            <li>
+                                                <span className="font-bold text-white">External Deposits:</span> To deposit from a personal crypto wallet, send <span className="font-bold text-white">USDC</span> on the <span className="font-bold text-white">Polygon (POL)</span> network to the address above.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         /* Mobile Money Deposit Form */
@@ -390,7 +424,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                                 <form onSubmit={handleInitiateDeposit} className="space-y-4">
                                     <div className="space-y-1.5">
                                         <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Operator*</span>
-                                        <select 
+                                        <select
                                             value={operator}
                                             onChange={(e) => setOperator(e.target.value)}
                                             className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans select-none"
@@ -403,7 +437,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                                     </div>
                                     <div className="space-y-1.5">
                                         <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Phone Number*</span>
-                                        <input 
+                                        <input
                                             type="text"
                                             required
                                             value={phone}
@@ -422,7 +456,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                                             className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-primary-500/50 w-full font-mono"
                                         />
                                     </div>
-                                    
+
                                     <button
                                         type="submit"
                                         disabled={fundMutation.isPending || !depositAmount || !phone}
