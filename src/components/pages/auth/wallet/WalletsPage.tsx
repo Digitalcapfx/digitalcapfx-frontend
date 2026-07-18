@@ -35,6 +35,7 @@ const CURRENCY_NAMES: Record<string, string> = {
     XOF: 'CFA Franc BCEAO',
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
+    IUSD: 'Instant USD',
     NGN: 'Nigerian Naira',
 };
 
@@ -58,8 +59,8 @@ const WalletsPage: React.FC = () => {
     const setBackPath = useNavigationStore((state) => state.setBackPath);
     const openSend = useTransactionStore((state) => state.openSend);
     const openReceive = useTransactionStore((state) => state.openReceive);
-    const [activeTab, setActiveTab] = useState<'all' | 'fiat' | 'stablecoins'>('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState<'all' | 'fiat' | 'stablecoins'>('all');
 
     // React Query Queries
     const fiatQuery = useQuery({
@@ -78,12 +79,13 @@ const WalletsPage: React.FC = () => {
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         const d = cryptoQuery.data.data;
         const balNum = parseFloat(d.balanceUsdc || '0');
+        const symbol = d.symbol || 'iUSD';
         walletsList.push({
-            id: 'usdc',
-            name: CURRENCY_NAMES.USDC,
-            code: 'USDC',
+            id: symbol.toLowerCase(),
+            name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
+            code: symbol,
             type: 'stablecoin',
-            balance: formatBalance(d.balanceUsdc, 'USDC'),
+            balance: d.balanceFormatted || formatBalance(d.balanceUsdc, symbol),
             rawBalance: balNum,
         });
     }

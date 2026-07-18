@@ -16,7 +16,11 @@ export interface AccountListResponse {
 }
 
 export interface CryptoBalanceData {
+  symbol: string;
+  name: string;
+  balance: number;
   balanceUsdc: string;
+  balanceFormatted: string;
   walletAddress: string;
 }
 

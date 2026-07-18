@@ -15,9 +15,9 @@ const FIAT_FLAGS: Record<string, string> = {
 
 // Sizing mappings
 const SIZES = {
-    sm: 'w-9 h-9 text-xs [&>svg]:w-4.5 [&>svg]:h-4.5',
+    sm: 'w-9 h-9 text-xs [&>svg]:w-[18px] [&>svg]:h-[18px]',
     md: 'w-10 h-10 text-sm [&>svg]:w-5 [&>svg]:h-5',
-    lg: 'w-11 h-11 text-base [&>svg]:w-5.5 [&>svg]:h-5.5',
+    lg: 'w-11 h-11 text-base [&>svg]:w-[22px] [&>svg]:h-[22px]',
 };
 
 // Background class mappings for cryptos and fiat
@@ -25,6 +25,7 @@ const BG_CLASSES: Record<string, string> = {
     BTC: 'bg-[#F7931A]',
     ETH: 'bg-[#627EEA]',
     USDC: 'bg-[#2775CA]',
+    IUSD: 'bg-[#2775CA]',
     USDT: 'bg-[#26A17B]',
     POL: 'bg-[#8247E5]',
     SOL: 'bg-gradient-to-br from-[#14F195] to-[#9945FF]',
@@ -113,7 +114,7 @@ export const CurrencyIcon: React.FC<CurrencyIconProps> = ({ code, name, size = '
     let InnerIcon: React.ReactNode = null;
     if (uppercaseCode === 'BTC') InnerIcon = <BtcIcon />;
     else if (uppercaseCode === 'ETH') InnerIcon = <EthIcon />;
-    else if (uppercaseCode === 'USDC') InnerIcon = <UsdcIcon />;
+    else if (uppercaseCode === 'USDC' || uppercaseCode === 'IUSD') InnerIcon = <UsdcIcon />;
     else if (uppercaseCode === 'USDT') InnerIcon = <UsdtIcon />;
     else if (uppercaseCode === 'POL') InnerIcon = <PolIcon />;
     else if (uppercaseCode === 'SOL') InnerIcon = <SolIcon />;

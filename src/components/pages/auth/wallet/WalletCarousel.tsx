@@ -19,11 +19,12 @@ const getCardBg = (currency: string) => {
         case 'XOF':
             return 'bg-gradient-to-br from-[#EF6C00] to-[#E65100] border-orange-400/20';
         case 'XAF':
-            return 'bg-gradient-to-br from-[#C62828] to-[#9E1A1A] border-rose-450/20';
+            return 'bg-gradient-to-br from-[#C62828] to-[#9E1A1A] border-rose-500/20';
         case 'USDC':
+        case 'IUSD':
             return 'bg-gradient-to-br from-[#2775CA] to-[#1E5D9F] border-blue-300/20';
         default:
-            return 'bg-gradient-to-br from-[#2E7D32] to-[#1B5E20] border-emerald-450/20';
+            return 'bg-gradient-to-br from-[#2E7D32] to-[#1B5E20] border-emerald-500/20';
     }
 };
 
@@ -60,16 +61,17 @@ const WalletCarousel: React.FC = () => {
     // Prepare live wallet list
     const wallets: Array<{ currency: string; amount: string; cardNum: string; bg: string }> = [];
 
-    // Push USDC if loaded
+    // Push crypto balance if loaded
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         const d = cryptoQuery.data.data;
         const addr = d.walletAddress || '';
         const shortAddr = addr ? addr.slice(-4) : 'SCW';
+        const symbol = d.symbol || 'iUSD';
         wallets.push({
-            currency: 'USDC',
+            currency: symbol,
             cardNum: shortAddr,
-            amount: formatBalance(d.balanceUsdc, 'USDC'),
-            bg: getCardBg('USDC'),
+            amount: d.balanceFormatted || formatBalance(d.balanceUsdc, symbol),
+            bg: getCardBg(symbol),
         });
     }
 
@@ -97,13 +99,13 @@ const WalletCarousel: React.FC = () => {
             </span>
 
             {isLoading && wallets.length === 0 ? (
-                <div className="flex space-x-4 pb-2 overflow-x-auto scrollbar-none">
+                <div className="flex gap-4 pb-2 overflow-x-auto scrollbar-none">
                     {[1, 2, 3].map((idx) => (
                         <div key={idx} className="w-[200px] h-[130px] rounded-2xl bg-white/5 border border-white/5 animate-pulse shrink-0" />
                     ))}
                 </div>
             ) : (
-                <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-none select-none flex-wrap gap-4">
+                <div className="flex overflow-x-auto pb-2 scrollbar-none select-none flex-wrap gap-4">
                     {wallets.map((card) => (
                         <div
                             key={card.currency}

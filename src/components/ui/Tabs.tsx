@@ -25,7 +25,7 @@ export const Tabs: React.FC<TabsProps> = ({
     return (
       <div
         className={cn(
-          "inline-flex p-1 bg-[#0A0E1A] border border-white/5 rounded-2xl",
+          "inline-flex p-1 bg-[#0A0E1A] border border-white/20 rounded-2xl",
           className
         )}
       >

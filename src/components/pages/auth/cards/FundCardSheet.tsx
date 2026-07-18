@@ -24,6 +24,7 @@ const CURRENCY_NAMES: Record<string, string> = {
     XOF: 'CFA Franc BCEAO',
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
+    IUSD: 'Instant USD',
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
@@ -63,10 +64,11 @@ export const FundCardSheet: React.FC = () => {
     const walletsList: any[] = [];
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         const d = cryptoQuery.data.data;
+        const symbol = d.symbol || 'iUSD';
         walletsList.push({
-            name: CURRENCY_NAMES.USDC,
-            code: 'USDC',
-            balance: d.balanceUsdc + ' USDC',
+            name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
+            code: symbol,
+            balance: d.balanceFormatted || (d.balanceUsdc + ' ' + symbol),
             rawBalance: parseFloat(d.balanceUsdc || '0'),
         });
     }

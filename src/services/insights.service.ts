@@ -1,33 +1,63 @@
 import { BaseService } from './base.service';
 
+export interface BalanceTrendItem {
+  date: string;
+  fiatUsd: number;
+  cryptoUsd: number;
+  totalUsd: number;
+}
+
+export interface AssetAllocationDetails {
+  fiatUsd: number;
+  fiatFormatted: string;
+  fiatPct: number;
+  cryptoUsd: number;
+  cryptoFormatted: string;
+  cryptoPct: number;
+  totalUsd: number;
+  totalFormatted: string;
+}
+
+export interface MonthlyFlowItem {
+  month: string;
+  income: number;
+  spending: number;
+}
+
+export interface SpendingByTypeItem {
+  type: string;
+  label: string;
+  fiatAmount: number;
+  cryptoAmount: number;
+  totalAmount: number;
+}
+
 export interface InsightsResponse {
   success: boolean;
   data: {
+    period: string;
     summary: {
       totalBalance: number;
-      income: number;
-      spending: number;
+      totalFormatted: string;
+      incomeMonth: number;
+      incomeFormatted: string;
+      spendingMonth: number;
+      spendingFormatted: string;
       netFlow: number;
-      transactionCount?: number;
+      netFormatted: string;
     };
-    balanceTrend?: {
-      dates: string[];
-      fiat: number[];
-      crypto: number[];
-    };
-    assetAllocation?: {
-      fiatPercentage: number;
-      cryptoPercentage: number;
-    };
-    monthlyCashFlow?: {
-      months: string[];
-      income: number[];
-      spending: number[];
-    };
-    spendingBreakdown?: {
-      categories: string[];
-      values: number[];
-    };
+    fiatBalance: number;
+    cryptoBalance: number;
+    trendChange: number;
+    trendFormatted: string;
+    balanceTrends: BalanceTrendItem[];
+    assetAllocation: AssetAllocationDetails;
+    monthlyFlow: MonthlyFlowItem[];
+    netFlow: number;
+    netFormatted: string;
+    spendingByType: SpendingByTypeItem[];
+    totalActivity: number;
+    totalActivityFormatted: string;
   };
 }
 

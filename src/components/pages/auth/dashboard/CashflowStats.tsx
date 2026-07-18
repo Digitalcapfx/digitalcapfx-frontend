@@ -26,11 +26,12 @@ const CashflowStats: React.FC = () => {
         );
     }
 
-    const summary = insightsQuery.data?.data?.summary || {
-        income: 0,
-        spending: 0,
-        netFlow: 0,
-        transactionCount: 0
+    const rawSummary = insightsQuery.data?.data?.summary;
+    const summary = {
+        income: rawSummary?.incomeMonth ?? 0,
+        spending: rawSummary?.spendingMonth ?? 0,
+        netFlow: rawSummary?.netFlow ?? 0,
+        transactionCount: insightsQuery.data?.data?.totalActivity ?? 0
     };
 
     const isNetPositive = summary.netFlow >= 0;

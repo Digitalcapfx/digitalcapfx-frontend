@@ -45,6 +45,7 @@ const CURRENCY_NAMES: Record<string, string> = {
     XOF: 'CFA Franc BCEAO',
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
+    IUSD: 'Instant USD',
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
@@ -124,12 +125,13 @@ export const SendMoneySheet: React.FC = () => {
     // Map stablecoin wallet
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         const d = cryptoQuery.data.data;
+        const symbol = d.symbol || 'iUSD';
         walletsList.push({
-            id: 'usdc',
-            name: CURRENCY_NAMES.USDC,
-            code: 'USDC',
+            id: symbol.toLowerCase(),
+            name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
+            code: symbol,
             type: 'stablecoin',
-            balance: formatBalance(d.balanceUsdc, 'USDC'),
+            balance: d.balanceFormatted || formatBalance(d.balanceUsdc, symbol),
             rawBalance: parseFloat(d.balanceUsdc || '0'),
             walletAddress: d.walletAddress,
         });
