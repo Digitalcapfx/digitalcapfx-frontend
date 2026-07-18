@@ -65,13 +65,9 @@ export interface ActivityResponse {
 }
 
 class TransferService extends BaseService {
-  async sendCrypto(payload: SendCryptoRequest): Promise<SendCryptoResponse> {
-    const response = await this.api.post('/crypto/send', payload);
-    return response.data;
-  }
-
-  async fundAccount(payload: FundAccountRequest): Promise<FundAccountResponse> {
-    const response = await this.api.post('/wallets/deposit', {
+  async initiateDeposit(payload: FundAccountRequest & { isStablecoin?: boolean }): Promise<FundAccountResponse> {
+    const endpoint = payload.isStablecoin ? '/crypto/fund' : '/wallets/deposit';
+    const response = await this.api.post(endpoint, {
       amount: payload.amount,
       currency: payload.currency,
       operator: payload.operator,
@@ -80,13 +76,8 @@ class TransferService extends BaseService {
     return response.data;
   }
 
-  async withdraw(payload: WithdrawRequest): Promise<WithdrawResponse> {
-    const response = await this.api.post('/wallets/withdraw', {
-      amount: parseFloat(payload.amount),
-      currency: payload.token || 'XOF',
-      operator: payload.payout_network,
-      phone: payload.payout_mobile
-    });
+  async sendCrypto(payload: SendCryptoRequest): Promise<SendCryptoResponse> {
+    const response = await this.api.post('/crypto/send', payload);
     return response.data;
   }
 

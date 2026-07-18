@@ -1,13 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { 
-    ChevronDown, 
-    Search, 
-    ArrowLeft, 
-    Check, 
-    Download, 
-    RefreshCw, 
+import {
+    ChevronDown,
+    Search,
+    ArrowLeft,
+    Check,
+    Download,
+    RefreshCw,
     CheckCircle2,
     Info,
     Trash2,
@@ -70,13 +70,13 @@ export const SendMoneySheet: React.FC = () => {
 
     // Wizard step state: 1 = Form, 2 = Review & Confirm, 3 = Success
     const [step, setStep] = useState<1 | 2 | 3>(1);
-    
+
     // Form inputs state
     const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [amount, setAmount] = useState('');
     const [recipientType, setRecipientType] = useState<'new' | 'saved'>('new');
-    
+
     // New beneficiary inputs
     const [accountNumber, setAccountNumber] = useState('');
     const [accountName, setAccountName] = useState('');
@@ -84,7 +84,7 @@ export const SendMoneySheet: React.FC = () => {
     const [country, setCountry] = useState('Senegal');
     const [saveBeneficiary, setSaveBeneficiary] = useState(false);
     const [selectedBeneficiaryId, setSelectedBeneficiaryId] = useState<string | null>(null);
-    
+
     // Mobile Money operator (XAF/XOF)
     const [operator, setOperator] = useState('Orange');
     // Internal user transfer toggle
@@ -92,8 +92,8 @@ export const SendMoneySheet: React.FC = () => {
 
     // Crypto recipient inputs
     const [cryptoAddress, setCryptoAddress] = useState('');
-    const [cryptoSendMode, setCryptoSendMode] = useState<'phone' | 'address'>('phone');
-    
+    const [cryptoSendMode, setCryptoSendMode] = useState<'phone' | 'withdraw' | 'address'>('phone');
+
     // Shared inputs
     const [note, setNote] = useState('');
 
@@ -193,15 +193,15 @@ export const SendMoneySheet: React.FC = () => {
     }, [beneficiariesList, selectedBeneficiaryId]);
 
     const activeBeneficiary = beneficiariesList.find(b => b.id === selectedBeneficiaryId) || beneficiariesList[0];
-    
-    const displayRecipientName = isCrypto 
+
+    const displayRecipientName = isCrypto
         ? (cryptoAddress ? `${cryptoAddress.slice(0, 8)}...${cryptoAddress.slice(-6)}` : 'Recipient Phone')
         : (recipientType === 'saved' && activeBeneficiary ? activeBeneficiary.name : (accountName || 'New Recipient'));
 
     // Check if form is valid to proceed
     const isFormValid = () => {
         if (!selectedWalletId || !amount || parseFloat(amount) <= 0) return false;
-        
+
         if (isCrypto) {
             return cryptoAddress.length > 5;
         } else {
@@ -295,8 +295,10 @@ export const SendMoneySheet: React.FC = () => {
             withdrawalService.initiateWithdrawal(payload),
         onSuccess: (data) => {
             if (data?.success && data?.data) {
-                setTxRef(data.data.reference || 'TXN-OK');
-                setTxStatus(data.data.status || 'Processing');
+                const txId = data.data.id || data.data.caas_withdrawal_id || data.data.reference || 'TXN-OK';
+                const status = data.data.status || 'Processing';
+                setTxRef(txId);
+                setTxStatus(status);
                 setStep(3);
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
@@ -308,12 +310,14 @@ export const SendMoneySheet: React.FC = () => {
     });
 
     const hub2TransferMutation = useMutation({
-        mutationFn: (payload: { amount: number; currency: 'XOF' | 'XAF'; phone: string; operator: string }) =>
-            withdrawalService.transferHub2(payload),
+        mutationFn: (payload: { amount: number; currency: string; phone: string; operator: string }) =>
+            withdrawalService.initiateWithdrawal(payload),
         onSuccess: (data) => {
             if (data?.success && data?.data) {
-                setTxRef(data.data.reference || 'TXN-MM-OK');
-                setTxStatus(data.data.status || 'Processing');
+                const txId = data.data.id || data.data.caas_withdrawal_id || data.data.reference || 'TXN-MM-OK';
+                const status = data.data.status || 'Processing';
+                setTxRef(txId);
+                setTxStatus(status);
                 setStep(3);
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
@@ -341,13 +345,194 @@ export const SendMoneySheet: React.FC = () => {
         }
     });
 
+    const handleDownloadReceipt = () => {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            toast.error('Please allow popups to download the receipt.');
+            return;
+        }
+
+        const dateStr = new Date().toLocaleString();
+
+        window.document.write(`
+            <html>
+                <head>
+                    <title>Transaction Receipt - ${txRef}</title>
+                    <style>
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                            color: #0f172a;
+                            padding: 40px;
+                            max-width: 600px;
+                            margin: 0 auto;
+                        }
+                        .header {
+                            text-align: center;
+                            border-bottom: 2px solid #f1f5f9;
+                            padding-bottom: 20px;
+                            margin-bottom: 30px;
+                        }
+                        .logo {
+                            font-size: 24px;
+                            font-weight: 800;
+                            color: #3b82f6;
+                            margin-bottom: 5px;
+                        }
+                        .title {
+                            font-size: 14px;
+                            color: #64748b;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                        }
+                        .amount-box {
+                            text-align: center;
+                            background-color: #f8fafc;
+                            border-radius: 16px;
+                            padding: 24px;
+                            margin-bottom: 30px;
+                        }
+                        .amount-label {
+                            font-size: 12px;
+                            color: #64748b;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            display: block;
+                            margin-bottom: 5px;
+                        }
+                        .amount-val {
+                            font-size: 32px;
+                            font-weight: 900;
+                            color: #0f172a;
+                        }
+                        .details-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 30px;
+                        }
+                        .details-row {
+                            border-bottom: 1px solid #f1f5f9;
+                        }
+                        .details-row td {
+                            padding: 14px 0;
+                            font-size: 13px;
+                        }
+                        .label {
+                            color: #64748b;
+                            font-weight: 600;
+                            width: 150px;
+                        }
+                        .value {
+                            color: #0f172a;
+                            font-weight: 700;
+                            text-align: right;
+                        }
+                        .value.mono {
+                            font-family: monospace;
+                            font-size: 12px;
+                        }
+                        .status {
+                            display: inline-block;
+                            padding: 4px 10px;
+                            border-radius: 6px;
+                            font-size: 11px;
+                            font-weight: 800;
+                            text-transform: uppercase;
+                        }
+                        .status.completed {
+                            background-color: #dcfce7;
+                            color: #15803d;
+                        }
+                        .status.pending {
+                            background-color: #dbeafe;
+                            color: #1d4ed8;
+                        }
+                        .footer {
+                            text-align: center;
+                            color: #94a3b8;
+                            font-size: 11px;
+                            margin-top: 50px;
+                            border-top: 1px solid #f1f5f9;
+                            padding-top: 20px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="logo">DigitalFX</div>
+                        <div class="title">Transaction Receipt</div>
+                    </div>
+                    
+                    <div class="amount-box">
+                        <span class="amount-label">Amount Transferred</span>
+                        <div class="amount-val">${activeWallet.type === 'fiat' ? '$' : ''}${parseFloat(amount).toLocaleString()} ${activeWallet.code}</div>
+                    </div>
+                    
+                    <table class="details-table">
+                        <tr class="details-row">
+                            <td class="label">Transaction ID</td>
+                            <td class="value mono">${txRef}</td>
+                        </tr>
+                        <tr class="details-row">
+                            <td class="label">Date</td>
+                            <td class="value">${dateStr}</td>
+                        </tr>
+                        <tr class="details-row">
+                            <td class="label">Source Wallet</td>
+                            <td class="value">${activeWallet.name} (${activeWallet.code})</td>
+                        </tr>
+                        <tr class="details-row">
+                            <td class="label">Recipient</td>
+                            <td class="value">${displayRecipientName}</td>
+                        </tr>
+                        <tr class="details-row">
+                            <td class="label">Reference</td>
+                            <td class="value">${note || 'Invoice payment'}</td>
+                        </tr>
+                        <tr class="details-row">
+                            <td class="label">Status</td>
+                            <td class="value">
+                                <span class="status ${txStatus.toLowerCase() === 'completed' || txStatus.toLowerCase() === 'success' ? 'completed' : 'pending'}">
+                                    ${txStatus}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div class="footer">
+                        Thank you for using DigitalFX.<br>
+                        This is an automated receipt generated by DigitalFX for tracking purposes.
+                    </div>
+                    
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            window.onafterprint = function() {
+                                window.close();
+                            }
+                        }
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+
     const handleConfirmSend = async () => {
         if (isCrypto) {
-            sendCryptoMutation.mutate({
-                receiver_phone: cryptoAddress,
-                amount: amount,
-                token: activeWallet.code === 'USDT' ? 'USDT' : 'USDC',
-            });
+            if (cryptoSendMode === 'withdraw') {
+                hub2TransferMutation.mutate({
+                    amount: parseFloat(amount),
+                    currency: activeWallet.code,
+                    phone: cryptoAddress,
+                    operator
+                });
+            } else {
+                sendCryptoMutation.mutate({
+                    receiver_phone: cryptoAddress,
+                    amount: amount,
+                    token: activeWallet.code === 'USDT' ? 'USDT' : 'USDC',
+                });
+            }
         } else if (isMobileMoney) {
             const phoneVal = recipientType === 'saved' ? activeBeneficiary?.accountNumber : accountNumber;
             hub2TransferMutation.mutate({
@@ -409,11 +594,11 @@ export const SendMoneySheet: React.FC = () => {
         setQuoteDetails(null);
     };
 
-    const isPending = sendCryptoMutation.isPending || 
-                      withdrawMutation.isPending || 
-                      hub2TransferMutation.isPending || 
-                      internalTransferMutation.isPending ||
-                      quoteMutation.isPending;
+    const isPending = sendCryptoMutation.isPending ||
+        withdrawMutation.isPending ||
+        hub2TransferMutation.isPending ||
+        internalTransferMutation.isPending ||
+        quoteMutation.isPending;
 
     return (
         <Sheet
@@ -426,12 +611,12 @@ export const SendMoneySheet: React.FC = () => {
                 /* Step 1: Input details form */
                 <form onSubmit={handleProceed} className="space-y-6 flex flex-col justify-between h-full text-left">
                     <div className="space-y-5">
-                        
+
                         {/* Selector for FROM Wallet */}
                         <div className="space-y-2">
                             <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block select-none">Source Wallet</span>
                             <div className="relative">
-                                <div 
+                                <div
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                     className="bg-[#0C1224] border border-white/10 hover:border-white/15 rounded-2xl p-4 flex items-center justify-between cursor-pointer transition select-none"
                                 >
@@ -445,11 +630,11 @@ export const SendMoneySheet: React.FC = () => {
                                     <ChevronDown className="h-4 w-4 text-slate-500" />
                                 </div>
 
-                                 {/* Overlay to close dropdown when clicking outside */}
+                                {/* Overlay to close dropdown when clicking outside */}
                                 {isDropdownOpen && (
-                                    <div 
-                                        className="fixed inset-0 z-20" 
-                                        onClick={() => setIsDropdownOpen(false)} 
+                                    <div
+                                        className="fixed inset-0 z-20"
+                                        onClick={() => setIsDropdownOpen(false)}
                                     />
                                 )}
 
@@ -498,16 +683,15 @@ export const SendMoneySheet: React.FC = () => {
                                 )}
                             </div>
                         </div>
-
                         <div className="h-[1px] bg-white/5 my-1"></div>
 
                         {isCrypto ? (
                             /* Crypto Recipient Input */
                             <div className="space-y-4 animate-in fade-in duration-200">
-                                {/* Segmented pills to select phone vs address */}
+                                {/* Segmented pills to select phone vs withdraw vs address */}
                                 <div className="space-y-1.5">
                                     <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Transfer Method</span>
-                                    <div className="flex bg-black/30 border border-white/5 p-1 rounded-xl">
+                                    <div className="flex bg-black/30 border border-white/15 p-1 rounded-xl">
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -515,9 +699,9 @@ export const SendMoneySheet: React.FC = () => {
                                                 setCryptoAddress('');
                                             }}
                                             className={cn(
-                                                "flex-1 py-2 text-[11px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                                cryptoSendMode === 'phone' 
-                                                    ? "bg-primary-500 text-white shadow-md" 
+                                                "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
+                                                cryptoSendMode === 'phone'
+                                                    ? "bg-primary-500 text-white shadow-md"
                                                     : "text-slate-400 hover:text-white"
                                             )}
                                         >
@@ -526,39 +710,79 @@ export const SendMoneySheet: React.FC = () => {
                                         <button
                                             type="button"
                                             onClick={() => {
+                                                setCryptoSendMode('withdraw');
+                                                setCryptoAddress('');
+                                            }}
+                                            className={cn(
+                                                "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
+                                                cryptoSendMode === 'withdraw'
+                                                    ? "bg-primary-500 text-white shadow-md"
+                                                    : "text-slate-400 hover:text-white"
+                                            )}
+                                        >
+                                            Withdraw to MM
+                                        </button>
+                                        {/* <button
+                                            type="button"
+                                            onClick={() => {
                                                 setCryptoSendMode('address');
                                                 setCryptoAddress('');
                                             }}
                                             className={cn(
-                                                "flex-1 py-2 text-[11px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                                cryptoSendMode === 'address' 
-                                                    ? "bg-primary-500 text-white shadow-md" 
+                                                "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
+                                                cryptoSendMode === 'address'
+                                                    ? "bg-primary-500 text-white shadow-md"
                                                     : "text-slate-400 hover:text-white"
                                             )}
                                         >
-                                            Send to Address
-                                        </button>
+                                            On-Chain Address
+                                        </button> */}
                                     </div>
                                 </div>
 
-                                {cryptoSendMode === 'phone' ? (
-                                    <PhoneInput 
+                                {cryptoSendMode === 'phone' && (
+                                    <PhoneInput
                                         required
                                         label="Recipient Phone number*"
                                         placeholder="Enter recipient phone"
                                         value={cryptoAddress}
                                         onChange={(val) => setCryptoAddress(val)}
                                     />
-                                ) : (
+                                )}
+                                {cryptoSendMode === 'withdraw' && (
+                                    <div className="space-y-4">
+                                        <PhoneInput
+                                            required
+                                            label="Withdraw Phone number*"
+                                            placeholder="Enter phone"
+                                            value={cryptoAddress}
+                                            onChange={(val) => setCryptoAddress(val)}
+                                        />
+                                        <div className="space-y-1.5">
+                                            <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Operator*</span>
+                                            <select
+                                                value={operator}
+                                                onChange={(e) => setOperator(e.target.value)}
+                                                className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans select-none"
+                                            >
+                                                <option value="MTN">MTN Mobile Money</option>
+                                                <option value="Orange">Orange Money</option>
+                                                <option value="Moov">Moov Money</option>
+                                                <option value="Wave">Wave</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                                {cryptoSendMode === 'address' && (
                                     <div className="space-y-1.5">
                                         <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block font-sans">Recipient Wallet Address*</span>
-                                        <input 
+                                        <input
                                             type="text"
                                             required
                                             value={cryptoAddress}
                                             onChange={(e) => setCryptoAddress(e.target.value)}
                                             placeholder="Enter 0x... address"
-                                            className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-primary-500/50 w-full font-mono"
+                                            className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-primary-500/50 w-full font-mono"
                                         />
                                     </div>
                                 )}
@@ -566,11 +790,11 @@ export const SendMoneySheet: React.FC = () => {
                         ) : (
                             /* Fiat Recipient Form */
                             <div className="space-y-4">
-                                
+
                                 {/* Segmented transfer toggles */}
                                 <div className="flex space-x-3 mb-2">
                                     <label className="flex items-center space-x-2 text-xs font-bold text-slate-300 select-none cursor-pointer">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             checked={isInternal}
                                             disabled={isMobileMoney}
@@ -587,8 +811,8 @@ export const SendMoneySheet: React.FC = () => {
                                         onClick={() => setRecipientType('new')}
                                         className={cn(
                                             "flex-1 py-2 text-[11px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                            recipientType === 'new' 
-                                                ? "bg-primary-500 text-white shadow-md" 
+                                            recipientType === 'new'
+                                                ? "bg-primary-500 text-white shadow-md"
                                                 : "text-slate-400 hover:text-white"
                                         )}
                                     >
@@ -599,8 +823,8 @@ export const SendMoneySheet: React.FC = () => {
                                         onClick={() => setRecipientType('saved')}
                                         className={cn(
                                             "flex-1 py-2 text-[11px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                            recipientType === 'saved' 
-                                                ? "bg-primary-500 text-white shadow-md" 
+                                            recipientType === 'saved'
+                                                ? "bg-primary-500 text-white shadow-md"
                                                 : "text-slate-400 hover:text-white"
                                         )}
                                     >
@@ -614,7 +838,7 @@ export const SendMoneySheet: React.FC = () => {
                                             <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">
                                                 {isMobileMoney ? 'Mobile phone number*' : 'Bank Account Number*'}
                                             </span>
-                                            <input 
+                                            <input
                                                 type="text"
                                                 required
                                                 value={accountNumber}
@@ -625,7 +849,7 @@ export const SendMoneySheet: React.FC = () => {
                                         </div>
                                         <div className="space-y-1.5">
                                             <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Recipient Full Name*</span>
-                                            <input 
+                                            <input
                                                 type="text"
                                                 required
                                                 value={accountName}
@@ -639,7 +863,7 @@ export const SendMoneySheet: React.FC = () => {
                                             /* Mobile Money Network Selector */
                                             <div className="space-y-1.5">
                                                 <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Mobile Money Operator*</span>
-                                                <select 
+                                                <select
                                                     value={operator}
                                                     onChange={(e) => setOperator(e.target.value)}
                                                     className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans cursor-pointer"
@@ -655,7 +879,7 @@ export const SendMoneySheet: React.FC = () => {
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5">
                                                     <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Bank Name</span>
-                                                    <input 
+                                                    <input
                                                         type="text"
                                                         value={bankName}
                                                         onChange={(e) => setBankName(e.target.value)}
@@ -665,7 +889,7 @@ export const SendMoneySheet: React.FC = () => {
                                                 </div>
                                                 <div className="space-y-1.5">
                                                     <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Country</span>
-                                                    <input 
+                                                    <input
                                                         type="text"
                                                         value={country}
                                                         onChange={(e) => setCountry(e.target.value)}
@@ -678,7 +902,7 @@ export const SendMoneySheet: React.FC = () => {
 
                                         {!isCrypto && !isMobileMoney && !isInternal && (
                                             <label className="flex items-center space-x-2 text-xs font-semibold text-slate-400 select-none cursor-pointer mt-1">
-                                                <input 
+                                                <input
                                                     type="checkbox"
                                                     checked={saveBeneficiary}
                                                     onChange={(e) => setSaveBeneficiary(e.target.checked)}
@@ -699,13 +923,13 @@ export const SendMoneySheet: React.FC = () => {
                                         ) : (
                                             <div className="space-y-2 max-h-[170px] overflow-y-auto pr-1">
                                                 {beneficiariesList.map((b) => (
-                                                    <div 
+                                                    <div
                                                         key={b.id}
                                                         onClick={() => setSelectedBeneficiaryId(b.id)}
                                                         className={cn(
                                                             "p-3.5 rounded-2xl bg-black/20 border transition flex items-center justify-between cursor-pointer",
-                                                            selectedBeneficiaryId === b.id 
-                                                                ? "border-primary-500 bg-primary-500/5" 
+                                                            selectedBeneficiaryId === b.id
+                                                                ? "border-primary-500 bg-primary-500/5"
                                                                 : "border-white/10 hover:border-white/20"
                                                         )}
                                                     >
@@ -739,7 +963,7 @@ export const SendMoneySheet: React.FC = () => {
 
                         <div className="space-y-1.5">
                             <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block select-none">Reference / Note</span>
-                            <input 
+                            <input
                                 type="text"
                                 value={note}
                                 onChange={(e) => setNote(e.target.value)}
@@ -771,7 +995,7 @@ export const SendMoneySheet: React.FC = () => {
                 /* Step 2: Review and Confirm conversion */
                 <div className="space-y-6 flex flex-col justify-between h-full text-left">
                     <div className="space-y-5">
-                        
+
                         <div className="bg-gradient-to-br from-[#0F172A] to-[#0A0F1D] border border-white/5 rounded-3xl p-6.5 text-center shadow-xl select-none">
                             <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block">You are sending</span>
                             <span className="text-2.5xl md:text-3.5xl font-black text-white block mt-1.5 font-satoshi">
@@ -789,7 +1013,7 @@ export const SendMoneySheet: React.FC = () => {
                                     <span className="font-bold text-white block">{displayRecipientName}</span>
                                 </div>
                             </div>
-                            
+
                             <div className="flex justify-between items-center py-0.5">
                                 <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Recipient gets</span>
                                 <span className="font-bold text-emerald-400 font-mono">
@@ -868,7 +1092,7 @@ export const SendMoneySheet: React.FC = () => {
             {step === 3 && (
                 /* Step 3: Success Screen details */
                 <div className="space-y-6 flex flex-col justify-between h-full text-center">
-                    
+
                     <div className="space-y-6 select-none pt-8">
                         <div className="relative inline-flex items-center justify-center">
                             <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-[20px]"></div>
@@ -876,7 +1100,7 @@ export const SendMoneySheet: React.FC = () => {
                                 <CheckCircle2 className="h-9 w-9" />
                             </div>
                         </div>
-                        
+
                         <div className="space-y-2 max-w-sm mx-auto">
                             <span className="text-[10px] font-bold text-emerald-400 tracking-[0.2em] uppercase font-mono block">
                                 Transfer Sent
@@ -895,7 +1119,7 @@ export const SendMoneySheet: React.FC = () => {
                             <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Transaction ID</span>
                             <span className="font-mono text-slate-350">{txRef}</span>
                         </div>
-                        
+
                         <div className="flex justify-between items-center py-0.5">
                             <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Est. delivery</span>
                             <span className="text-white">
@@ -915,13 +1139,22 @@ export const SendMoneySheet: React.FC = () => {
 
                         <div className="flex justify-between items-center py-0.5 border-t border-white/5 pt-3">
                             <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Status</span>
-                            <span className="text-emerald-400 font-bold">{txStatus}</span>
+                            <span className={cn(
+                                "font-bold",
+                                (txStatus.toLowerCase() === 'completed' || txStatus.toLowerCase() === 'success')
+                                    ? "text-emerald-400"
+                                    : (txStatus.toLowerCase() === 'pending' || txStatus.toLowerCase() === 'processing')
+                                        ? "text-blue-400"
+                                        : "text-rose-500"
+                            )}>
+                                {txStatus}
+                            </span>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mt-auto">
                         <button
-                            onClick={() => alert('Downloading receipt PDF...')}
+                            onClick={handleDownloadReceipt}
                             className="bg-transparent hover:bg-white/[0.02] border border-white/15 text-white font-bold text-xs py-3.5 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center space-x-1.5"
                         >
                             <Download className="h-4 w-4 text-slate-400" />
@@ -931,8 +1164,7 @@ export const SendMoneySheet: React.FC = () => {
                             onClick={handleReset}
                             className="bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs py-3.5 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center space-x-1.5 active:scale-[0.98]"
                         >
-                            <RefreshCw className="h-3.5 w-3.5" />
-                            <span>Send Again</span>
+                            <span>Done</span>
                         </button>
                     </div>
 

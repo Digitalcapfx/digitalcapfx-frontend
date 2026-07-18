@@ -92,6 +92,7 @@ export const ReceiveMoneySheet: React.FC = () => {
     const [phone, setPhone] = useState('');
     const [depositAmount, setDepositAmount] = useState('');
     const [depositSuccess, setDepositSuccess] = useState(false);
+    const [fundingCurrency, setFundingCurrency] = useState<'XOF' | 'XAF'>('XOF');
 
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -126,10 +127,10 @@ export const ReceiveMoneySheet: React.FC = () => {
     // Map stablecoin wallet
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         const d = cryptoQuery.data.data;
-        const symbol = d.symbol || 'iUSD';
+        const symbol = d.symbol === 'IUSD' ? 'iUSD' : (d.symbol || 'iUSD');
         walletsList.push({
             id: symbol.toLowerCase(),
-            name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
+            name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || CURRENCY_NAMES[symbol] || 'Instant USD',
             code: symbol,
             type: 'stablecoin',
             balance: d.balanceFormatted || formatBalance(d.balanceUsdc, symbol),
@@ -166,6 +167,7 @@ export const ReceiveMoneySheet: React.FC = () => {
             setDepositSuccess(false);
             setDepositAmount('');
             setPhone('');
+            setFundingCurrency('XOF');
             setActiveTab('details');
         }
     }, [isReceiveOpen, receiveDefaultWalletId, walletsList.length]);
@@ -185,7 +187,7 @@ export const ReceiveMoneySheet: React.FC = () => {
         ? (activeWallet.walletAddress || '0xSCW1234567890abcdef...')
         : (activeWallet.iban || activeWallet.accountNumberUk || activeWallet.accountNumber || 'Account details loading...');
 
-    const isMomoAvailable = activeWallet.code === 'XAF' || activeWallet.code === 'XOF';
+    const isMomoAvailable = activeWallet.code === 'XAF' || activeWallet.code === 'XOF' || isCrypto;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(address);
@@ -207,7 +209,7 @@ export const ReceiveMoneySheet: React.FC = () => {
 
     // MoMo Fund Mutation
     const fundMutation = useMutation({
-        mutationFn: (payload: { amount: number; currency: 'XOF' | 'XAF'; operator: string; phone: string; token?: 'USDC' | 'USDT' }) => transferService.fundAccount(payload),
+        mutationFn: (payload: { amount: number; currency: 'XOF' | 'XAF'; operator: string; phone: string; isStablecoin?: boolean }) => transferService.initiateDeposit(payload),
         onSuccess: (data) => {
             if (data?.success) {
                 setDepositSuccess(true);
@@ -229,10 +231,10 @@ export const ReceiveMoneySheet: React.FC = () => {
         if (!depositAmount || parseFloat(depositAmount) <= 0 || !phone) return;
         fundMutation.mutate({
             amount: parseFloat(depositAmount),
-            currency: activeWallet.code as 'XOF' | 'XAF',
+            currency: isCrypto ? fundingCurrency : (activeWallet.code as 'XOF' | 'XAF'),
             operator,
             phone,
-            token: 'USDC',
+            isStablecoin: isCrypto,
         });
     };
 
@@ -304,7 +306,7 @@ export const ReceiveMoneySheet: React.FC = () => {
 
                     {isMomoAvailable && (
                         /* Tab selector for MoMo vs bank details */
-                        <div className="flex bg-black/30 border border-white/5 p-1 rounded-xl">
+                        <div className="flex bg-black/30 border border-white/15 p-1 rounded-xl">
                             <button
                                 type="button"
                                 onClick={() => setActiveTab('details')}
@@ -348,8 +350,8 @@ export const ReceiveMoneySheet: React.FC = () => {
                                         className="w-full h-full rounded-lg"
                                     />
                                 </div>
-                                <span className="text-[10px] text-slate-550 font-bold tracking-wider uppercase block">
-                                    Your {activeWallet.code} {isCrypto ? 'address' : 'bank details'}
+                                <span className="text-[10px] text-slate-550 font-bold tracking-wider block">
+                                    YOUR {activeWallet.code} {isCrypto ? 'ADDRESS' : 'BANK DETAILS'}
                                 </span>
                             </div>
 
@@ -412,6 +414,19 @@ export const ReceiveMoneySheet: React.FC = () => {
                                 </div>
                             ) : (
                                 <form onSubmit={handleInitiateDeposit} className="space-y-4">
+                                    {isCrypto && (
+                                        <div className="space-y-1.5 animate-in fade-in duration-200">
+                                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block font-sans">Payment Currency*</span>
+                                            <select
+                                                value={fundingCurrency}
+                                                onChange={(e) => setFundingCurrency(e.target.value as 'XOF' | 'XAF')}
+                                                className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans select-none"
+                                            >
+                                                <option value="XOF">XOF (West African CFA)</option>
+                                                <option value="XAF">XAF (Central African CFA)</option>
+                                            </select>
+                                        </div>
+                                    )}
                                     <div className="space-y-1.5">
                                         <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Operator*</span>
                                         <select
@@ -433,7 +448,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                                         onChange={setPhone}
                                     />
                                     <div className="space-y-1.5">
-                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Deposit Amount ({activeWallet.code})*</span>
+                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Deposit Amount ({isCrypto ? fundingCurrency : activeWallet.code})*</span>
                                         <NumberInput
                                             required
                                             value={depositAmount}

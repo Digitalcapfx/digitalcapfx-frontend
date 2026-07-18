@@ -45,7 +45,9 @@ export interface WithdrawalQuoteResponse {
 export interface InitiateWithdrawalRequest {
   amount: number;
   currency: string;
-  beneficiaryId: string;
+  phone?: string;
+  operator?: string;
+  beneficiaryId?: string;
   source_currency?: string;
 }
 
@@ -135,22 +137,41 @@ export class WithdrawalService extends BaseService {
     return response.data;
   }
 
-  async initiateWithdrawal(payload: InitiateWithdrawalRequest): Promise<{ success: boolean; data: { reference: string; status: string } }> {
-    const response = await this.api.post('/withdrawals', {
-      beneficiary_id: payload.beneficiaryId,
-      source_amount: payload.amount,
-      source_currency: payload.source_currency || payload.currency || 'USD'
-    });
-    return response.data;
+  async initiateWithdrawal(payload: InitiateWithdrawalRequest): Promise<any> {
+    const code = payload.currency.toUpperCase();
+    if (code === 'IUSD' || code === 'USDC' || code === 'USDT') {
+      const response = await this.api.post('/crypto/withdraw', {
+        amount: payload.amount.toString(),
+        payout_mobile: payload.phone || '',
+        payout_network: payload.operator || 'MTN',
+        token: code === 'IUSD' ? 'USDC' : code
+      });
+      return response.data;
+    } else if (code === 'XAF' || code === 'XOF') {
+      const response = await this.api.post('/wallets/withdraw', {
+        amount: payload.amount,
+        currency: code,
+        operator: payload.operator || 'MTN',
+        phone: payload.phone || ''
+      });
+      return response.data;
+    } else {
+      const response = await this.api.post('/withdrawals', {
+        beneficiary_id: payload.beneficiaryId,
+        source_amount: payload.amount,
+        source_currency: payload.source_currency || code
+      });
+      return response.data;
+    }
   }
 
-  async transferHub2(payload: Hub2TransferRequest): Promise<{ success: boolean; data: { reference: string; status: string } }> {
-    const response = await this.api.post('/transfers/hub2', {
-      direction: 'disbursement',
-      payment_method: 'mobile_money',
-      ...payload
+  async transferHub2(payload: Hub2TransferRequest): Promise<any> {
+    return this.initiateWithdrawal({
+      amount: payload.amount,
+      currency: payload.currency,
+      phone: payload.phone,
+      operator: payload.operator
     });
-    return response.data;
   }
 
   async transferInternal(payload: InternalTransferRequest): Promise<{ success: boolean; data: { reference: string; status: string } }> {

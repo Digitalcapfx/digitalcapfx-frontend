@@ -55,7 +55,7 @@ const WalletCarousel: React.FC = () => {
         const d = cryptoQuery.data.data;
         const addr = d.walletAddress || '';
         const shortAddr = addr ? addr.slice(-4) : 'SCW';
-        const symbol = d.symbol || 'iUSD';
+        const symbol = d.symbol === 'IUSD' ? 'iUSD' : (d.symbol || 'iUSD');
         wallets.push({
             currency: symbol,
             cardNum: shortAddr,

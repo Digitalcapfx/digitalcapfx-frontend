@@ -68,7 +68,7 @@ const WalletsPage: React.FC = () => {
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         const d = cryptoQuery.data.data;
         const balNum = parseFloat(d.balanceUsdc || '0');
-        const symbol = d.symbol || 'iUSD';
+        const symbol = d.symbol === 'IUSD' ? 'iUSD' : (d.symbol || 'iUSD');
         walletsList.push({
             id: symbol.toLowerCase(),
             name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
