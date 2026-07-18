@@ -36,3 +36,31 @@ export function toCamelCase(obj: any): any {
   }
   return obj;
 }
+
+export function formatCurrencyByLocale(amount: string | number, currency: string): string {
+  const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
+  if (isNaN(val)) return '0.00';
+  
+  const isLocalAfrican = currency.toUpperCase() === 'XAF' || currency.toUpperCase() === 'XOF';
+  const fractionDigits = isLocalAfrican ? 0 : 2;
+  
+  // Use navigator.language client-side, fallback to undefined on server
+  const locale = typeof navigator !== 'undefined' ? navigator.language : undefined;
+  
+  const formatted = val.toLocaleString(locale, {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits
+  });
+  
+  if (isLocalAfrican) {
+    return `${formatted} ${currency}`;
+  }
+  
+  const symbols: Record<string, string> = {
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+  };
+  const prefix = symbols[currency.toUpperCase()] || '';
+  return `${prefix}${formatted}${prefix ? '' : ` ${currency}`}`;
+}

@@ -30,6 +30,10 @@ export interface Wallet {
     rawBalance: number;
     accountNumber?: string;
     walletAddress?: string;
+    iban?: string | null;
+    bic?: string | null;
+    sortCode?: string | null;
+    accountNumberUk?: string | null;
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
@@ -40,6 +44,7 @@ const CURRENCY_NAMES: Record<string, string> = {
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
     IUSD: 'Instant USD',
+    NGN: 'Nigerian Naira',
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
@@ -57,32 +62,56 @@ const formatBalance = (amount: string | number, currency: string) => {
     return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
 };
 
+const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value }) => {
+    const [copied, setCopied] = useState(false);
+    
+    const handleCopy = () => {
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <div className="flex items-center justify-between bg-black/25 border border-white/5 rounded-xl px-4 py-3 select-text select-none">
+            <div className="text-left space-y-0.5 min-w-0 flex-1 pr-3">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block font-sans">{label}</span>
+                <span className="font-mono text-xs text-white block break-all select-all leading-normal">{value}</span>
+            </div>
+            <button 
+                type="button"
+                onClick={handleCopy}
+                className="text-slate-500 hover:text-white transition duration-200 cursor-pointer shrink-0"
+            >
+                {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+            </button>
+        </div>
+    );
+};
+
 export const ReceiveMoneySheet: React.FC = () => {
     const queryClient = useQueryClient();
     const { isReceiveOpen, closeReceive, receiveDefaultWalletId } = useTransactionStore();
 
-    const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
+    const [selectedWalletId, setSelectedWalletId] = useState<string>('usdc');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [copied, setCopied] = useState(false);
-
-    // Funding form states
     const [activeTab, setActiveTab] = useState<'details' | 'momo'>('details');
-    const [depositAmount, setDepositAmount] = useState('');
+
+    // Mobile Money form states
     const [operator, setOperator] = useState('MTN');
     const [phone, setPhone] = useState('');
+    const [depositAmount, setDepositAmount] = useState('');
     const [depositSuccess, setDepositSuccess] = useState(false);
 
     // Queries
     const fiatQuery = useQuery({
         queryKey: ['accounts'],
         queryFn: () => accountService.getAccounts(),
-        enabled: isReceiveOpen,
     });
 
     const cryptoQuery = useQuery({
         queryKey: ['cryptoBalances'],
         queryFn: () => accountService.getCryptoBalances(),
-        enabled: isReceiveOpen,
     });
 
     const walletsList: Wallet[] = [];
@@ -113,6 +142,10 @@ export const ReceiveMoneySheet: React.FC = () => {
                 balance: formatBalance(acc.balance, acc.currency),
                 rawBalance: parseFloat(acc.balance || '0'),
                 accountNumber: acc.accountNumber,
+                iban: acc.iban,
+                bic: acc.bic,
+                sortCode: acc.sortCode,
+                accountNumberUk: acc.accountNumberUk,
             });
         });
     }
@@ -143,7 +176,7 @@ export const ReceiveMoneySheet: React.FC = () => {
     const isCrypto = activeWallet.type === 'stablecoin';
     const address = isCrypto 
         ? (activeWallet.walletAddress || '0xSCW1234567890abcdef...')
-        : (activeWallet.accountNumber ? `Account: ${activeWallet.accountNumber}` : 'Account details loading...');
+        : (activeWallet.iban || activeWallet.accountNumberUk || activeWallet.accountNumber || 'Account details loading...');
 
     const isMomoAvailable = activeWallet.code === 'XAF' || activeWallet.code === 'XOF';
 
@@ -161,7 +194,7 @@ export const ReceiveMoneySheet: React.FC = () => {
             }).catch(console.error);
         } else {
             handleCopy();
-            alert('Details copied to clipboard! Share them with anyone to receive payments.');
+            toast.success('Details copied to clipboard!');
         }
     };
 
@@ -219,43 +252,39 @@ export const ReceiveMoneySheet: React.FC = () => {
                                 <div className="flex items-center space-x-3">
                                     <CurrencyIcon code={activeWallet.code} size="md" />
                                     <div className="text-left">
-                                        <span className="font-bold text-white block text-sm leading-tight">{activeWallet.name}</span>
-                                        <span className="text-[9px] text-slate-500 font-bold uppercase block mt-0.5">{activeWallet.code} • {activeWallet.type}</span>
+                                        <span className="font-bold text-white text-xs block leading-tight">{activeWallet.name}</span>
+                                        <span className="text-[9px] text-slate-500 font-bold uppercase">{activeWallet.code} • {activeWallet.balance}</span>
                                     </div>
                                 </div>
-                                <ChevronDown className="h-4 w-4 text-slate-500" />
+                                <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-200", isDropdownOpen && "rotate-180")} />
                             </div>
-
-                            {/* Overlay to close dropdown when clicking outside */}
-                            {isDropdownOpen && (
-                                <div 
-                                    className="fixed inset-0 z-20" 
-                                    onClick={() => setIsDropdownOpen(false)} 
-                                />
-                            )}
 
                             {/* Dropdown Options */}
                             {isDropdownOpen && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-[#0E1528] border border-white/10 rounded-2xl shadow-2xl z-30 max-h-[220px] overflow-y-auto scrollbar-none py-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-[#090E1E] border border-white/10 rounded-2xl overflow-hidden z-50 max-h-60 overflow-y-auto shadow-2xl">
                                     {walletsList.map((w) => (
-                                        <div
+                                        <div 
                                             key={w.id}
                                             onClick={() => {
                                                 setSelectedWalletId(w.id);
                                                 setIsDropdownOpen(false);
+                                                setCopied(false);
                                                 setDepositSuccess(false);
-                                                setActiveTab('details');
+                                                setDepositAmount('');
+                                                setPhone('');
+                                                // Reset tab to momo if selected momo currency, else details
+                                                setActiveTab((w.code === 'XAF' || w.code === 'XOF') ? 'momo' : 'details');
                                             }}
                                             className={cn(
-                                                "px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition",
-                                                selectedWalletId === w.id ? "bg-white/[0.01]" : ""
+                                                "p-4 flex items-center justify-between hover:bg-white/[0.02] cursor-pointer transition",
+                                                selectedWalletId === w.id && "bg-white/[0.03]"
                                             )}
                                         >
                                             <div className="flex items-center space-x-3">
                                                 <CurrencyIcon code={w.code} size="md" />
                                                 <div className="text-left">
                                                     <span className="font-bold text-white text-xs block leading-tight">{w.name}</span>
-                                                    <span className="text-[9px] text-slate-500 font-bold uppercase">{w.code} • {w.balance}</span>
+                                                    <span className="text-[9px] text-slate-505 font-bold uppercase">{w.code} • {w.balance}</span>
                                                 </div>
                                             </div>
                                             {selectedWalletId === w.id && <Check className="h-4 w-4 text-primary-400" />}
@@ -317,17 +346,29 @@ export const ReceiveMoneySheet: React.FC = () => {
                                 </span>
                             </div>
 
-                            {/* Address Text Field */}
-                            <div className="flex items-center justify-between bg-black/20 border border-white/5 rounded-xl px-4 py-3 font-mono text-xs text-slate-355 select-text">
-                                <span className="truncate mr-3 leading-relaxed">
-                                    {isLoading ? 'Loading details...' : address}
-                                </span>
-                                <button 
-                                    onClick={handleCopy}
-                                    className="text-slate-500 hover:text-white transition duration-200 cursor-pointer shrink-0"
-                                >
-                                    {copied ? <Check className="h-4.5 w-4.5 text-emerald-400" /> : <Copy className="h-4.5 w-4.5" />}
-                                </button>
+                            {/* Dynamically List Banking / Local details */}
+                            <div className="space-y-3.5 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin select-none">
+                                {isCrypto ? (
+                                    <DetailRow label="SCW Wallet Address" value={activeWallet.walletAddress || '0xSCW1234567890abcdef...'} />
+                                ) : (
+                                    <>
+                                        {activeWallet.accountNumber && (
+                                            <DetailRow label={`${activeWallet.code} Account Number`} value={activeWallet.accountNumber} />
+                                        )}
+                                        {activeWallet.accountNumberUk && (
+                                            <DetailRow label="UK Account Number" value={activeWallet.accountNumberUk} />
+                                        )}
+                                        {activeWallet.sortCode && (
+                                            <DetailRow label="Sort Code" value={activeWallet.sortCode} />
+                                        )}
+                                        {activeWallet.iban && (
+                                            <DetailRow label="IBAN" value={activeWallet.iban} />
+                                        )}
+                                        {activeWallet.bic && (
+                                            <DetailRow label="BIC / SWIFT Code" value={activeWallet.bic} />
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </div>
                     ) : (
@@ -361,7 +402,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                                         </select>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Phone Number*</span>
+                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Phone Number*</span>
                                         <input 
                                             type="text"
                                             required
@@ -378,7 +419,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                                             value={depositAmount}
                                             onChange={setDepositAmount}
                                             placeholder="0"
-                                            className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-primary-500/50 w-full font-mono"
+                                            className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-primary-500/50 w-full font-mono"
                                         />
                                     </div>
                                     

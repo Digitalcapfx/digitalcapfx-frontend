@@ -20,7 +20,8 @@ import {
     Gift,
     Menu,
     X,
-    Users
+    Users,
+    Smartphone
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SendMoneySheet from '@/components/pages/auth/_components/SendMoneySheet'
@@ -38,6 +39,7 @@ const SIDEBAR_LINKS = [
     { label: 'Wallets', icon: Wallet, href: '/wallets' },
     { label: 'Cards', icon: CreditCard, href: '/cards' },
     { label: 'Exchange', icon: RefreshCw, href: '/exchange' },
+    { label: 'Airtime & Bills', icon: Smartphone, href: '/vtu' },
     { label: 'Activity', icon: Clock, href: '/activity' },
     { label: 'Referrals', icon: Gift, href: '/referrals' },
     { label: 'Support Desk', icon: HelpCircle, href: '/support' },
@@ -222,6 +224,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { label: 'Wallets', icon: Wallet, href: '/wallets' },
         { label: 'Cards', icon: CreditCard, href: '/cards' },
         { label: 'Exchange', icon: RefreshCw, href: '/exchange' },
+        { label: 'Airtime & Bills', icon: Smartphone, href: '/vtu' },
         { label: 'Activity', icon: Clock, href: '/activity' },
         ...(isBusiness ? [{ label: 'Teams', icon: Users, href: '/teams' }] : []),
         { label: 'Referrals', icon: Gift, href: '/referrals' },

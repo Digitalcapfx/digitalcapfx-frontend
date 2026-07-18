@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { useNavigationStore } from '@/store/navigationStore'
 import { useQuery } from '@tanstack/react-query'
@@ -29,18 +29,7 @@ const getCardBg = (currency: string) => {
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
-    const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
-    if (isNaN(val)) return '0.00';
-    if (currency === 'XAF' || currency === 'XOF') {
-        return val.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency}`;
-    }
-    const symbols: Record<string, string> = {
-        USD: '$',
-        EUR: '€',
-        GBP: '£',
-    };
-    const prefix = symbols[currency] || '';
-    return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
+    return formatCurrencyByLocale(amount, currency);
 };
 
 const WalletCarousel: React.FC = () => {

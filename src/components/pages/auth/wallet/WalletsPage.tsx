@@ -8,7 +8,7 @@ import { useTransactionStore } from '@/store/transactionStore'
 import PhoneSend from '../_components/PhoneSend'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { useNavigationStore } from '@/store/navigationStore'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 
@@ -40,18 +40,7 @@ const CURRENCY_NAMES: Record<string, string> = {
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
-    const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
-    if (isNaN(val)) return '0.00';
-    if (currency === 'XAF' || currency === 'XOF') {
-        return val.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency}`;
-    }
-    const symbols: Record<string, string> = {
-        USD: '$',
-        EUR: '€',
-        GBP: '£',
-    };
-    const prefix = symbols[currency] || '';
-    return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
+    return formatCurrencyByLocale(amount, currency);
 };
 
 const WalletsPage: React.FC = () => {

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
@@ -37,22 +37,12 @@ const CURRENCY_NAMES: Record<string, string> = {
     XOF: 'CFA Franc BCEAO',
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
+    IUSD: 'Instant USD',
     NGN: 'Nigerian Naira',
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
-    const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
-    if (isNaN(val)) return '0.00';
-    if (currency === 'XAF' || currency === 'XOF') {
-        return val.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency}`;
-    }
-    const symbols: Record<string, string> = {
-        USD: '$',
-        EUR: '€',
-        GBP: '£',
-    };
-    const prefix = symbols[currency] || '';
-    return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
+    return formatCurrencyByLocale(amount, currency);
 };
 
 const LIVE_RATES = [
@@ -109,13 +99,17 @@ export const ExchangePage: React.FC = () => {
     // Map stablecoin wallet
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         const d = cryptoQuery.data.data;
+        const symbol = d.symbol || 'USDC';
+        const name = d.name || 'USD Coin';
+        const formattedBalance = d.balanceFormatted || formatBalance(d.balanceUsdc || d.balance || '0', symbol);
+        
         walletsList.push({
-            id: 'usdc',
-            name: CURRENCY_NAMES.USDC,
-            code: 'USDC',
+            id: symbol.toLowerCase(),
+            name: name,
+            code: symbol,
             type: 'stablecoin',
-            balance: formatBalance(d.balanceUsdc, 'USDC'),
-            rawBalance: parseFloat(d.balanceUsdc || '0'),
+            balance: formattedBalance,
+            rawBalance: typeof d.balance === 'number' ? d.balance : parseFloat(d.balanceUsdc || '0'),
         });
     }
 

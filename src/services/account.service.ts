@@ -8,6 +8,10 @@ export interface AccountData {
   currency: string;
   status: string;
   createdAt: string;
+  iban?: string | null;
+  bic?: string | null;
+  sortCode?: string | null;
+  accountNumberUk?: string | null;
 }
 
 export interface AccountListResponse {

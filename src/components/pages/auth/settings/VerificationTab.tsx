@@ -11,6 +11,25 @@ import { uploadService } from '@/services/upload.service'
 import { FileUpload } from '@/components/ui/FileUpload'
 import { FilePreviewDialog } from '@/components/ui/FilePreviewDialog'
 
+const loadSumsubScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+        if (typeof window === 'undefined') {
+            resolve(false);
+            return;
+        }
+        if ((window as any).snsWebSdk) {
+            resolve(true);
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://static.sumsub.com/websdk-v2/iframe.js';
+        script.async = true;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+    });
+};
+
 export const VerificationTab: React.FC = () => {
     const queryClient = useQueryClient();
     const [verificationLaunched, setVerificationLaunched] = useState(false);
@@ -40,33 +59,69 @@ export const VerificationTab: React.FC = () => {
     const kycStatus = kycData?.kycStatus || kycData?.status || 'idle'; // 'idle' | 'pending' | 'approved' | 'rejected'
     const rejectionReason = kycData?.rejectionReason || kycData?.rejection_reason || '';
 
-    // Metamap Initialization Mutation
-    const initMetaMapMutation = useMutation({
-        mutationFn: () => kycService.initMetaMap(),
+    const launchSumsub = async (accessToken: string) => {
+        const loaded = await loadSumsubScript();
+        if (!loaded) {
+            toast.error('Failed to load Sumsub verification SDK.');
+            return;
+        }
+        const snsWebSdk = (window as any).snsWebSdk;
+        if (!snsWebSdk) {
+            toast.error('Sumsub verification SDK not initialized.');
+            return;
+        }
+
+        try {
+            const snsWebSdkInstance = snsWebSdk.init(
+                accessToken,
+                () => kycService.initKyc().then(res => res.data.identityAccess)
+            )
+            .withConf({
+                lang: 'en',
+            })
+            .withOptions({
+                addViewportTag: false,
+                adaptIframeHeight: true
+            })
+            .on('onStepCompleted', (payload: any) => {
+                console.log('Sumsub step completed:', payload);
+            })
+            .on('onError', (error: any) => {
+                console.error('Sumsub SDK error:', error);
+            })
+            .onMessage((type: any, payload: any) => {
+                console.log('Sumsub message:', type, payload);
+            })
+            .build();
+
+            snsWebSdkInstance.launch('#sumsub-container');
+        } catch (e) {
+            console.error('Error launching Sumsub:', e);
+            toast.error('Error starting Sumsub verification widget.');
+        }
+    };
+
+    // Sumsub KYC Initialization Mutation
+    const initKycMutation = useMutation({
+        mutationFn: () => kycService.initKyc(),
         onSuccess: (res) => {
             if (res?.success && res?.data) {
-                const { flowId, identityAccess } = res.data;
-                
-                // MetaMap standard client/merchant token placeholder
-                const merchantToken = '60f1a2b3c4d5e6f7a8b9c0d1';
-                
-                // Build MetaMap signup URL
-                const url = `https://signup.getmati.com/?merchantToken=${merchantToken}&flowId=${flowId}&identityAccess=${identityAccess}`;
-                
-                // Open MetaMap verification tab
-                window.open(url, '_blank');
+                const { identityAccess } = res.data;
                 setVerificationLaunched(true);
-                toast.success('MetaMap identity verification flow initiated!');
+                toast.success('Sumsub identity verification flow initiated!');
+                setTimeout(() => {
+                    launchSumsub(identityAccess);
+                }, 100);
             } else {
-                toast.error('Failed to retrieve MetaMap verification tokens.');
+                toast.error('Failed to retrieve Sumsub verification token.');
             }
         },
         onError: (err: any) => {
-            console.error('MetaMap initialization error:', err);
+            console.error('Sumsub initialization error:', err);
             const rawError = err.response?.data?.error;
             const msg = typeof rawError === 'object'
                 ? (rawError.message || JSON.stringify(rawError))
-                : (rawError || 'Failed to start MetaMap verification.');
+                : (rawError || 'Failed to start Sumsub verification.');
             toast.error(msg);
         }
     });
@@ -173,7 +228,7 @@ export const VerificationTab: React.FC = () => {
                                 KYC Review in Progress
                             </h4>
                             <p className="text-slate-400 text-xs leading-relaxed">
-                                Your MetaMap identity details have been received and are currently under review. This usually takes from a few minutes up to 24 hours.
+                                Your Sumsub identity details have been received and are currently under review. This usually takes from a few minutes up to 24 hours.
                             </p>
                         </div>
                     </div>
@@ -195,60 +250,58 @@ export const VerificationTab: React.FC = () => {
                         </div>
                     )}
 
-                    <div className="bg-[#0C1224]/30 border border-[#131B30] rounded-2xl p-6 space-y-6">
-                        <div className="space-y-2">
-                            <h4 className="text-sm font-bold text-white">
-                                Verify with MetaMap
-                            </h4>
-                            <p className="text-slate-400 text-xs leading-relaxed">
-                                We utilize MetaMap's secure compliance platform to verify your identity. You will be prompted to present your government-issued document and capture a biometric face match.
-                            </p>
-                        </div>
-
-                        {/* Feature Badges list */}
-                        <div className="space-y-3 pt-1 border-t border-white/[0.03]">
-                            <div className="flex items-center space-x-2.5 text-xs text-slate-350">
-                                <div className="w-5 h-5 rounded-full bg-[#131B30] flex items-center justify-center text-slate-400">
-                                    <Check className="h-3 w-3" />
-                                </div>
-                                <span>No-Nigeria isolation protocol (WAEMU / CEMAC document options)</span>
-                            </div>
-                            <div className="flex items-center space-x-2.5 text-xs text-slate-350">
-                                <div className="w-5 h-5 rounded-full bg-[#131B30] flex items-center justify-center text-slate-400">
-                                    <Check className="h-3 w-3" />
-                                </div>
-                                <span>Real-time biometric and document authenticity checks</span>
-                            </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="space-y-4 pt-3">
+                    {verificationLaunched ? (
+                        <div className="space-y-4">
+                            <div id="sumsub-container" className="w-full min-h-[550px] bg-black/40 border border-white/10 rounded-2xl p-4 animate-in fade-in duration-300"></div>
                             <Button
-                                onClick={() => initMetaMapMutation.mutate()}
-                                disabled={initMetaMapMutation.isPending}
-                                className="w-full rounded-xl h-[52px] font-bold text-sm"
-                                rightIcon={initMetaMapMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                                onClick={handleRefreshStatus}
+                                variant="secondary"
+                                className="w-full rounded-xl h-11 text-xs font-bold"
+                                leftIcon={<RefreshCw className={cn("h-3.5 w-3.5", kycStatusQuery.isFetching && "animate-spin")} />}
                             >
-                                {initMetaMapMutation.isPending ? 'Initializing MetaMap flow...' : 'Start MetaMap Verification'}
+                                Sync Verification Status
                             </Button>
-
-                            {verificationLaunched && (
-                                <div className="p-4 rounded-xl bg-primary-500/5 border border-primary-500/15 space-y-3">
-                                    <p className="text-[11px] text-slate-400 leading-normal">
-                                        MetaMap verification window opened. Complete the verification flow there, then return here to sync your status.
-                                    </p>
-                                    <Button
-                                        onClick={handleRefreshStatus}
-                                        variant="secondary"
-                                        className="w-full rounded-lg h-9 text-xs font-bold"
-                                        leftIcon={<RefreshCw className={cn("h-3.5 w-3.5", kycStatusQuery.isFetching && "animate-spin")} />}
-                                    >
-                                        Refresh Verification Status
-                                    </Button>
-                                </div>
-                            )}
                         </div>
-                    </div>
+                    ) : (
+                        <div className="bg-[#0C1224]/30 border border-[#131B30] rounded-2xl p-6 space-y-6">
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-bold text-white">
+                                    Verify with Sumsub
+                                </h4>
+                                <p className="text-slate-400 text-xs leading-relaxed">
+                                    We utilize Sumsub's secure, automated compliance platform to verify your identity. You will be prompted to present a valid government-issued ID and take a brief biometric selfie.
+                                </p>
+                            </div>
+
+                            {/* Feature Badges list */}
+                            <div className="space-y-3 pt-1 border-t border-white/[0.03]">
+                                <div className="flex items-center space-x-2.5 text-xs text-slate-350">
+                                    <div className="w-5 h-5 rounded-full bg-[#131B30] flex items-center justify-center text-slate-400">
+                                        <Check className="h-3 w-3" />
+                                    </div>
+                                    <span>Fast, automated document verification</span>
+                                </div>
+                                <div className="flex items-center space-x-2.5 text-xs text-slate-350">
+                                    <div className="w-5 h-5 rounded-full bg-[#131B30] flex items-center justify-center text-slate-400">
+                                        <Check className="h-3 w-3" />
+                                    </div>
+                                    <span>Secure biometrics and liveness verification</span>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="pt-3">
+                                <Button
+                                    onClick={() => initKycMutation.mutate()}
+                                    disabled={initKycMutation.isPending}
+                                    className="w-full rounded-xl h-[52px] font-bold text-sm"
+                                    rightIcon={initKycMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                                >
+                                    {initKycMutation.isPending ? 'Initializing Sumsub flow...' : 'Start Sumsub Verification'}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Manual File Upload Card Alternative */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-2xl p-6 space-y-6 text-left">

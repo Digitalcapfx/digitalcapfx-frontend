@@ -344,7 +344,7 @@ export const SendMoneySheet: React.FC = () => {
             sendCryptoMutation.mutate({
                 receiver_phone: cryptoAddress,
                 amount: amount,
-                token: activeWallet.code as 'USDC' | 'USDT',
+                token: activeWallet.code === 'USDT' ? 'USDT' : 'USDC',
             });
         } else if (isMobileMoney) {
             const phoneVal = recipientType === 'saved' ? activeBeneficiary?.accountNumber : accountNumber;
