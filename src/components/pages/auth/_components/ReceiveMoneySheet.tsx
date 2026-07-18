@@ -14,8 +14,9 @@ import {
 import { useTransactionStore } from '@/store/transactionStore'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { NumberInput } from '@/components/ui/NumberInput'
+import { PhoneInput } from '@/components/ui/PhoneInput'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
@@ -48,18 +49,7 @@ const CURRENCY_NAMES: Record<string, string> = {
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
-    const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
-    if (isNaN(val)) return '0.00';
-    if (currency === 'XAF' || currency === 'XOF') {
-        return val.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency}`;
-    }
-    const symbols: Record<string, string> = {
-        USD: '$',
-        EUR: '€',
-        GBP: '£',
-    };
-    const prefix = symbols[currency] || '';
-    return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
+    return formatCurrencyByLocale(amount, currency);
 };
 
 const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value }) => {
@@ -270,7 +260,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                                     <CurrencyIcon code={activeWallet.code} size="md" />
                                     <div className="text-left">
                                         <span className="font-bold text-white text-xs block leading-tight">{activeWallet.name}</span>
-                                        <span className="text-[9px] text-slate-500 font-bold uppercase">{activeWallet.code} • {activeWallet.balance}</span>
+                                        <span className="text-[9px] text-slate-500 font-bold">{activeWallet.code} • {activeWallet.balance}</span>
                                     </div>
                                 </div>
                                 <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-200", isDropdownOpen && "rotate-180")} />
@@ -301,7 +291,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                                                 <CurrencyIcon code={w.code} size="md" />
                                                 <div className="text-left">
                                                     <span className="font-bold text-white text-xs block leading-tight">{w.name}</span>
-                                                    <span className="text-[9px] text-slate-505 font-bold uppercase">{w.code} • {w.balance}</span>
+                                                    <span className="text-[9px] text-slate-500 font-bold">{w.code} • {w.balance}</span>
                                                 </div>
                                             </div>
                                             {selectedWalletId === w.id && <Check className="h-4 w-4 text-primary-400" />}
@@ -435,17 +425,13 @@ export const ReceiveMoneySheet: React.FC = () => {
                                             <option value="Wave">Wave</option>
                                         </select>
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Phone Number*</span>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={phone}
-                                            onChange={(e) => setPhone(e.target.value)}
-                                            placeholder="Enter phone (e.g. +2376...)"
-                                            className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-primary-500/50 w-full font-mono"
-                                        />
-                                    </div>
+                                    <PhoneInput
+                                        required
+                                        label="Phone Number*"
+                                        placeholder="Enter phone"
+                                        value={phone}
+                                        onChange={setPhone}
+                                    />
                                     <div className="space-y-1.5">
                                         <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Deposit Amount ({activeWallet.code})*</span>
                                         <NumberInput

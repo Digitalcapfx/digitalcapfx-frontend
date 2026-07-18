@@ -71,12 +71,22 @@ class TransferService extends BaseService {
   }
 
   async fundAccount(payload: FundAccountRequest): Promise<FundAccountResponse> {
-    const response = await this.api.post('/crypto/fund', payload);
+    const response = await this.api.post('/wallets/deposit', {
+      amount: payload.amount,
+      currency: payload.currency,
+      operator: payload.operator,
+      phone: payload.phone
+    });
     return response.data;
   }
 
   async withdraw(payload: WithdrawRequest): Promise<WithdrawResponse> {
-    const response = await this.api.post('/crypto/withdraw', payload);
+    const response = await this.api.post('/wallets/withdraw', {
+      amount: parseFloat(payload.amount),
+      currency: payload.token || 'XOF',
+      operator: payload.payout_network,
+      phone: payload.payout_mobile
+    });
     return response.data;
   }
 

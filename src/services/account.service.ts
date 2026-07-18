@@ -89,6 +89,36 @@ class AccountService extends BaseService {
     const response = await this.api.get(`/wallets/stablecoin/${symbol}/transactions`);
     return response.data;
   }
+
+  async getWalletDetail(currency: string): Promise<{ success: boolean; data: any }> {
+    const code = currency.toUpperCase();
+    if (code === 'IUSD' || code === 'USDC' || code === 'USDT') {
+      const symbol = code === 'IUSD' ? 'iUSD' : code;
+      const response = await this.api.get(`/wallets/stablecoin/${symbol}`);
+      return response.data;
+    } else if (code === 'XAF' || code === 'XOF') {
+      const response = await this.api.get(`/accounts/${code}`);
+      return response.data;
+    } else {
+      const response = await this.api.get(`/wallets/fiat/${code}`);
+      return response.data;
+    }
+  }
+
+  async getWalletTransactions(currency: string): Promise<{ success: boolean; data: any[] }> {
+    const code = currency.toUpperCase();
+    if (code === 'IUSD' || code === 'USDC' || code === 'USDT') {
+      const symbol = code === 'IUSD' ? 'iUSD' : code;
+      const response = await this.api.get(`/wallets/stablecoin/${symbol}/transactions`);
+      return response.data;
+    } else if (code === 'XAF' || code === 'XOF') {
+      const response = await this.api.get(`/accounts/${code}/transactions`);
+      return response.data;
+    } else {
+      const response = await this.api.get(`/wallets/fiat/${code}/transactions`);
+      return response.data;
+    }
+  }
 }
 
 export const accountService = new AccountService();

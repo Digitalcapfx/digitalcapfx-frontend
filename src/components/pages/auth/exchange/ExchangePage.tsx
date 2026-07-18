@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
-import { cn, formatCurrencyByLocale } from '@/lib/utils'
+import { cn, formatCurrencyByLocale, formatValueByLocale } from '@/lib/utils'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
@@ -44,6 +44,8 @@ const CURRENCY_NAMES: Record<string, string> = {
 const formatBalance = (amount: string | number, currency: string) => {
     return formatCurrencyByLocale(amount, currency);
 };
+
+
 
 const LIVE_RATES = [
     { pair: 'EUR/USD', rate: '1.0825', change: 0.42 },
@@ -395,7 +397,7 @@ export const ExchangePage: React.FC = () => {
                                                         <CurrencyIcon code={w.code} size="md" />
                                                         <div className="text-left">
                                                             <span className="font-bold text-white text-xs block leading-tight">{w.name}</span>
-                                                            <span className="text-[9px] text-slate-500 font-bold uppercase">{w.code} • {w.balance}</span>
+                                                            <span className="text-[9px] text-slate-500 font-bold">{w.code} • {w.balance}</span>
                                                         </div>
                                                     </div>
                                                     {fromWalletId === w.id && <Check className="h-4 w-4 text-primary-400" />}
@@ -450,7 +452,7 @@ export const ExchangePage: React.FC = () => {
 
                                         <div className="flex items-center shrink-0">
                                             <span className="font-mono font-black text-xl text-emerald-400 mr-1 select-all">
-                                                {toAmount || '0.00'}
+                                                {formatValueByLocale(toAmount, toWallet.code, toWallet.type === 'fiat')}
                                             </span>
                                         </div>
                                     </div>
@@ -482,7 +484,7 @@ export const ExchangePage: React.FC = () => {
                                                         <CurrencyIcon code={w.code} size="md" />
                                                         <div className="text-left">
                                                             <span className="font-bold text-white text-xs block leading-tight">{w.name}</span>
-                                                            <span className="text-[9px] text-slate-500 font-bold uppercase">{w.code} • {w.balance}</span>
+                                                            <span className="text-[9px] text-slate-500 font-bold">{w.code} • {w.balance}</span>
                                                         </div>
                                                     </div>
                                                     {toWalletId === w.id && <Check className="h-4 w-4 text-primary-400" />}

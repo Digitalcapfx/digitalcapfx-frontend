@@ -223,7 +223,7 @@ const WalletsPage: React.FC = () => {
                                                 {wallet.name}
                                             </span>
                                             <div className="flex items-center space-x-2">
-                                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                                <span className="text-[10px] font-bold text-slate-500 tracking-wide">
                                                     {wallet.code}
                                                 </span>
                                                 <span className="w-1 h-1 rounded-full bg-slate-700"></span>

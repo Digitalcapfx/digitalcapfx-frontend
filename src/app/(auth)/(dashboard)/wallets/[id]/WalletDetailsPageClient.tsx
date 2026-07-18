@@ -7,6 +7,7 @@ import { useNavigationStore } from '@/store/navigationStore'
 import { useQuery } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { Wallet } from '@/components/pages/auth/wallet/WalletsPage'
+import { formatCurrencyByLocale } from '@/lib/utils'
 
 interface WalletDetailsPageClientProps {
     id: string;
@@ -20,42 +21,30 @@ const CURRENCY_NAMES: Record<string, string> = {
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
     NGN: 'Nigerian Naira',
+    iUSD: 'Instant USD',
+    IUSD: 'Instant USD',
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
-    const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
-    if (isNaN(val)) return '0.00';
-    if (currency === 'XAF' || currency === 'XOF') {
-        return val.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency}`;
-    }
-    const symbols: Record<string, string> = {
-        USD: '$',
-        EUR: '€',
-        GBP: '£',
-    };
-    const prefix = symbols[currency] || '';
-    return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
+    return formatCurrencyByLocale(amount, currency);
 };
 
 export default function WalletDetailsPageClient({ id }: WalletDetailsPageClientProps) {
     const router = useRouter();
     const searchId = id.toUpperCase();
-    const isCrypto = searchId === 'USDC';
+    const isCrypto = searchId === 'USDC' || searchId === 'IUSD';
+    const apiSymbol = searchId === 'IUSD' ? 'iUSD' : searchId;
 
-    // Fetch live wallet header details from specific fiat/stablecoin endpoint
+    // Fetch live wallet header details from abstracted endpoint router
     const detailQuery = useQuery({
         queryKey: ['walletDetail', searchId],
-        queryFn: () => isCrypto
-            ? accountService.getStablecoinWalletDetail('USDC')
-            : accountService.getFiatWalletDetail(searchId),
+        queryFn: () => accountService.getWalletDetail(searchId),
     });
 
     // Fetch live transactions for specific fiat/stablecoin endpoint
     const txQuery = useQuery({
         queryKey: ['walletTransactions', searchId],
-        queryFn: () => isCrypto
-            ? accountService.getStablecoinWalletTransactions('USDC')
-            : accountService.getFiatWalletTransactions(searchId),
+        queryFn: () => accountService.getWalletTransactions(searchId),
     });
 
     const isLoading = detailQuery.isLoading || txQuery.isLoading;
@@ -63,7 +52,7 @@ export default function WalletDetailsPageClient({ id }: WalletDetailsPageClientP
     let activeWallet: Wallet | null = null;
     if (detailQuery.data?.success && detailQuery.data.data) {
         const d = detailQuery.data.data;
-        const curCode = (isCrypto ? 'USDC' : d.currency) || searchId;
+        const curCode = (isCrypto ? apiSymbol : d.currency) || searchId;
         activeWallet = {
             id: curCode.toLowerCase(),
             name: CURRENCY_NAMES[curCode] || curCode,

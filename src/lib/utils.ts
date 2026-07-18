@@ -37,20 +37,24 @@ export function toCamelCase(obj: any): any {
   return obj;
 }
 
-export function formatCurrencyByLocale(amount: string | number, currency: string): string {
+export function formatValueByLocale(amount: string | number, currency: string, isFiat = true): string {
   const val = typeof amount === 'number' ? amount : parseFloat(amount || '0');
   if (isNaN(val)) return '0.00';
   
   const isLocalAfrican = currency.toUpperCase() === 'XAF' || currency.toUpperCase() === 'XOF';
-  const fractionDigits = isLocalAfrican ? 0 : 2;
+  const decimals = isLocalAfrican ? 0 : (isFiat ? 2 : 4);
   
-  // Use navigator.language client-side, fallback to undefined on server
   const locale = typeof navigator !== 'undefined' ? navigator.language : undefined;
   
-  const formatted = val.toLocaleString(locale, {
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits
+  return val.toLocaleString(locale, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
   });
+}
+
+export function formatCurrencyByLocale(amount: string | number, currency: string): string {
+  const isLocalAfrican = currency.toUpperCase() === 'XAF' || currency.toUpperCase() === 'XOF';
+  const formatted = formatValueByLocale(amount, currency, true);
   
   if (isLocalAfrican) {
     return `${formatted} ${currency}`;

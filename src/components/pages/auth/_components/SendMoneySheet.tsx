@@ -26,6 +26,7 @@ import { transferService } from '@/services/transfer.service'
 import { withdrawalService, Beneficiary } from '@/services/withdrawal.service'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
+import { PhoneInput } from '@/components/ui/PhoneInput'
 
 export interface Wallet {
     id: string;
@@ -91,6 +92,7 @@ export const SendMoneySheet: React.FC = () => {
 
     // Crypto recipient inputs
     const [cryptoAddress, setCryptoAddress] = useState('');
+    const [cryptoSendMode, setCryptoSendMode] = useState<'phone' | 'address'>('phone');
     
     // Shared inputs
     const [note, setNote] = useState('');
@@ -437,7 +439,7 @@ export const SendMoneySheet: React.FC = () => {
                                         <CurrencyIcon code={activeWallet.code} size="md" />
                                         <div className="text-left">
                                             <span className="font-bold text-white block text-sm leading-tight">{activeWallet.name}</span>
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase block mt-0.5">{activeWallet.code} • Balance: {activeWallet.balance}</span>
+                                            <span className="text-[9px] text-slate-500 font-bold block mt-0.5">{activeWallet.code} • Balance: {activeWallet.balance}</span>
                                         </div>
                                     </div>
                                     <ChevronDown className="h-4 w-4 text-slate-500" />
@@ -492,7 +494,7 @@ export const SendMoneySheet: React.FC = () => {
                                     className="bg-transparent border-none focus:outline-none focus:ring-0 text-center text-white font-mono font-black text-3.5xl placeholder-slate-700 w-full max-w-[240px] leading-none"
                                 />
                                 {activeWallet.type !== 'fiat' && (
-                                    <span className="text-2xl font-black text-slate-500 font-mono uppercase">{activeWallet.code}</span>
+                                    <span className="text-2xl font-black text-slate-500 font-mono">{activeWallet.code}</span>
                                 )}
                             </div>
                         </div>
@@ -501,17 +503,65 @@ export const SendMoneySheet: React.FC = () => {
 
                         {isCrypto ? (
                             /* Crypto Recipient Input */
-                            <div className="space-y-4">
+                            <div className="space-y-4 animate-in fade-in duration-200">
+                                {/* Segmented pills to select phone vs address */}
                                 <div className="space-y-1.5">
-                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Recipient Mobile or Address</span>
-                                    <input 
-                                        type="text"
-                                        value={cryptoAddress}
-                                        onChange={(e) => setCryptoAddress(e.target.value)}
-                                        placeholder="Enter receiver's phone number or address"
-                                        className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-primary-500/50 w-full font-mono"
-                                    />
+                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Transfer Method</span>
+                                    <div className="flex bg-black/30 border border-white/5 p-1 rounded-xl">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCryptoSendMode('phone');
+                                                setCryptoAddress('');
+                                            }}
+                                            className={cn(
+                                                "flex-1 py-2 text-[11px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
+                                                cryptoSendMode === 'phone' 
+                                                    ? "bg-primary-500 text-white shadow-md" 
+                                                    : "text-slate-400 hover:text-white"
+                                            )}
+                                        >
+                                            Send to Phone
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCryptoSendMode('address');
+                                                setCryptoAddress('');
+                                            }}
+                                            className={cn(
+                                                "flex-1 py-2 text-[11px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
+                                                cryptoSendMode === 'address' 
+                                                    ? "bg-primary-500 text-white shadow-md" 
+                                                    : "text-slate-400 hover:text-white"
+                                            )}
+                                        >
+                                            Send to Address
+                                        </button>
+                                    </div>
                                 </div>
+
+                                {cryptoSendMode === 'phone' ? (
+                                    <PhoneInput 
+                                        required
+                                        label="Recipient Phone number*"
+                                        placeholder="Enter recipient phone"
+                                        value={cryptoAddress}
+                                        onChange={(val) => setCryptoAddress(val)}
+                                    />
+                                ) : (
+                                    <div className="space-y-1.5">
+                                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block font-sans">Recipient Wallet Address*</span>
+                                        <input 
+                                            type="text"
+                                            required
+                                            value={cryptoAddress}
+                                            onChange={(e) => setCryptoAddress(e.target.value)}
+                                            placeholder="Enter 0x... address"
+                                            className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-primary-500/50 w-full font-mono"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             /* Fiat Recipient Form */
