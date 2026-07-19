@@ -86,47 +86,56 @@ export const ExchangePage: React.FC = () => {
         queryFn: () => accountService.getAccounts(),
     });
 
-    const cryptoQuery = useQuery({
-        queryKey: ['cryptoBalances'],
-        queryFn: () => accountService.getCryptoBalances(),
-    });
-
     const exchangeHistoryQuery = useQuery({
         queryKey: ['exchangeHistory'],
         queryFn: () => exchangeService.getExchangeHistory().catch(() => ({ success: false, data: [] })),
     });
 
+    const liveRatesQuery = useQuery({
+        queryKey: ['liveExchangeRates'],
+        queryFn: async () => {
+            const pairs = [
+                { from: 'EUR', to: 'USD' },
+                { from: 'GBP', to: 'USD' },
+                { from: 'GBP', to: 'EUR' },
+                { from: 'EUR', to: 'GBP' }
+            ];
+            
+            const results = await Promise.all(
+                pairs.map(async (p) => {
+                    try {
+                        const res = await exchangeService.getRate(p.from, p.to);
+                        return {
+                            pair: `${p.from}/${p.to}`,
+                            rate: res.data.rate.toFixed(4),
+                            change: p.from === 'GBP' ? 0.12 : -0.08
+                        };
+                    } catch (e) {
+                        return null;
+                    }
+                })
+            );
+            return results.filter(Boolean) as { pair: string; rate: string; change: number }[];
+        },
+        refetchInterval: 30000,
+    });
+
     const walletsList: Wallet[] = [];
 
-    // Map stablecoin wallet
-    if (cryptoQuery.data?.success && cryptoQuery.data.data) {
-        const d = cryptoQuery.data.data;
-        const symbol = d.symbol || 'USDC';
-        const name = d.name || 'USD Coin';
-        const formattedBalance = d.balanceFormatted || formatBalance(d.balanceUsdc || d.balance || '0', symbol);
-        
-        walletsList.push({
-            id: symbol.toLowerCase(),
-            name: name,
-            code: symbol,
-            type: 'stablecoin',
-            balance: formattedBalance,
-            rawBalance: typeof d.balance === 'number' ? d.balance : parseFloat(d.balanceUsdc || '0'),
-        });
-    }
-
-    // Map fiat wallets
+    // Map fiat wallets (EUR, USD, GBP are supported by Nilos Exchange)
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
-        fiatQuery.data.data.forEach((acc) => {
-            walletsList.push({
-                id: acc.currency.toLowerCase(),
-                name: CURRENCY_NAMES[acc.currency] || acc.currency,
-                code: acc.currency,
-                type: 'fiat',
-                balance: formatBalance(acc.balance, acc.currency),
-                rawBalance: parseFloat(acc.balance || '0'),
+        fiatQuery.data.data
+            .filter((acc) => acc.currency === 'EUR' || acc.currency === 'USD' || acc.currency === 'GBP')
+            .forEach((acc) => {
+                walletsList.push({
+                    id: acc.currency.toLowerCase(),
+                    name: CURRENCY_NAMES[acc.currency] || acc.currency,
+                    code: acc.currency,
+                    type: 'fiat',
+                    balance: formatBalance(acc.balance, acc.currency),
+                    rawBalance: parseFloat(acc.balance || '0'),
+                });
             });
-        });
     }
 
     // Default configuration fallbacks
@@ -141,13 +150,8 @@ export const ExchangePage: React.FC = () => {
 
     const isFromFiat = fromWallet.type === 'fiat';
 
-    // Target wallets matching constraints: Fiat to Fiat OR Crypto to Crypto
-    const filteredToWallets = walletsList.filter(w => {
-        const isToFiat = w.type === 'fiat';
-        if (isFromFiat !== isToFiat) return false;
-        if (fromWallet.id === w.id) return false;
-        return true;
-    });
+    // Target wallets matching constraints: EUR, USD, GBP (excluding the selected From wallet)
+    const filteredToWallets = walletsList.filter(w => w.id !== fromWallet.id);
 
     const toWallet = walletsList.find(w => w.id === toWalletId) || filteredToWallets[0] || walletsList[1] || {
         id: 'eur',
@@ -161,8 +165,7 @@ export const ExchangePage: React.FC = () => {
     // Auto update selection if violated
     useEffect(() => {
         if (walletsList.length > 0) {
-            const isToFiat = toWallet.type === 'fiat';
-            if (isFromFiat !== isToFiat || fromWallet.id === toWallet.id) {
+            if (fromWallet.id === toWallet.id) {
                 const firstValid = filteredToWallets[0];
                 if (firstValid) {
                     setToWalletId(firstValid.id);
@@ -309,7 +312,7 @@ export const ExchangePage: React.FC = () => {
             { id: 'mock-2', fromCode: 'EUR', toCode: 'GBP', fromVal: '€500', toVal: '£420.50', date: 'Yesterday', rate: '0.8410' },
         ];
 
-    const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading;
+    const isLoading = fiatQuery.isLoading;
 
     if (isLoading && walletsList.length === 0) {
         return (
@@ -566,7 +569,12 @@ export const ExchangePage: React.FC = () => {
                                 </span>
                             </div>
                             <div className="space-y-3.5">
-                                {LIVE_RATES.map((rate) => (
+                                {(liveRatesQuery.data && liveRatesQuery.data.length > 0 ? liveRatesQuery.data : [
+                                    { pair: 'EUR/USD', rate: '1.0825', change: 0.42 },
+                                    { pair: 'GBP/USD', rate: '1.2710', change: 0.12 },
+                                    { pair: 'GBP/EUR', rate: '1.1636', change: 0.31 },
+                                    { pair: 'EUR/GBP', rate: '0.8594', change: -0.15 },
+                                ]).map((rate) => (
                                     <div key={rate.pair} className="flex justify-between items-center text-xs">
                                         <span className="font-bold text-slate-355">{rate.pair}</span>
                                         <div className="text-right flex items-center space-x-2 font-mono">
