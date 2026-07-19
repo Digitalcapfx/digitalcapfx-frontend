@@ -4,8 +4,7 @@ import React from 'react'
 import PortfolioCard from './PortfolioCard'
 import QuickActions from './QuickActions'
 import WalletCarousel from '../wallet/WalletCarousel'
-import CashflowStats from './CashflowStats'
-import CardCreator from './CardCreator'
+import InsightsContainer from './InsightsContainer'
 import PhoneSend from '../_components/PhoneSend'
 import RecentActivity from './RecentActivity'
 import { useQuery } from '@tanstack/react-query'
@@ -54,14 +53,8 @@ const Dashboard: React.FC = () => {
             {/* Horizontal scroll currencies */}
             <WalletCarousel />
 
-            {/* Bottom grid splits */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Cashflow Statistics panel */}
-                <CashflowStats />
-
-                {/* Your Card Creator box */}
-                <CardCreator />
-            </div>
+            {/* Performance and cashflow stats with unified filter */}
+            <InsightsContainer />
 
             {/* Phone Send widget */}
             <PhoneSend />

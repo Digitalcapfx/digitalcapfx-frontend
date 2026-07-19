@@ -11,10 +11,21 @@ const formatCurrency = (val: number) => {
     return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-const CashflowStats: React.FC = () => {
+interface CashflowStatsProps {
+    period: '1w' | '1m' | '3m' | '6m';
+}
+
+const PERIOD_LABELS = {
+    '1w': 'This Week',
+    '1m': 'This Month',
+    '3m': 'Last 3 Months',
+    '6m': 'Last 6 Months',
+};
+
+const CashflowStats: React.FC<CashflowStatsProps> = ({ period }) => {
     const insightsQuery = useQuery({
-        queryKey: ['insights', '1m'],
-        queryFn: () => insightsService.getInsights('1m'),
+        queryKey: ['insights', period],
+        queryFn: () => insightsService.getInsights(period),
     });
 
     if (insightsQuery.isLoading) {
@@ -41,7 +52,7 @@ const CashflowStats: React.FC = () => {
             <div>
                 <div className="flex justify-between items-center select-none mb-4">
                     <div>
-                        <h3 className="font-satoshi font-bold text-base text-white">This Month</h3>
+                        <h3 className="font-satoshi font-bold text-base text-white">{PERIOD_LABELS[period]}</h3>
                         <span className="text-[10px] font-semibold text-slate-500">Insights</span>
                     </div>
                     <div className="text-right">
