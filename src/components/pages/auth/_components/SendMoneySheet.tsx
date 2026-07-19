@@ -1,32 +1,19 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import {
-    ChevronDown,
-    Search,
-    ArrowLeft,
-    Check,
-    Download,
-    RefreshCw,
-    CheckCircle2,
-    Info,
-    Trash2,
-    X,
-    User
-} from 'lucide-react'
 import { useTransactionStore } from '@/store/transactionStore'
-import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
-import { Switch } from '@/components/ui/Switch'
-import { cn } from '@/lib/utils'
-import { NumberInput } from '@/components/ui/NumberInput'
+import { formatCurrencyByLocale } from '@/lib/utils'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
-import { withdrawalService, Beneficiary } from '@/services/withdrawal.service'
+import { withdrawalService, Beneficiary, InitiateWithdrawalRequest } from '@/services/withdrawal.service'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/Button'
-import { PhoneInput } from '@/components/ui/PhoneInput'
+
+// Import subcomponents
+import { SendMoneyForm } from './send/SendMoneyForm'
+import { SendMoneyReview } from './send/SendMoneyReview'
+import { SendMoneySuccess } from './send/SendMoneySuccess'
 
 export interface Wallet {
     id: string;
@@ -82,13 +69,12 @@ export const SendMoneySheet: React.FC = () => {
     const [accountName, setAccountName] = useState('');
     const [bankName, setBankName] = useState('Digital Cap Partner Bank');
     const [country, setCountry] = useState('Senegal');
-    const [saveBeneficiary, setSaveBeneficiary] = useState(false);
     const [selectedBeneficiaryId, setSelectedBeneficiaryId] = useState<string | null>(null);
 
     // Mobile Money operator (XAF/XOF)
-    const [operator, setOperator] = useState('Orange');
+    const [operator, setOperator] = useState('DigitalCap');
     // Internal user transfer toggle
-    const [isInternal, setIsInternal] = useState(false);
+    const [isInternal, setIsInternal] = useState(true);
 
     // Crypto recipient inputs
     const [cryptoAddress, setCryptoAddress] = useState('');
@@ -101,6 +87,7 @@ export const SendMoneySheet: React.FC = () => {
     const [txRef, setTxRef] = useState('TXN-2026-9148');
     const [txStatus, setTxStatus] = useState('Processing');
     const [quoteDetails, setQuoteDetails] = useState<{ fee: number; rate: number; totalAmount: number } | null>(null);
+    const [showSaveBeneficiaryPrompt, setShowSaveBeneficiaryPrompt] = useState(false);
 
     // Fetch wallets/balances
     const fiatQuery = useQuery({
@@ -180,6 +167,28 @@ export const SendMoneySheet: React.FC = () => {
 
     const isCrypto = activeWallet.type === 'stablecoin';
     const isMobileMoney = !isCrypto && (activeWallet.code === 'XAF' || activeWallet.code === 'XOF');
+
+    const showPolling = step === 3 && isCrypto && !!txRef && txRef !== 'TXN-MM-OK' && txRef !== 'TXN-OK' && txRef !== 'TXN-INT-OK';
+
+    const transactionQuery = useQuery({
+        queryKey: ['cryptoTransaction', txRef],
+        queryFn: () => accountService.getCryptoTransaction(txRef),
+        enabled: showPolling,
+        refetchInterval: (query) => {
+            const data = query.state.data;
+            const status = (data?.data?.status || '').toLowerCase();
+            if (status === 'completed' || status === 'success' || status === 'failed') {
+                return false;
+            }
+            return 3000;
+        }
+    });
+
+    useEffect(() => {
+        if (transactionQuery.data?.success && transactionQuery.data.data?.status) {
+            setTxStatus(transactionQuery.data.data.status);
+        }
+    }, [transactionQuery.data]);
 
     const beneficiariesList: Beneficiary[] = beneficiariesQuery.data?.success && Array.isArray(beneficiariesQuery.data.data)
         ? beneficiariesQuery.data.data
@@ -276,6 +285,7 @@ export const SendMoneySheet: React.FC = () => {
                 setTxRef(data.data.reference || data.data.transaction_hash || 'TXN-OK');
                 setTxStatus('Completed');
                 setStep(3);
+                setShowSaveBeneficiaryPrompt(true);
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 queryClient.invalidateQueries({ queryKey: ['cryptoBalances'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
@@ -291,7 +301,7 @@ export const SendMoneySheet: React.FC = () => {
     });
 
     const withdrawMutation = useMutation({
-        mutationFn: (payload: { amount: number; currency: string; beneficiaryId: string; source_currency?: string }) =>
+        mutationFn: (payload: InitiateWithdrawalRequest) =>
             withdrawalService.initiateWithdrawal(payload),
         onSuccess: (data) => {
             if (data?.success && data?.data) {
@@ -300,6 +310,9 @@ export const SendMoneySheet: React.FC = () => {
                 setTxRef(txId);
                 setTxStatus(status);
                 setStep(3);
+                if (recipientType === 'new') {
+                    setShowSaveBeneficiaryPrompt(true);
+                }
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
             }
@@ -319,6 +332,9 @@ export const SendMoneySheet: React.FC = () => {
                 setTxRef(txId);
                 setTxStatus(status);
                 setStep(3);
+                if (recipientType === 'new') {
+                    setShowSaveBeneficiaryPrompt(true);
+                }
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
             }
@@ -336,6 +352,9 @@ export const SendMoneySheet: React.FC = () => {
                 setTxRef(data.data.reference || 'TXN-INT-OK');
                 setTxStatus(data.data.status || 'Completed');
                 setStep(3);
+                if (recipientType === 'new') {
+                    setShowSaveBeneficiaryPrompt(true);
+                }
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
             }
@@ -346,175 +365,181 @@ export const SendMoneySheet: React.FC = () => {
     });
 
     const handleDownloadReceipt = () => {
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            toast.error('Please allow popups to download the receipt.');
-            return;
-        }
+        // Create dynamic print stylesheet
+        const style = document.createElement('style');
+        style.id = 'receipt-print-style';
+        style.innerHTML = `
+            @media print {
+                body > * {
+                    display: none !important;
+                }
+                #receipt-print-container {
+                    display: block !important;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                    color: #0f172a !important;
+                    padding: 40px !important;
+                    max-width: 600px !important;
+                    margin: 0 auto !important;
+                }
+                .header {
+                    text-align: center;
+                    border-bottom: 2px solid #f1f5f9;
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
+                }
+                .logo {
+                    font-size: 24px;
+                    font-weight: 800;
+                    color: #3b82f6;
+                    margin-bottom: 5px;
+                }
+                .title {
+                    font-size: 14px;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+                .amount-box {
+                    text-align: center;
+                    background-color: #f8fafc;
+                    border-radius: 16px;
+                    padding: 24px;
+                    margin-bottom: 30px;
+                }
+                .amount-label {
+                    font-size: 12px;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    display: block;
+                    margin-bottom: 5px;
+                }
+                .amount-val {
+                    font-size: 32px;
+                    font-weight: 900;
+                    color: #0f172a;
+                }
+                .details-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 30px;
+                }
+                .details-row {
+                    border-bottom: 1px solid #f1f5f9;
+                }
+                .details-row td {
+                    padding: 14px 0;
+                    font-size: 13px;
+                }
+                .label {
+                    color: #64748b;
+                    font-weight: 600;
+                    width: 150px;
+                    text-align: left;
+                }
+                .value {
+                    color: #0f172a;
+                    font-weight: 700;
+                    text-align: right;
+                }
+                .value.mono {
+                    font-family: monospace;
+                    font-size: 12px;
+                }
+                .status {
+                    display: inline-block;
+                    padding: 4px 10px;
+                    border-radius: 6px;
+                    font-size: 11px;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                }
+                .status.completed {
+                    background-color: #dcfce7;
+                    color: #15803d;
+                }
+                .status.pending {
+                    background-color: #dbeafe;
+                    color: #1d4ed8;
+                }
+                .footer {
+                    text-align: center;
+                    color: #94a3b8;
+                    font-size: 11px;
+                    margin-top: 50px;
+                    border-top: 1px solid #f1f5f9;
+                    padding-top: 20px;
+                }
+            }
+            @media screen {
+                #receipt-print-container {
+                    display: none !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Create printing wrapper element
+        const container = document.createElement('div');
+        container.id = 'receipt-print-container';
 
         const dateStr = new Date().toLocaleString();
 
-        window.document.write(`
-            <html>
-                <head>
-                    <title>Transaction Receipt - ${txRef}</title>
-                    <style>
-                        body {
-                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                            color: #0f172a;
-                            padding: 40px;
-                            max-width: 600px;
-                            margin: 0 auto;
-                        }
-                        .header {
-                            text-align: center;
-                            border-bottom: 2px solid #f1f5f9;
-                            padding-bottom: 20px;
-                            margin-bottom: 30px;
-                        }
-                        .logo {
-                            font-size: 24px;
-                            font-weight: 800;
-                            color: #3b82f6;
-                            margin-bottom: 5px;
-                        }
-                        .title {
-                            font-size: 14px;
-                            color: #64748b;
-                            text-transform: uppercase;
-                            letter-spacing: 1px;
-                        }
-                        .amount-box {
-                            text-align: center;
-                            background-color: #f8fafc;
-                            border-radius: 16px;
-                            padding: 24px;
-                            margin-bottom: 30px;
-                        }
-                        .amount-label {
-                            font-size: 12px;
-                            color: #64748b;
-                            text-transform: uppercase;
-                            letter-spacing: 1px;
-                            display: block;
-                            margin-bottom: 5px;
-                        }
-                        .amount-val {
-                            font-size: 32px;
-                            font-weight: 900;
-                            color: #0f172a;
-                        }
-                        .details-table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-bottom: 30px;
-                        }
-                        .details-row {
-                            border-bottom: 1px solid #f1f5f9;
-                        }
-                        .details-row td {
-                            padding: 14px 0;
-                            font-size: 13px;
-                        }
-                        .label {
-                            color: #64748b;
-                            font-weight: 600;
-                            width: 150px;
-                        }
-                        .value {
-                            color: #0f172a;
-                            font-weight: 700;
-                            text-align: right;
-                        }
-                        .value.mono {
-                            font-family: monospace;
-                            font-size: 12px;
-                        }
-                        .status {
-                            display: inline-block;
-                            padding: 4px 10px;
-                            border-radius: 6px;
-                            font-size: 11px;
-                            font-weight: 800;
-                            text-transform: uppercase;
-                        }
-                        .status.completed {
-                            background-color: #dcfce7;
-                            color: #15803d;
-                        }
-                        .status.pending {
-                            background-color: #dbeafe;
-                            color: #1d4ed8;
-                        }
-                        .footer {
-                            text-align: center;
-                            color: #94a3b8;
-                            font-size: 11px;
-                            margin-top: 50px;
-                            border-top: 1px solid #f1f5f9;
-                            padding-top: 20px;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <div class="logo">DigitalFX</div>
-                        <div class="title">Transaction Receipt</div>
-                    </div>
-                    
-                    <div class="amount-box">
-                        <span class="amount-label">Amount Transferred</span>
-                        <div class="amount-val">${activeWallet.type === 'fiat' ? '$' : ''}${parseFloat(amount).toLocaleString()} ${activeWallet.code}</div>
-                    </div>
-                    
-                    <table class="details-table">
-                        <tr class="details-row">
-                            <td class="label">Transaction ID</td>
-                            <td class="value mono">${txRef}</td>
-                        </tr>
-                        <tr class="details-row">
-                            <td class="label">Date</td>
-                            <td class="value">${dateStr}</td>
-                        </tr>
-                        <tr class="details-row">
-                            <td class="label">Source Wallet</td>
-                            <td class="value">${activeWallet.name} (${activeWallet.code})</td>
-                        </tr>
-                        <tr class="details-row">
-                            <td class="label">Recipient</td>
-                            <td class="value">${displayRecipientName}</td>
-                        </tr>
-                        <tr class="details-row">
-                            <td class="label">Reference</td>
-                            <td class="value">${note || 'Invoice payment'}</td>
-                        </tr>
-                        <tr class="details-row">
-                            <td class="label">Status</td>
-                            <td class="value">
-                                <span class="status ${txStatus.toLowerCase() === 'completed' || txStatus.toLowerCase() === 'success' ? 'completed' : 'pending'}">
-                                    ${txStatus}
-                                </span>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <div class="footer">
-                        Thank you for using DigitalFX.<br>
-                        This is an automated receipt generated by DigitalFX for tracking purposes.
-                    </div>
-                    
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                            window.onafterprint = function() {
-                                window.close();
-                            }
-                        }
-                    </script>
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
+        container.innerHTML = `
+            <div class="header">
+                <div class="logo">DigitalFX</div>
+                <div class="title">Transaction Receipt</div>
+            </div>
+            
+            <div class="amount-box">
+                <span class="amount-label">Amount Transferred</span>
+                <div class="amount-val">${formatCurrencyByLocale(amount || '0', activeWallet.code)}</div>
+            </div>
+            
+            <table class="details-table">
+                <tr class="details-row">
+                    <td class="label">Transaction ID</td>
+                    <td class="value mono">${txRef}</td>
+                </tr>
+                <tr class="details-row">
+                    <td class="label">Date</td>
+                    <td class="value">${dateStr}</td>
+                </tr>
+                <tr class="details-row">
+                    <td class="label">Source Wallet</td>
+                    <td class="value">${activeWallet ? activeWallet.name : ''} (${activeWallet ? activeWallet.code : ''})</td>
+                </tr>
+                <tr class="details-row">
+                    <td class="label">Recipient</td>
+                    <td class="value">${displayRecipientName}</td>
+                </tr>
+                <tr class="details-row">
+                    <td class="label">Reference</td>
+                    <td class="value">${note || 'Invoice payment'}</td>
+                </tr>
+                <tr class="details-row">
+                    <td class="label">Status</td>
+                    <td class="value">
+                        <span class="status ${(txStatus || '').toLowerCase() === 'completed' || (txStatus || '').toLowerCase() === 'success' ? 'completed' : 'pending'}">
+                            ${txStatus}
+                        </span>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="footer">
+                Thank you for using DigitalFX.<br>
+                This is an automated receipt generated by DigitalFX for tracking purposes.
+            </div>
+        `;
+        document.body.appendChild(container);
+
+        // Execute print window helper
+        window.print();
+
+        // Cleanup
+        document.head.removeChild(style);
+        document.body.removeChild(container);
     };
 
     const handleConfirmSend = async () => {
@@ -550,37 +575,29 @@ export const SendMoneySheet: React.FC = () => {
             });
         } else {
             // Standard Bank Wire Withdrawal
-            let beneficiaryId = selectedBeneficiaryId;
-
-            // If new beneficiary and checkbox checked, save it first
-            if (recipientType === 'new') {
-                try {
-                    const saveRes = await saveBeneficiaryMutation.mutateAsync({
-                        name: accountName,
-                        accountNumber,
-                        bankName,
-                        currency: activeWallet.code,
-                        country
-                    });
-                    if (saveRes?.success && saveRes?.data) {
-                        beneficiaryId = saveRes.data.id;
-                    }
-                } catch (e) {
-                    console.error('Save beneficiary failure:', e);
+            if (recipientType === 'saved') {
+                if (!selectedBeneficiaryId) {
+                    toast.error('A beneficiary is required to initiate bank withdrawals.');
+                    return;
                 }
+                withdrawMutation.mutate({
+                    amount: parseFloat(amount),
+                    currency: activeWallet.code,
+                    beneficiaryId: selectedBeneficiaryId,
+                    source_currency: activeWallet.code
+                });
+            } else {
+                withdrawMutation.mutate({
+                    amount: parseFloat(amount),
+                    currency: activeWallet.code,
+                    source_currency: activeWallet.code,
+                    accountNumber,
+                    bankName,
+                    country,
+                    recipientName: accountName,
+                    destinationCurrency: activeWallet.code
+                });
             }
-
-            if (!beneficiaryId) {
-                toast.error('A beneficiary is required to initiate bank withdrawals.');
-                return;
-            }
-
-            withdrawMutation.mutate({
-                amount: parseFloat(amount),
-                currency: activeWallet.code,
-                beneficiaryId,
-                source_currency: activeWallet.code
-            });
         }
     };
 
@@ -591,7 +608,38 @@ export const SendMoneySheet: React.FC = () => {
         setAccountNumber('');
         setAccountName('');
         setCryptoAddress('');
+        setOperator('DigitalCap');
+        setIsInternal(true);
         setQuoteDetails(null);
+        setShowSaveBeneficiaryPrompt(false);
+    };
+
+    const handleSaveBeneficiaryPostTx = async () => {
+        try {
+            let name = accountName || 'Beneficiary';
+            let accNum = accountNumber;
+            if (isCrypto) {
+                name = cryptoAddress.slice(0, 8) + '...';
+                accNum = cryptoAddress;
+            }
+            const res = await saveBeneficiaryMutation.mutateAsync({
+                name,
+                accountNumber: accNum,
+                bankName: isCrypto ? 'Crypto Wallet' : (operator === 'DigitalCap' ? 'DigitalCap' : operator),
+                currency: activeWallet.code,
+                country: country || 'Senegal'
+            });
+            if (res?.success) {
+                toast.success('Beneficiary saved successfully.');
+            }
+        } catch (e) {
+            toast.error('Failed to save beneficiary.');
+        }
+        setShowSaveBeneficiaryPrompt(false);
+    };
+
+    const handleDiscardBeneficiaryPostTx = () => {
+        setShowSaveBeneficiaryPrompt(false);
     };
 
     const isPending = sendCryptoMutation.isPending ||
@@ -600,6 +648,87 @@ export const SendMoneySheet: React.FC = () => {
         internalTransferMutation.isPending ||
         quoteMutation.isPending;
 
+    const renderStep = () => {
+        switch (step) {
+            case 1:
+                return (
+                    <SendMoneyForm
+                        walletsList={walletsList}
+                        activeWallet={activeWallet}
+                        selectedWalletId={selectedWalletId}
+                        setSelectedWalletId={setSelectedWalletId}
+                        isDropdownOpen={isDropdownOpen}
+                        setIsDropdownOpen={setIsDropdownOpen}
+                        amount={amount}
+                        setAmount={setAmount}
+                        isCrypto={isCrypto}
+                        isMobileMoney={isMobileMoney}
+                        cryptoSendMode={cryptoSendMode}
+                        setCryptoSendMode={setCryptoSendMode}
+                        cryptoAddress={cryptoAddress}
+                        setCryptoAddress={setCryptoAddress}
+                        operator={operator}
+                        setOperator={setOperator}
+                        isInternal={isInternal}
+                        setIsInternal={setIsInternal}
+                        recipientType={recipientType}
+                        setRecipientType={setRecipientType}
+                        accountNumber={accountNumber}
+                        setAccountNumber={setAccountNumber}
+                        accountName={accountName}
+                        setAccountName={setAccountName}
+                        bankName={bankName}
+                        setBankName={setBankName}
+                        country={country}
+                        setCountry={setCountry}
+                        selectedBeneficiaryId={selectedBeneficiaryId}
+                        setSelectedBeneficiaryId={setSelectedBeneficiaryId}
+                        beneficiariesList={beneficiariesList}
+                        deleteBeneficiary={(id) => deleteBeneficiaryMutation.mutate(id)}
+                        onSubmit={handleProceed}
+                        isFormValid={isFormValid()}
+                    />
+                );
+            case 2:
+                return (
+                    <SendMoneyReview
+                        amount={amount}
+                        activeWallet={activeWallet}
+                        isCrypto={isCrypto}
+                        isMobileMoney={isMobileMoney}
+                        isInternal={isInternal}
+                        displayRecipientName={displayRecipientName}
+                        note={note}
+                        quoteDetails={quoteDetails}
+                        recipientType={recipientType}
+                        activeBeneficiary={activeBeneficiary}
+                        operator={operator}
+                        isPending={isPending}
+                        onBack={() => setStep(1)}
+                        onConfirm={handleConfirmSend}
+                    />
+                );
+            case 3:
+                return (
+                    <SendMoneySuccess
+                        amount={amount}
+                        activeWallet={activeWallet}
+                        isCrypto={isCrypto}
+                        isMobileMoney={isMobileMoney}
+                        displayRecipientName={displayRecipientName}
+                        txRef={txRef}
+                        txStatus={txStatus}
+                        note={note}
+                        showSaveBeneficiaryPrompt={showSaveBeneficiaryPrompt}
+                        handleSaveBeneficiaryPostTx={handleSaveBeneficiaryPostTx}
+                        handleDiscardBeneficiaryPostTx={handleDiscardBeneficiaryPostTx}
+                        handleDownloadReceipt={handleDownloadReceipt}
+                        handleReset={handleReset}
+                    />
+                );
+        }
+    };
+
     return (
         <Sheet
             isOpen={isSendOpen}
@@ -607,569 +736,7 @@ export const SendMoneySheet: React.FC = () => {
             title="Send Money"
             description="Send fiat or stablecoins anywhere in the world"
         >
-            {step === 1 && (
-                /* Step 1: Input details form */
-                <form onSubmit={handleProceed} className="space-y-6 flex flex-col justify-between h-full text-left">
-                    <div className="space-y-5">
-
-                        {/* Selector for FROM Wallet */}
-                        <div className="space-y-2">
-                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block select-none">Source Wallet</span>
-                            <div className="relative">
-                                <div
-                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="bg-[#0C1224] border border-white/10 hover:border-white/15 rounded-2xl p-4 flex items-center justify-between cursor-pointer transition select-none"
-                                >
-                                    <div className="flex items-center space-x-3">
-                                        <CurrencyIcon code={activeWallet.code} size="md" />
-                                        <div className="text-left">
-                                            <span className="font-bold text-white block text-sm leading-tight">{activeWallet.name}</span>
-                                            <span className="text-[9px] text-slate-500 font-bold block mt-0.5">{activeWallet.code} • Balance: {activeWallet.balance}</span>
-                                        </div>
-                                    </div>
-                                    <ChevronDown className="h-4 w-4 text-slate-500" />
-                                </div>
-
-                                {/* Overlay to close dropdown when clicking outside */}
-                                {isDropdownOpen && (
-                                    <div
-                                        className="fixed inset-0 z-20"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    />
-                                )}
-
-                                {/* Dropdown FROM selections */}
-                                {isDropdownOpen && (
-                                    <div className="absolute top-full left-0 right-0 mt-2 bg-[#0E1528] border border-white/10 rounded-2xl shadow-2xl z-30 max-h-[220px] overflow-y-auto scrollbar-none py-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                                        {walletsList.map((w) => (
-                                            <div
-                                                key={w.id}
-                                                onClick={() => {
-                                                    setSelectedWalletId(w.id);
-                                                    setIsDropdownOpen(false);
-                                                }}
-                                                className={cn(
-                                                    "px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition",
-                                                    selectedWalletId === w.id ? "bg-white/[0.01]" : ""
-                                                )}
-                                            >
-                                                <div className="flex items-center space-x-3">
-                                                    <CurrencyIcon code={w.code} size="md" />
-                                                    <div className="text-left">
-                                                        <span className="font-bold text-white text-xs block leading-tight">{w.name}</span>
-                                                        <span className="text-[9px] text-slate-500 font-bold uppercase">{w.code} • {w.balance}</span>
-                                                    </div>
-                                                </div>
-                                                {selectedWalletId === w.id && <Check className="h-4 w-4 text-primary-400" />}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Amount Entry Card */}
-                        <div className="bg-[#0C1224] border border-white/10 rounded-2xl p-5 text-center relative select-none">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Enter Amount</span>
-                            <div className="flex items-center justify-center space-x-1 py-1">
-                                <NumberInput
-                                    value={amount}
-                                    onChange={setAmount}
-                                    placeholder="0.00"
-                                    className="bg-transparent border-none focus:outline-none focus:ring-0 text-center text-white font-mono font-black text-3.5xl placeholder-slate-700 w-full max-w-[240px] leading-none"
-                                />
-                                {activeWallet.type !== 'fiat' && (
-                                    <span className="text-2xl font-black text-slate-500 font-mono">{activeWallet.code}</span>
-                                )}
-                            </div>
-                        </div>
-                        <div className="h-[1px] bg-white/5 my-1"></div>
-
-                        {isCrypto ? (
-                            /* Crypto Recipient Input */
-                            <div className="space-y-4 animate-in fade-in duration-200">
-                                {/* Segmented pills to select phone vs withdraw vs address */}
-                                <div className="space-y-1.5">
-                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Transfer Method</span>
-                                    <div className="flex bg-black/30 border border-white/15 p-1 rounded-xl">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setCryptoSendMode('phone');
-                                                setCryptoAddress('');
-                                            }}
-                                            className={cn(
-                                                "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                                cryptoSendMode === 'phone'
-                                                    ? "bg-primary-500 text-white shadow-md"
-                                                    : "text-slate-400 hover:text-white"
-                                            )}
-                                        >
-                                            Send to Phone
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setCryptoSendMode('withdraw');
-                                                setCryptoAddress('');
-                                            }}
-                                            className={cn(
-                                                "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                                cryptoSendMode === 'withdraw'
-                                                    ? "bg-primary-500 text-white shadow-md"
-                                                    : "text-slate-400 hover:text-white"
-                                            )}
-                                        >
-                                            Withdraw to MM
-                                        </button>
-                                        {/* <button
-                                            type="button"
-                                            onClick={() => {
-                                                setCryptoSendMode('address');
-                                                setCryptoAddress('');
-                                            }}
-                                            className={cn(
-                                                "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                                cryptoSendMode === 'address'
-                                                    ? "bg-primary-500 text-white shadow-md"
-                                                    : "text-slate-400 hover:text-white"
-                                            )}
-                                        >
-                                            On-Chain Address
-                                        </button> */}
-                                    </div>
-                                </div>
-
-                                {cryptoSendMode === 'phone' && (
-                                    <PhoneInput
-                                        required
-                                        label="Recipient Phone number*"
-                                        placeholder="Enter recipient phone"
-                                        value={cryptoAddress}
-                                        onChange={(val) => setCryptoAddress(val)}
-                                    />
-                                )}
-                                {cryptoSendMode === 'withdraw' && (
-                                    <div className="space-y-4">
-                                        <PhoneInput
-                                            required
-                                            label="Withdraw Phone number*"
-                                            placeholder="Enter phone"
-                                            value={cryptoAddress}
-                                            onChange={(val) => setCryptoAddress(val)}
-                                        />
-                                        <div className="space-y-1.5">
-                                            <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Operator*</span>
-                                            <select
-                                                value={operator}
-                                                onChange={(e) => setOperator(e.target.value)}
-                                                className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans select-none"
-                                            >
-                                                <option value="MTN">MTN Mobile Money</option>
-                                                <option value="Orange">Orange Money</option>
-                                                <option value="Moov">Moov Money</option>
-                                                <option value="Wave">Wave</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                )}
-                                {cryptoSendMode === 'address' && (
-                                    <div className="space-y-1.5">
-                                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block font-sans">Recipient Wallet Address*</span>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={cryptoAddress}
-                                            onChange={(e) => setCryptoAddress(e.target.value)}
-                                            placeholder="Enter 0x... address"
-                                            className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-primary-500/50 w-full font-mono"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            /* Fiat Recipient Form */
-                            <div className="space-y-4">
-
-                                {/* Segmented transfer toggles */}
-                                <div className="flex space-x-3 mb-2">
-                                    <label className="flex items-center space-x-2 text-xs font-bold text-slate-300 select-none cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={isInternal}
-                                            disabled={isMobileMoney}
-                                            onChange={(e) => setIsInternal(e.target.checked)}
-                                            className="rounded border-white/10 bg-black/40 text-primary-500 focus:ring-0"
-                                        />
-                                        <span>Internal DigitalCap Transfer</span>
-                                    </label>
-                                </div>
-
-                                <div className="flex bg-black/30 border border-white/5 p-1 rounded-xl">
-                                    <button
-                                        type="button"
-                                        onClick={() => setRecipientType('new')}
-                                        className={cn(
-                                            "flex-1 py-2 text-[11px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                            recipientType === 'new'
-                                                ? "bg-primary-500 text-white shadow-md"
-                                                : "text-slate-400 hover:text-white"
-                                        )}
-                                    >
-                                        New Beneficiary
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setRecipientType('saved')}
-                                        className={cn(
-                                            "flex-1 py-2 text-[11px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                            recipientType === 'saved'
-                                                ? "bg-primary-500 text-white shadow-md"
-                                                : "text-slate-400 hover:text-white"
-                                        )}
-                                    >
-                                        Saved
-                                    </button>
-                                </div>
-
-                                {recipientType === 'new' ? (
-                                    <div className="space-y-4 animate-in fade-in duration-200">
-                                        <div className="space-y-1.5">
-                                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">
-                                                {isMobileMoney ? 'Mobile phone number*' : 'Bank Account Number*'}
-                                            </span>
-                                            <input
-                                                type="text"
-                                                required
-                                                value={accountNumber}
-                                                onChange={(e) => setAccountNumber(e.target.value)}
-                                                placeholder={isMobileMoney ? "Enter phone (e.g. +221...)" : "Enter Account Number"}
-                                                className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-primary-500/50 w-full font-mono"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Recipient Full Name*</span>
-                                            <input
-                                                type="text"
-                                                required
-                                                value={accountName}
-                                                onChange={(e) => setAccountName(e.target.value)}
-                                                placeholder="Enter recipient's name"
-                                                className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-primary-500/50 w-full font-sans"
-                                            />
-                                        </div>
-
-                                        {isMobileMoney ? (
-                                            /* Mobile Money Network Selector */
-                                            <div className="space-y-1.5">
-                                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Mobile Money Operator*</span>
-                                                <select
-                                                    value={operator}
-                                                    onChange={(e) => setOperator(e.target.value)}
-                                                    className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans cursor-pointer"
-                                                >
-                                                    <option value="Orange">Orange Money</option>
-                                                    <option value="MTN">MTN MoMo</option>
-                                                    <option value="Moov">Moov Money</option>
-                                                    <option value="Wave">Wave</option>
-                                                </select>
-                                            </div>
-                                        ) : !isInternal && (
-                                            /* Standard bank wire inputs */
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div className="space-y-1.5">
-                                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Bank Name</span>
-                                                    <input
-                                                        type="text"
-                                                        value={bankName}
-                                                        onChange={(e) => setBankName(e.target.value)}
-                                                        placeholder="Wells Fargo"
-                                                        className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-700 focus:outline-none focus:border-primary-500/50 w-full"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Country</span>
-                                                    <input
-                                                        type="text"
-                                                        value={country}
-                                                        onChange={(e) => setCountry(e.target.value)}
-                                                        placeholder="Senegal"
-                                                        className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-700 focus:outline-none focus:border-primary-500/50 w-full"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {!isCrypto && !isMobileMoney && !isInternal && (
-                                            <label className="flex items-center space-x-2 text-xs font-semibold text-slate-400 select-none cursor-pointer mt-1">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={saveBeneficiary}
-                                                    onChange={(e) => setSaveBeneficiary(e.target.checked)}
-                                                    className="rounded border-white/10 bg-black/40 text-primary-500 focus:ring-0"
-                                                />
-                                                <span>Save to beneficiary list</span>
-                                            </label>
-                                        )}
-                                    </div>
-                                ) : (
-                                    /* Interactive Beneficiaries tiles list */
-                                    <div className="space-y-2.5 animate-in fade-in duration-200">
-                                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Select Beneficiary</span>
-                                        {beneficiariesList.length === 0 ? (
-                                            <div className="p-6 text-center border border-dashed border-white/10 rounded-2xl text-xs text-slate-500 select-none">
-                                                No saved beneficiaries found. Select "New Beneficiary" above to transfer.
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-2 max-h-[170px] overflow-y-auto pr-1">
-                                                {beneficiariesList.map((b) => (
-                                                    <div
-                                                        key={b.id}
-                                                        onClick={() => setSelectedBeneficiaryId(b.id)}
-                                                        className={cn(
-                                                            "p-3.5 rounded-2xl bg-black/20 border transition flex items-center justify-between cursor-pointer",
-                                                            selectedBeneficiaryId === b.id
-                                                                ? "border-primary-500 bg-primary-500/5"
-                                                                : "border-white/10 hover:border-white/20"
-                                                        )}
-                                                    >
-                                                        <div className="text-left space-y-0.5">
-                                                            <span className="font-bold text-white text-xs block">{b.name}</span>
-                                                            <span className="text-[9.5px] text-slate-550 font-bold block font-mono">
-                                                                {b.bankName} • {b.accountNumber}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center space-x-3">
-                                                            {selectedBeneficiaryId === b.id && <Check className="h-4 w-4 text-primary-400" />}
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    deleteBeneficiaryMutation.mutate(b.id);
-                                                                }}
-                                                                className="p-1 rounded hover:bg-white/5 text-rose-455 transition cursor-pointer"
-                                                            >
-                                                                <Trash2 className="h-3.5 w-3.5" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        <div className="space-y-1.5">
-                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block select-none">Reference / Note</span>
-                            <input
-                                type="text"
-                                value={note}
-                                onChange={(e) => setNote(e.target.value)}
-                                placeholder="Enter transfer reference"
-                                className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-primary-500/50 w-full font-sans"
-                            />
-                        </div>
-
-                    </div>
-
-                    <div className="space-y-3 mt-auto">
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            disabled={!isFormValid() || quoteMutation.isPending}
-                            className="w-full rounded-xl h-[52px] font-bold text-sm"
-                            leftIcon={quoteMutation.isPending && <RefreshCw className="h-4 w-4 animate-spin" />}
-                        >
-                            {quoteMutation.isPending ? 'Pricing withdrawal...' : `Send ${amount ? `${activeWallet.type === 'fiat' ? '$' : ''}${parseFloat(amount).toLocaleString()} ${activeWallet.type === 'fiat' ? '' : activeWallet.code || ''}` : ''}`}
-                        </Button>
-                        <span className="text-[10px] text-slate-555 block text-center select-none leading-relaxed">
-                            Funds reflect instantly or within a few minutes
-                        </span>
-                    </div>
-                </form>
-            )}
-
-            {step === 2 && (
-                /* Step 2: Review and Confirm conversion */
-                <div className="space-y-6 flex flex-col justify-between h-full text-left">
-                    <div className="space-y-5">
-
-                        <div className="bg-gradient-to-br from-[#0F172A] to-[#0A0F1D] border border-white/5 rounded-3xl p-6.5 text-center shadow-xl select-none">
-                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block">You are sending</span>
-                            <span className="text-2.5xl md:text-3.5xl font-black text-white block mt-1.5 font-satoshi">
-                                {activeWallet.type === 'fiat' ? '$' : ''}{parseFloat(amount).toLocaleString()} {activeWallet.code}
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400 block mt-1">
-                                from your {activeWallet.name} Wallet
-                            </span>
-                        </div>
-
-                        <div className="bg-black/20 border border-white/5 rounded-2.5xl p-5 space-y-3.5 select-none font-sans text-xs">
-                            <div className="flex justify-between items-center py-0.5">
-                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Recipient</span>
-                                <div className="text-right">
-                                    <span className="font-bold text-white block">{displayRecipientName}</span>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-between items-center py-0.5">
-                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Recipient gets</span>
-                                <span className="font-bold text-emerald-400 font-mono">
-                                    {activeWallet.type === 'fiat' ? '$' : ''}{parseFloat(amount).toLocaleString()} {activeWallet.code}
-                                </span>
-                            </div>
-
-                            {/* Quote fees outputs */}
-                            {quoteDetails ? (
-                                <>
-                                    <div className="flex justify-between items-center py-0.5">
-                                        <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Processing fee</span>
-                                        <span className="font-bold text-white font-mono">
-                                            ${quoteDetails.fee.toFixed(2)}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center py-0.5">
-                                        <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Total Debit</span>
-                                        <span className="font-bold text-white font-mono">
-                                            ${quoteDetails.totalAmount.toFixed(2)}
-                                        </span>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="flex justify-between items-center py-0.5">
-                                    <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Transfer fee</span>
-                                    <span className="font-bold text-white font-mono">
-                                        {activeWallet.type === 'fiat' ? '$' : ''}{(parseFloat(amount) * 0.001).toFixed(2)} (0.1%)
-                                    </span>
-                                </div>
-                            )}
-
-                            <div className="flex justify-between items-center py-0.5">
-                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Settlement time</span>
-                                <span className="font-bold text-white">
-                                    {isCrypto ? 'Instant' : isMobileMoney ? 'Instant' : 'Same day'}
-                                </span>
-                            </div>
-
-                            <div className="flex justify-between items-start py-0.5">
-                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px] pt-0.5">Reference</span>
-                                <span className="font-bold text-slate-350 max-w-[200px] text-right truncate">
-                                    {note || 'Invoice payment'}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="bg-orange-500/5 border border-orange-500/10 rounded-2xl p-4 flex items-start space-x-3 text-xs text-orange-400 leading-relaxed select-none">
-                            <Info className="h-4.5 w-4.5 shrink-0 mt-0.5" />
-                            <p className="font-semibold text-[11px]">
-                                Please confirm you're sending to the correct recipient. Mobile Money cashouts, bank withdrawals, and blockchain transfers cannot be recalled.
-                            </p>
-                        </div>
-
-                    </div>
-
-                    <div className="flex flex-col space-y-2 mt-auto">
-                        <Button
-                            onClick={handleConfirmSend}
-                            disabled={isPending}
-                            className="w-full rounded-xl h-[52px] font-bold text-sm shadow-lg"
-                            leftIcon={isPending && <RefreshCw className="h-4 w-4 animate-spin" />}
-                        >
-                            {isPending ? 'Processing Transfer...' : 'Confirm & Send'}
-                        </Button>
-                        <button
-                            onClick={() => setStep(1)}
-                            className="w-full bg-slate-800/50 hover:bg-slate-800 text-slate-400 py-3.5 rounded-xl font-bold text-sm tracking-wide transition duration-200 border border-white/5 cursor-pointer animate-in"
-                        >
-                            Back
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {step === 3 && (
-                /* Step 3: Success Screen details */
-                <div className="space-y-6 flex flex-col justify-between h-full text-center">
-
-                    <div className="space-y-6 select-none pt-8">
-                        <div className="relative inline-flex items-center justify-center">
-                            <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-[20px]"></div>
-                            <div className="relative w-18 h-18 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
-                                <CheckCircle2 className="h-9 w-9" />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2 max-w-sm mx-auto">
-                            <span className="text-[10px] font-bold text-emerald-400 tracking-[0.2em] uppercase font-mono block">
-                                Transfer Sent
-                            </span>
-                            <h2 className="font-satoshi font-black text-2.5xl text-white tracking-tight">
-                                {activeWallet.type === 'fiat' ? '$' : ''}{parseFloat(amount).toLocaleString()} {activeWallet.code}
-                            </h2>
-                            <p className="text-slate-400 text-xs font-sans leading-relaxed">
-                                successfully sent to <strong className="text-white font-bold">{displayRecipientName}</strong>
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 text-left space-y-3.5 select-none font-sans text-xs max-w-md mx-auto w-full">
-                        <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Transaction ID</span>
-                            <span className="font-mono text-slate-350">{txRef}</span>
-                        </div>
-
-                        <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Est. delivery</span>
-                            <span className="text-white">
-                                {isCrypto ? 'Instant' : isMobileMoney ? 'Instant' : 'Same day'}
-                            </span>
-                        </div>
-
-                        <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Recipient</span>
-                            <span className="font-bold text-white">{displayRecipientName}</span>
-                        </div>
-
-                        <div className="flex justify-between items-start py-0.5">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px] pt-0.5">Reference</span>
-                            <span className="font-bold text-slate-350 max-w-[200px] truncate">{note || 'Fund transfer'}</span>
-                        </div>
-
-                        <div className="flex justify-between items-center py-0.5 border-t border-white/5 pt-3">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Status</span>
-                            <span className={cn(
-                                "font-bold",
-                                (txStatus.toLowerCase() === 'completed' || txStatus.toLowerCase() === 'success')
-                                    ? "text-emerald-400"
-                                    : (txStatus.toLowerCase() === 'pending' || txStatus.toLowerCase() === 'processing')
-                                        ? "text-blue-400"
-                                        : "text-rose-500"
-                            )}>
-                                {txStatus}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mt-auto">
-                        <button
-                            onClick={handleDownloadReceipt}
-                            className="bg-transparent hover:bg-white/[0.02] border border-white/15 text-white font-bold text-xs py-3.5 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center space-x-1.5"
-                        >
-                            <Download className="h-4 w-4 text-slate-400" />
-                            <span>Receipt</span>
-                        </button>
-                        <button
-                            onClick={handleReset}
-                            className="bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs py-3.5 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center space-x-1.5 active:scale-[0.98]"
-                        >
-                            <span>Done</span>
-                        </button>
-                    </div>
-
-                </div>
-            )}
+            {renderStep()}
         </Sheet>
     );
 };

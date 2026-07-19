@@ -50,7 +50,25 @@ export interface ExecuteExchangeResponse {
   error?: any;
 }
 
+export interface RateItem {
+  currency: string;
+  standardRate: number;
+  buyRate: number;
+  sellRate: number;
+  updatedAt: string;
+}
+
+export interface RatesResponse {
+  success: boolean;
+  data: RateItem[];
+}
+
 class ExchangeService extends BaseService {
+  async getRates(): Promise<RatesResponse> {
+    const response = await this.api.get('/rates');
+    return response.data;
+  }
+
   async getRate(from: string, to: string): Promise<ExchangeRateResponse> {
     const response = await this.api.get('/exchange/rate', {
       params: { from, to },

@@ -49,6 +49,12 @@ export interface InitiateWithdrawalRequest {
   operator?: string;
   beneficiaryId?: string;
   source_currency?: string;
+  accountNumber?: string;
+  bankName?: string;
+  country?: string;
+  recipientName?: string;
+  destinationCurrency?: string;
+  destinationType?: string;
 }
 
 export interface Hub2TransferRequest {
@@ -156,11 +162,23 @@ export class WithdrawalService extends BaseService {
       });
       return response.data;
     } else {
-      const response = await this.api.post('/withdrawals', {
-        beneficiary_id: payload.beneficiaryId,
+      const body: any = {
         source_amount: payload.amount,
         source_currency: payload.source_currency || code
-      });
+      };
+
+      if (payload.beneficiaryId) {
+        body.beneficiary_id = payload.beneficiaryId;
+      } else {
+        body.account_number = payload.accountNumber;
+        body.bank_name = payload.bankName;
+        body.destination_country = payload.country;
+        body.destination_currency = payload.destinationCurrency || code;
+        body.destination_type = payload.destinationType || 'bank';
+        body.recipient_name = payload.recipientName;
+      }
+
+      const response = await this.api.post('/withdrawals', body);
       return response.data;
     }
   }

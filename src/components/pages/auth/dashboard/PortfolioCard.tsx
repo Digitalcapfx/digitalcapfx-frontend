@@ -4,15 +4,7 @@ import React, { useState } from 'react'
 import { Zap, Eye, EyeOff } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
-
-const CONVERSION_RATES: Record<string, number> = {
-    USD: 1.0,
-    USDC: 1.0,
-    EUR: 1.08,
-    GBP: 1.28,
-    XAF: 0.0016,
-    XOF: 0.0016,
-};
+import { exchangeService } from '@/services/exchange.service'
 
 const PortfolioCard: React.FC = () => {
     const [showPortfolio, setShowPortfolio] = useState(true);
@@ -27,7 +19,27 @@ const PortfolioCard: React.FC = () => {
         queryFn: () => accountService.getCryptoBalances(),
     });
 
+    const ratesQuery = useQuery({
+        queryKey: ['exchangeRates'],
+        queryFn: () => exchangeService.getRates(),
+    });
+
     let totalUsd = 0;
+
+    // Build standard rates map (USD-base)
+    const ratesMap: Record<string, number> = {
+        USD: 1.0,
+        USDC: 1.0,
+    };
+
+    if (ratesQuery.data?.success && Array.isArray(ratesQuery.data.data)) {
+        ratesQuery.data.data.forEach((r) => {
+            if (r.currency && r.standardRate > 0) {
+                ratesMap[r.currency.toUpperCase()] = r.standardRate;
+            }
+        });
+    }
+
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         totalUsd += parseFloat(cryptoQuery.data.data.balanceUsdc || '0');
     }
@@ -35,14 +47,17 @@ const PortfolioCard: React.FC = () => {
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
         fiatQuery.data.data.forEach((acc) => {
             const bal = parseFloat(acc.balance || '0');
-            const weight = CONVERSION_RATES[acc.currency.toUpperCase()] || 1.0;
-            totalUsd += bal * weight;
+            const currency = acc.currency.toUpperCase();
+            const rate = ratesMap[currency];
+            if (rate && rate > 0) {
+                totalUsd += bal / rate;
+            }
         });
     }
 
     const displayVal = '$' + totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-    const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading;
+    const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading || ratesQuery.isLoading;
 
     return (
         <div className="bg-[#0C1224] border border-white/5 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[170px] shadow-2xl">
@@ -66,14 +81,9 @@ const PortfolioCard: React.FC = () => {
                                 '••••••'
                             )}
                         </span>
-                        {showPortfolio && !isLoading && (
-                            <div className="inline-flex items-center space-x-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[9px] font-bold text-emerald-400 font-mono">
-                                <span>↗ Stable</span>
-                            </div>
-                        )}
                     </div>
                 </div>
-                <button 
+                <button
                     onClick={() => setShowPortfolio(!showPortfolio)}
                     className="text-slate-550 hover:text-white transition duration-200"
                 >
@@ -84,11 +94,11 @@ const PortfolioCard: React.FC = () => {
             {/* Middle trend vector indicator (SVG spline) */}
             <div className="absolute bottom-12 left-6 right-6 h-8">
                 <svg className="w-full h-full" viewBox="0 0 600 30" preserveAspectRatio="none">
-                    <path 
-                        d="M0 25 C100 24, 200 23, 300 24 C400 25, 500 22, 600 20" 
-                        fill="none" 
-                        stroke="#2F80FF" 
-                        strokeWidth="2.5" 
+                    <path
+                        d="M0 25 C100 24, 200 23, 300 24 C400 25, 500 22, 600 20"
+                        fill="none"
+                        stroke="#2F80FF"
+                        strokeWidth="2.5"
                         strokeLinecap="round"
                     />
                 </svg>

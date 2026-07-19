@@ -119,6 +119,11 @@ class AccountService extends BaseService {
       return response.data;
     }
   }
+
+  async getCryptoTransaction(id: string): Promise<{ success: boolean; data: any }> {
+    const response = await this.api.get(`/crypto/transactions/${id}`);
+    return response.data;
+  }
 }
 
 export const accountService = new AccountService();
