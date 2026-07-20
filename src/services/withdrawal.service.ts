@@ -26,7 +26,7 @@ export interface CreateBeneficiaryRequest {
 export interface WithdrawalQuoteRequest {
   amount: number;
   currency: string;
-  source_currency?: string;
+  sourceCurrency?: string;
 }
 
 export interface WithdrawalQuoteData {
@@ -48,7 +48,7 @@ export interface InitiateWithdrawalRequest {
   phone?: string;
   operator?: string;
   beneficiaryId?: string;
-  source_currency?: string;
+  sourceCurrency?: string;
   accountNumber?: string;
   bankName?: string;
   country?: string;
@@ -119,24 +119,24 @@ export class WithdrawalService extends BaseService {
   }
 
   async createWithdrawalQuote(payload: WithdrawalQuoteRequest): Promise<WithdrawalQuoteResponse> {
-    const source_currency = payload.source_currency || payload.currency || 'USD';
-    const destination_currency = payload.currency || 'USD';
+    const sourceCurrency = payload.sourceCurrency || payload.currency || 'USD';
+    const destinationCurrency = payload.currency || 'USD';
     const response = await this.api.post('/withdrawals/quote', {
-      source_amount: payload.amount,
-      source_currency,
-      destination_currency,
-      destination_type: 'bank'
+      sourceAmount: payload.amount,
+      sourceCurrency,
+      destinationCurrency,
+      destinationType: 'bank'
     });
     if (response.data && response.data.success !== false) {
       const d = response.data.data || response.data;
       return {
         success: true,
         data: {
-          quoteId: d.quote_id || d.quoteId || '',
+          quoteId: d.quoteId || '',
           fee: d.fee || 0,
           rate: d.rate || 1,
-          totalAmount: d.target_amount || d.totalAmount || d.source_amount || 0,
-          expiryAt: d.expires_at || d.expiryAt || ''
+          totalAmount: d.totalAmount || d.sourceAmount || 0,
+          expiryAt: d.expiryAt || ''
         }
       };
     }
@@ -148,8 +148,8 @@ export class WithdrawalService extends BaseService {
     if (code === 'IUSD' || code === 'USDC' || code === 'USDT') {
       const response = await this.api.post('/crypto/withdraw', {
         amount: payload.amount.toString(),
-        payout_mobile: payload.phone || '',
-        payout_network: payload.operator || 'MTN',
+        payoutMobile: payload.phone || '',
+        payoutNetwork: payload.operator || 'MTN',
         token: code === 'IUSD' ? 'USDC' : code
       });
       return response.data;
@@ -163,19 +163,19 @@ export class WithdrawalService extends BaseService {
       return response.data;
     } else {
       const body: any = {
-        source_amount: payload.amount,
-        source_currency: payload.source_currency || code
+        sourceAmount: payload.amount,
+        sourceCurrency: payload.sourceCurrency || code
       };
 
       if (payload.beneficiaryId) {
-        body.beneficiary_id = payload.beneficiaryId;
+        body.beneficiaryId = payload.beneficiaryId;
       } else {
-        body.account_number = payload.accountNumber;
-        body.bank_name = payload.bankName;
-        body.destination_country = payload.country;
-        body.destination_currency = payload.destinationCurrency || code;
-        body.destination_type = payload.destinationType || 'bank';
-        body.recipient_name = payload.recipientName;
+        body.accountNumber = payload.accountNumber;
+        body.bankName = payload.bankName;
+        body.destinationCountry = payload.country;
+        body.destinationCurrency = payload.destinationCurrency || code;
+        body.destinationType = payload.destinationType || 'bank';
+        body.recipientName = payload.recipientName;
       }
 
       const response = await this.api.post('/withdrawals', body);

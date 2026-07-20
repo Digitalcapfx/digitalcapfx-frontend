@@ -1,7 +1,7 @@
 import { BaseService } from './base.service';
 
 export interface SendCryptoRequest {
-  receiver_phone: string;
+  receiverPhone: string;
   amount: string;
   token?: 'USDC' | 'USDT';
 }
@@ -9,7 +9,7 @@ export interface SendCryptoRequest {
 export interface SendCryptoResponse {
   success: boolean;
   data?: {
-    transaction_hash: string;
+    transactionHash: string;
     reference: string;
   };
   error?: any;
@@ -34,8 +34,8 @@ export interface FundAccountResponse {
 
 export interface WithdrawRequest {
   amount: string;
-  payout_mobile: string;
-  payout_network: string;
+  payoutMobile: string;
+  payoutNetwork: string;
   token?: 'USDC' | 'USDT';
 }
 
@@ -56,7 +56,7 @@ export interface TransactionActivity {
   status: string;
   reference: string;
   description: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface ActivityResponse {
@@ -83,6 +83,11 @@ class TransferService extends BaseService {
 
   async getActivity(): Promise<ActivityResponse> {
     const response = await this.api.get('/activity');
+    return response.data;
+  }
+
+  async transferWaaS(payload: { amount: string; currency: string; network: string; toAddress: string }): Promise<any> {
+    const response = await this.api.post('/wallets/transfer', payload);
     return response.data;
   }
 }

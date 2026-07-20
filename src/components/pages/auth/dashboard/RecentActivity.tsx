@@ -68,7 +68,7 @@ const RecentActivity: React.FC = () => {
                                             {tx.description || `${tx.type} transaction`}
                                         </h4>
                                         <span className="text-[10px] text-slate-500 font-medium block mt-0.5 select-none">
-                                            {tx.type} • {new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                            {tx.type} • {new Date(tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                         </span>
                                     </div>
                                 </div>

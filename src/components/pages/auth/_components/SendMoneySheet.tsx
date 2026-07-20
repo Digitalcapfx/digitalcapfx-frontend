@@ -7,7 +7,7 @@ import { formatCurrencyByLocale } from '@/lib/utils'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
-import { withdrawalService, Beneficiary, InitiateWithdrawalRequest } from '@/services/withdrawal.service'
+import { withdrawalService, Beneficiary, InitiateWithdrawalRequest, WithdrawalQuoteRequest } from '@/services/withdrawal.service'
 import { toast } from 'sonner'
 
 // Import subcomponents
@@ -24,6 +24,7 @@ export interface Wallet {
     rawBalance: number;
     accountNumber?: string;
     walletAddress?: string;
+    provider?: 'caas' | 'waas';
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
@@ -49,6 +50,26 @@ const formatBalance = (amount: string | number, currency: string) => {
     };
     const prefix = symbols[currency] || '';
     return prefix + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (prefix ? '' : ` ${currency}`);
+};
+
+const toSmallestUnit = (amountStr: string, network: string): string => {
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) return '0';
+    
+    const net = network.toUpperCase();
+    let decimals = 18; // Default to ETH/POL/BSC 18 decimals
+    
+    if (net === 'BTC' || net === 'BCH' || net === 'LTC') {
+        decimals = 8;
+    } else if (net === 'SOL') {
+        decimals = 9;
+    } else if (net === 'TRX' || net === 'XRP') {
+        decimals = 6;
+    }
+    
+    const multiplier = Math.pow(10, decimals);
+    const smallestUnit = Math.round(amount * multiplier);
+    return smallestUnit.toString();
 };
 
 export const SendMoneySheet: React.FC = () => {
@@ -84,8 +105,8 @@ export const SendMoneySheet: React.FC = () => {
     const [note, setNote] = useState('');
 
     // Transaction Result states
-    const [txRef, setTxRef] = useState('TXN-2026-9148');
-    const [txStatus, setTxStatus] = useState('Processing');
+    const [txRef, setTxRef] = useState('');
+    const [txStatus, setTxStatus] = useState('');
     const [quoteDetails, setQuoteDetails] = useState<{ fee: number; rate: number; totalAmount: number } | null>(null);
     const [showSaveBeneficiaryPrompt, setShowSaveBeneficiaryPrompt] = useState(false);
 
@@ -100,6 +121,35 @@ export const SendMoneySheet: React.FC = () => {
         queryKey: ['cryptoBalances'],
         queryFn: () => accountService.getCryptoBalances(),
         enabled: isSendOpen,
+    });
+
+    const waasWalletsQuery = useQuery({
+        queryKey: ['waasWallets'],
+        queryFn: () => accountService.getWaaSWallets(),
+        enabled: isSendOpen,
+    });
+
+    const waasDetailsQuery = useQuery({
+        queryKey: ['waasWalletsDetails', waasWalletsQuery.data?.data],
+        queryFn: async () => {
+            const list = waasWalletsQuery.data?.data || [];
+            const details = await Promise.all(list.map(async (w: any) => {
+                try {
+                    const res = await accountService.getWaaSWalletDetail(w.network);
+                    return {
+                        ...w,
+                        balanceData: res?.success && res.data ? res.data : null
+                    };
+                } catch (e) {
+                    return {
+                        ...w,
+                        balanceData: null
+                    };
+                }
+            }));
+            return details;
+        },
+        enabled: isSendOpen && !!waasWalletsQuery.data?.success
     });
 
     // Fetch beneficiaries
@@ -123,6 +173,7 @@ export const SendMoneySheet: React.FC = () => {
             balance: d.balanceFormatted || formatBalance(d.balanceUsdc, symbol),
             rawBalance: parseFloat(d.balanceUsdc || '0'),
             walletAddress: d.walletAddress,
+            provider: 'caas'
         });
     }
 
@@ -137,6 +188,29 @@ export const SendMoneySheet: React.FC = () => {
                 balance: formatBalance(acc.balance, acc.currency),
                 rawBalance: parseFloat(acc.balance || '0'),
                 accountNumber: acc.accountNumber,
+            });
+        });
+    }
+
+    // Map WaaS wallets
+    if (waasDetailsQuery.data && Array.isArray(waasDetailsQuery.data)) {
+        waasDetailsQuery.data.forEach((w: any) => {
+            const balObj = w.balanceData?.wallet || w.balanceData;
+            const balSymbol = balObj?.symbol || w.network || 'POL';
+            const balVal = balObj?.balance !== undefined ? parseFloat(balObj.balance.toString()) : 0;
+            const formattedBal = w.balanceData?.wallet?.formatted_balance || 
+                                 w.balanceData?.formatted_balance || 
+                                 `${balVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${balSymbol}`;
+            
+            walletsList.push({
+                id: balSymbol.toLowerCase(),
+                name: `${w.network} Wallet`,
+                code: balSymbol,
+                type: 'stablecoin',
+                balance: formattedBal,
+                rawBalance: balVal,
+                walletAddress: w.address,
+                provider: 'waas'
             });
         });
     }
@@ -164,6 +238,16 @@ export const SendMoneySheet: React.FC = () => {
         balance: '0.00 USDC',
         rawBalance: 0,
     };
+
+    useEffect(() => {
+        if (activeWallet) {
+            if (activeWallet.provider === 'waas') {
+                setCryptoSendMode('address');
+            } else {
+                setCryptoSendMode('phone');
+            }
+        }
+    }, [selectedWalletId]);
 
     const isCrypto = activeWallet.type === 'stablecoin';
     const isMobileMoney = !isCrypto && (activeWallet.code === 'XAF' || activeWallet.code === 'XOF');
@@ -222,9 +306,8 @@ export const SendMoneySheet: React.FC = () => {
         }
     };
 
-    // Mutation to preview / create quote for bank withdrawal
     const quoteMutation = useMutation({
-        mutationFn: (payload: { amount: number; currency: string; source_currency?: string }) => withdrawalService.createWithdrawalQuote(payload),
+        mutationFn: (payload: WithdrawalQuoteRequest) => withdrawalService.createWithdrawalQuote(payload),
         onSuccess: (res) => {
             if (res?.success && res?.data) {
                 setQuoteDetails({
@@ -251,7 +334,7 @@ export const SendMoneySheet: React.FC = () => {
             quoteMutation.mutate({
                 amount: parseFloat(amount),
                 currency: destCurrency,
-                source_currency: activeWallet.code
+                sourceCurrency: activeWallet.code
             });
         } else {
             setStep(2);
@@ -277,12 +360,11 @@ export const SendMoneySheet: React.FC = () => {
         onError: () => toast.error('Could not delete beneficiary.')
     });
 
-    // Payout and transfer mutations
     const sendCryptoMutation = useMutation({
-        mutationFn: (payload: { receiver_phone: string; amount: string; token: 'USDC' | 'USDT' }) => transferService.sendCrypto(payload),
+        mutationFn: (payload: { receiverPhone: string; amount: string; token: 'USDC' | 'USDT' }) => transferService.sendCrypto(payload),
         onSuccess: (data) => {
             if (data?.success && data?.data) {
-                setTxRef(data.data.reference || data.data.transaction_hash || 'TXN-OK');
+                setTxRef(data.data.reference || data.data.transactionHash || 'TXN-OK');
                 setTxStatus('Completed');
                 setStep(3);
                 setShowSaveBeneficiaryPrompt(true);
@@ -300,12 +382,35 @@ export const SendMoneySheet: React.FC = () => {
         }
     });
 
+    const sendWaaSMutation = useMutation({
+        mutationFn: (payload: { amount: string; currency: string; network: string; toAddress: string }) =>
+            transferService.transferWaaS(payload),
+        onSuccess: (data) => {
+            if (data?.success && data?.data) {
+                setTxRef(data.data.transactionHash || data.data.reference || 'TXN-WaaS-OK');
+                setTxStatus('Completed');
+                setStep(3);
+                queryClient.invalidateQueries({ queryKey: ['accounts'] });
+                queryClient.invalidateQueries({ queryKey: ['waasWallets'] });
+                queryClient.invalidateQueries({ queryKey: ['waasWalletsDetails'] });
+                queryClient.invalidateQueries({ queryKey: ['activity'] });
+            } else {
+                toast.error(data?.error?.message || 'On-chain transfer failed.');
+            }
+        },
+        onError: (err: any) => {
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to send on-chain.');
+            toast.error(msg);
+        }
+    });
+
     const withdrawMutation = useMutation({
         mutationFn: (payload: InitiateWithdrawalRequest) =>
             withdrawalService.initiateWithdrawal(payload),
         onSuccess: (data) => {
             if (data?.success && data?.data) {
-                const txId = data.data.id || data.data.caas_withdrawal_id || data.data.reference || 'TXN-OK';
+                const txId = data.data.id || data.data.caasWithdrawalId || data.data.reference || 'TXN-OK';
                 const status = data.data.status || 'Processing';
                 setTxRef(txId);
                 setTxStatus(status);
@@ -327,7 +432,7 @@ export const SendMoneySheet: React.FC = () => {
             withdrawalService.initiateWithdrawal(payload),
         onSuccess: (data) => {
             if (data?.success && data?.data) {
-                const txId = data.data.id || data.data.caas_withdrawal_id || data.data.reference || 'TXN-MM-OK';
+                const txId = data.data.id || data.data.caasWithdrawalId || data.data.reference || 'TXN-MM-OK';
                 const status = data.data.status || 'Processing';
                 setTxRef(txId);
                 setTxStatus(status);
@@ -544,7 +649,14 @@ export const SendMoneySheet: React.FC = () => {
 
     const handleConfirmSend = async () => {
         if (isCrypto) {
-            if (cryptoSendMode === 'withdraw') {
+            if (activeWallet.provider === 'waas') {
+                sendWaaSMutation.mutate({
+                    amount: toSmallestUnit(amount, activeWallet.code),
+                    currency: activeWallet.code,
+                    network: activeWallet.code,
+                    toAddress: cryptoAddress
+                });
+            } else if (cryptoSendMode === 'withdraw') {
                 hub2TransferMutation.mutate({
                     amount: parseFloat(amount),
                     currency: activeWallet.code,
@@ -553,7 +665,7 @@ export const SendMoneySheet: React.FC = () => {
                 });
             } else {
                 sendCryptoMutation.mutate({
-                    receiver_phone: cryptoAddress,
+                    receiverPhone: cryptoAddress,
                     amount: amount,
                     token: activeWallet.code === 'USDT' ? 'USDT' : 'USDC',
                 });
@@ -584,13 +696,13 @@ export const SendMoneySheet: React.FC = () => {
                     amount: parseFloat(amount),
                     currency: activeWallet.code,
                     beneficiaryId: selectedBeneficiaryId,
-                    source_currency: activeWallet.code
+                    sourceCurrency: activeWallet.code
                 });
             } else {
                 withdrawMutation.mutate({
                     amount: parseFloat(amount),
                     currency: activeWallet.code,
-                    source_currency: activeWallet.code,
+                    sourceCurrency: activeWallet.code,
                     accountNumber,
                     bankName,
                     country,

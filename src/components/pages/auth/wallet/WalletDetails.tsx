@@ -104,16 +104,16 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
 
     // Bank Account details strings
     const rawIban = wallet.iban || wallet.accountNumber || '';
-    const ibanValue = rawIban || 'GB29 NMBK 8832 9012 3442 12';
+    const ibanValue = rawIban || 'Not Available';
     const ibanMasked = rawIban 
         ? `${rawIban.slice(0, 4)} **** **** **** **`
-        : 'GB29 NMBK **** **** **** **';
-    const swiftValue = wallet.swiftCode || wallet.bic || 'NWBKGB2L';
-    const routingValue = wallet.routingNumber || '021000021';
-    const cryptoAddressValue = wallet.walletAddress || '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+        : 'Not Available';
+    const swiftValue = wallet.swiftCode || wallet.bic || 'Not Available';
+    const routingValue = wallet.routingNumber || 'Not Available';
+    const cryptoAddressValue = wallet.walletAddress || '';
     const cryptoAddressMasked = wallet.walletAddress
         ? `${wallet.walletAddress.slice(0, 6)}...${wallet.walletAddress.slice(-5)}`
-        : '0x71C7...8976F';
+        : 'Not Available';
 
     // Map and filter transactions for this wallet
     const filteredTxs = Array.isArray(initialTransactions) && initialTransactions.length > 0

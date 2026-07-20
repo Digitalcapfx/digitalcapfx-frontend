@@ -85,10 +85,10 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
     };
 
     const sendCryptoMutation = useMutation({
-        mutationFn: (payload: { receiver_phone: string; amount: string; token: 'USDC' }) => transferService.sendCrypto(payload),
+        mutationFn: (payload: { receiverPhone: string; amount: string; token: 'USDC' }) => transferService.sendCrypto(payload),
         onSuccess: (data) => {
             if (data?.success && data?.data) {
-                setTxRef(data.data.reference || data.data.transaction_hash || 'TXN-OK');
+                setTxRef(data.data.reference || data.data.transactionHash || 'TXN-OK');
                 setTxStatus('Completed');
                 setStep(3);
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
@@ -107,7 +107,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
 
     const handleConfirmSend = () => {
         sendCryptoMutation.mutate({
-            receiver_phone: phoneNumber,
+            receiverPhone: phoneNumber,
             amount: amount,
             token: 'USDC',
         });

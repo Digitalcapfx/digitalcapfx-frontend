@@ -28,6 +28,7 @@ export interface Wallet {
     bic?: string | null;
     sortCode?: string | null;
     accountNumberUk?: string | null;
+    provider?: 'caas' | 'waas';
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
@@ -82,6 +83,35 @@ export const ReceiveMoneySheet: React.FC = () => {
         enabled: isReceiveOpen,
     });
 
+    const waasWalletsQuery = useQuery({
+        queryKey: ['waasWallets'],
+        queryFn: () => accountService.getWaaSWallets(),
+        enabled: isReceiveOpen,
+    });
+
+    const waasDetailsQuery = useQuery({
+        queryKey: ['waasWalletsDetails', waasWalletsQuery.data?.data],
+        queryFn: async () => {
+            const list = waasWalletsQuery.data?.data || [];
+            const details = await Promise.all(list.map(async (w: any) => {
+                try {
+                    const res = await accountService.getWaaSWalletDetail(w.network);
+                    return {
+                        ...w,
+                        balanceData: res?.success && res.data ? res.data : null
+                    };
+                } catch (e) {
+                    return {
+                        ...w,
+                        balanceData: null
+                    };
+                }
+            }));
+            return details;
+        },
+        enabled: isReceiveOpen && !!waasWalletsQuery.data?.success
+    });
+
     const walletsList: Wallet[] = [];
 
     // Map stablecoin wallet
@@ -96,6 +126,7 @@ export const ReceiveMoneySheet: React.FC = () => {
             balance: d.balanceFormatted || formatCurrencyByLocale(d.balanceUsdc, symbol),
             rawBalance: parseFloat(d.balanceUsdc || '0'),
             walletAddress: d.walletAddress,
+            provider: 'caas'
         });
     }
 
@@ -114,6 +145,29 @@ export const ReceiveMoneySheet: React.FC = () => {
                 bic: acc.bic || null,
                 sortCode: acc.sortCode || null,
                 accountNumberUk: acc.accountNumberUk || null,
+            });
+        });
+    }
+
+    // Map WaaS wallets
+    if (waasDetailsQuery.data && Array.isArray(waasDetailsQuery.data)) {
+        waasDetailsQuery.data.forEach((w: any) => {
+            const balObj = w.balanceData?.wallet || w.balanceData;
+            const balSymbol = balObj?.symbol || w.network || 'POL';
+            const balVal = balObj?.balance !== undefined ? parseFloat(balObj.balance.toString()) : 0;
+            const formattedBal = w.balanceData?.wallet?.formatted_balance || 
+                                 w.balanceData?.formatted_balance || 
+                                 `${balVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${balSymbol}`;
+            
+            walletsList.push({
+                id: balSymbol.toLowerCase(),
+                name: `${w.network} Wallet`,
+                code: balSymbol,
+                type: 'stablecoin',
+                balance: formattedBal,
+                rawBalance: balVal,
+                walletAddress: w.address,
+                provider: 'waas'
             });
         });
     }
@@ -140,11 +194,11 @@ export const ReceiveMoneySheet: React.FC = () => {
     };
 
     const isCrypto = activeWallet.type === 'stablecoin';
-    const isMomoAvailable = isCrypto || activeWallet.code === 'XOF' || activeWallet.code === 'XAF';
+    const isMomoAvailable = (isCrypto && activeWallet.provider !== 'waas') || activeWallet.code === 'XOF' || activeWallet.code === 'XAF';
 
     // Build the dynamic address/copy label
     const address = isCrypto
-        ? (activeWallet.walletAddress || '0xSCW1234567890abcdef...')
+        ? (activeWallet.walletAddress || 'Address not available')
         : `Bank: ${activeWallet.name}\nAccount: ${activeWallet.accountNumber || ''}\nIBAN: ${activeWallet.iban || ''}`;
 
     const handleShare = async () => {

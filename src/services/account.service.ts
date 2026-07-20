@@ -124,6 +124,26 @@ class AccountService extends BaseService {
     const response = await this.api.get(`/crypto/transactions/${id}`);
     return response.data;
   }
+
+  async getWaaSWallets(): Promise<{ success: boolean; data: any[]; error?: any }> {
+    const response = await this.api.get('/wallets');
+    return response.data;
+  }
+
+  async getWaaSWalletDetail(network: string): Promise<{ success: boolean; data: any; error?: any }> {
+    const response = await this.api.get(`/wallets/crypto/${network}`);
+    return response.data;
+  }
+
+  async provisionWaaSWallet(network: string): Promise<{ success: boolean; data: any; error?: any }> {
+    const response = await this.api.post('/wallets', { network });
+    return response.data;
+  }
+
+  async getWaaSWalletTransactions(network: string): Promise<{ success: boolean; data: any[]; error?: any }> {
+    const response = await this.api.get(`/wallets/crypto/${network}/transactions`);
+    return response.data;
+  }
 }
 
 export const accountService = new AccountService();

@@ -11,6 +11,7 @@ import { formatCurrencyByLocale } from '@/lib/utils'
 
 interface WalletDetailsPageClientProps {
     id: string;
+    provider?: string;
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
@@ -29,22 +30,27 @@ const formatBalance = (amount: string | number, currency: string) => {
     return formatCurrencyByLocale(amount, currency);
 };
 
-export default function WalletDetailsPageClient({ id }: WalletDetailsPageClientProps) {
+export default function WalletDetailsPageClient({ id, provider }: WalletDetailsPageClientProps) {
     const router = useRouter();
     const searchId = id.toUpperCase();
-    const isCrypto = searchId === 'USDC' || searchId === 'IUSD';
+    const isWaaS = provider === 'waas';
+    const isCrypto = searchId === 'USDC' || searchId === 'IUSD' || isWaaS;
     const apiSymbol = searchId === 'IUSD' ? 'iUSD' : searchId;
 
-    // Fetch live wallet header details from abstracted endpoint router
+    // Fetch live wallet header details from abstracted endpoint router or WaaS details
     const detailQuery = useQuery({
-        queryKey: ['walletDetail', searchId],
-        queryFn: () => accountService.getWalletDetail(searchId),
+        queryKey: ['walletDetail', searchId, provider],
+        queryFn: () => isWaaS 
+            ? accountService.getWaaSWalletDetail(searchId) 
+            : accountService.getWalletDetail(searchId),
     });
 
     // Fetch live transactions for specific fiat/stablecoin endpoint
     const txQuery = useQuery({
-        queryKey: ['walletTransactions', searchId],
-        queryFn: () => accountService.getWalletTransactions(searchId),
+        queryKey: ['walletTransactions', searchId, provider],
+        queryFn: () => isWaaS
+            ? accountService.getWaaSWalletTransactions(searchId)
+            : accountService.getWalletTransactions(searchId),
     });
 
     const isLoading = detailQuery.isLoading || txQuery.isLoading;
@@ -52,22 +58,37 @@ export default function WalletDetailsPageClient({ id }: WalletDetailsPageClientP
     let activeWallet: Wallet | null = null;
     if (detailQuery.data?.success && detailQuery.data.data) {
         const d = detailQuery.data.data;
-        const curCode = (isCrypto ? apiSymbol : d.currency) || searchId;
-        activeWallet = {
-            id: curCode.toLowerCase(),
-            name: CURRENCY_NAMES[curCode] || curCode,
-            code: curCode,
-            type: isCrypto ? 'stablecoin' : 'fiat',
-            balance: formatBalance(d.balance || d.balanceUsdc || '0', curCode),
-            rawBalance: parseFloat(d.balance || d.balanceUsdc || '0'),
-            walletAddress: d.walletAddress,
-            accountNumber: d.accountNumber,
-            iban: d.iban,
-            bic: d.bic,
-            routingNumber: d.routingNumber,
-            swiftCode: d.swiftCode || d.bic,
-            bankName: d.bankName,
-        };
+        if (isWaaS) {
+            const balObj = d.wallet || d;
+            const balSymbol = balObj?.symbol || searchId;
+            const balVal = balObj?.balance !== undefined ? parseFloat(balObj.balance.toString()) : 0;
+            activeWallet = {
+                id: searchId.toLowerCase(),
+                name: `${searchId} Wallet`,
+                code: balSymbol,
+                type: 'stablecoin',
+                balance: `${balVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${balSymbol}`,
+                rawBalance: balVal,
+                walletAddress: balObj?.address || d.address || '',
+            };
+        } else {
+            const curCode = (isCrypto ? apiSymbol : d.currency) || searchId;
+            activeWallet = {
+                id: curCode.toLowerCase(),
+                name: CURRENCY_NAMES[curCode] || curCode,
+                code: curCode,
+                type: isCrypto ? 'stablecoin' : 'fiat',
+                balance: formatBalance(d.balance || d.balanceUsdc || '0', curCode),
+                rawBalance: parseFloat(d.balance || d.balanceUsdc || '0'),
+                walletAddress: d.walletAddress,
+                accountNumber: d.accountNumber,
+                iban: d.iban,
+                bic: d.bic,
+                routingNumber: d.routingNumber,
+                swiftCode: d.swiftCode || d.bic,
+                bankName: d.bankName,
+            };
+        }
     }
 
     const onBack = () => {

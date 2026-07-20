@@ -2,15 +2,15 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, Send, ArrowDownLeft } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Plus, Search, Send, ArrowDownLeft, X, RefreshCw } from 'lucide-react'
 import { useTransactionStore } from '@/store/transactionStore'
 import PhoneSend from '../_components/PhoneSend'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { useNavigationStore } from '@/store/navigationStore'
 import { cn, formatCurrencyByLocale } from '@/lib/utils'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
+import { toast } from 'sonner'
 
 export interface Wallet {
     id: string;
@@ -26,6 +26,7 @@ export interface Wallet {
     routingNumber?: string;
     swiftCode?: string;
     bankName?: string;
+    provider?: 'caas' | 'waas';
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
@@ -45,13 +46,16 @@ const formatBalance = (amount: string | number, currency: string) => {
 
 const WalletsPage: React.FC = () => {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const setBackPath = useNavigationStore((state) => state.setBackPath);
     const openSend = useTransactionStore((state) => state.openSend);
     const openReceive = useTransactionStore((state) => state.openReceive);
+    
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState<'all' | 'fiat' | 'stablecoins'>('all');
+    const [isProvisionOpen, setIsProvisionOpen] = useState(false);
+    const [selectedNetwork, setSelectedNetwork] = useState('POL');
 
-    // React Query Queries
+    // Queries
     const fiatQuery = useQuery({
         queryKey: ['accounts'],
         queryFn: () => accountService.getAccounts(),
@@ -62,66 +66,150 @@ const WalletsPage: React.FC = () => {
         queryFn: () => accountService.getCryptoBalances(),
     });
 
-    const walletsList: Wallet[] = [];
+    const waasWalletsQuery = useQuery({
+        queryKey: ['waasWallets'],
+        queryFn: () => accountService.getWaaSWallets(),
+    });
 
-    // Map stablecoin wallet
-    if (cryptoQuery.data?.success && cryptoQuery.data.data) {
-        const d = cryptoQuery.data.data;
-        const balNum = parseFloat(d.balanceUsdc || '0');
-        const symbol = d.symbol === 'IUSD' ? 'iUSD' : (d.symbol || 'iUSD');
-        walletsList.push({
-            id: symbol.toLowerCase(),
-            name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
-            code: symbol,
-            type: 'stablecoin',
-            balance: d.balanceFormatted || formatBalance(d.balanceUsdc, symbol),
-            rawBalance: balNum,
-        });
-    }
+    const waasDetailsQuery = useQuery({
+        queryKey: ['waasWalletsDetails', waasWalletsQuery.data?.data],
+        queryFn: async () => {
+            const list = waasWalletsQuery.data?.data || [];
+            const details = await Promise.all(list.map(async (w: any) => {
+                try {
+                    const res = await accountService.getWaaSWalletDetail(w.network);
+                    return {
+                        ...w,
+                        balanceData: res?.success && res.data ? res.data : null
+                    };
+                } catch (e) {
+                    return {
+                        ...w,
+                        balanceData: null
+                    };
+                }
+            }));
+            return details;
+        },
+        enabled: !!waasWalletsQuery.data?.success
+    });
+
+    const provisionMutation = useMutation({
+        mutationFn: (network: string) => accountService.provisionWaaSWallet(network),
+        onSuccess: (res) => {
+            if (res?.success) {
+                toast.success(`Successfully provisioned on-chain ${selectedNetwork} wallet.`);
+                setIsProvisionOpen(false);
+                queryClient.invalidateQueries({ queryKey: ['waasWallets'] });
+                queryClient.invalidateQueries({ queryKey: ['waasWalletsDetails'] });
+            } else {
+                toast.error(res?.error?.message || 'Wallet provisioning failed.');
+            }
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.error?.message || 'Could not provision wallet.');
+        }
+    });
+
+    let instantUsdWallet: Wallet | null = null;
+    const fiatWalletsList: Wallet[] = [];
+    const cryptoWalletsList: Wallet[] = [];
 
     // Map fiat wallets
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
         fiatQuery.data.data.forEach((acc) => {
             const balNum = parseFloat(acc.balance || '0');
-            walletsList.push({
+            fiatWalletsList.push({
                 id: acc.currency.toLowerCase(),
                 name: CURRENCY_NAMES[acc.currency] || acc.currency,
                 code: acc.currency,
                 type: 'fiat',
                 balance: formatBalance(acc.balance, acc.currency),
                 rawBalance: balNum,
+                accountNumber: acc.accountNumber,
             });
         });
     }
 
-    const handleCreateWallet = () => {
-        alert('Standard multi-currency accounts are auto-provisioned upon registration.');
+    // Map stablecoin wallet (CaaS - Instant USD)
+    if (cryptoQuery.data?.success && cryptoQuery.data.data) {
+        const d = cryptoQuery.data.data;
+        const balNum = parseFloat(d.balanceUsdc || '0');
+        const symbol = d.symbol === 'IUSD' ? 'iUSD' : (d.symbol || 'iUSD');
+        instantUsdWallet = {
+            id: symbol.toLowerCase(),
+            name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
+            code: symbol,
+            type: 'stablecoin',
+            balance: d.balanceFormatted || formatBalance(d.balanceUsdc, symbol),
+            rawBalance: balNum,
+            walletAddress: d.walletAddress,
+            provider: 'caas'
+        };
+    }
+
+    // Map WaaS wallets
+    if (waasDetailsQuery.data && Array.isArray(waasDetailsQuery.data)) {
+        waasDetailsQuery.data.forEach((w: any) => {
+            const balObj = w.balanceData?.wallet || w.balanceData;
+            const balSymbol = balObj?.symbol || w.network || 'POL';
+            const balVal = balObj?.balance !== undefined ? parseFloat(balObj.balance.toString()) : 0;
+            const formattedBal = w.balanceData?.wallet?.formatted_balance || 
+                                 w.balanceData?.formatted_balance || 
+                                 `${balVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${balSymbol}`;
+            
+            cryptoWalletsList.push({
+                id: balSymbol.toLowerCase(),
+                name: `${w.network} Wallet`,
+                code: balSymbol,
+                type: 'stablecoin',
+                balance: formattedBal,
+                rawBalance: balVal,
+                walletAddress: w.address,
+                provider: 'waas'
+            });
+        });
+    }
+
+    const handleCreateWallet = (e: React.FormEvent) => {
+        e.preventDefault();
+        provisionMutation.mutate(selectedNetwork);
     };
 
-    // Filter wallets by active tab and search query
-    const filteredWallets = walletsList.filter((wallet) => {
-        // Tab check
-        if (activeTab === 'fiat' && wallet.type !== 'fiat') return false;
-        if (activeTab === 'stablecoins' && wallet.type !== 'stablecoin') return false;
-
-        // Search check
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            return (
-                wallet.name.toLowerCase().includes(query) ||
-                wallet.code.toLowerCase().includes(query) ||
-                wallet.type.toLowerCase().includes(query)
-            );
-        }
-
-        return true;
+    // Filter fiat list by search
+    const filteredFiat = fiatWalletsList.filter((wallet) => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+            wallet.name.toLowerCase().includes(query) ||
+            wallet.code.toLowerCase().includes(query)
+        );
     });
 
-    const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading;
+    // Filter crypto list by search
+    const filteredCrypto = cryptoWalletsList.filter((wallet) => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+            wallet.name.toLowerCase().includes(query) ||
+            wallet.code.toLowerCase().includes(query)
+        );
+    });
+
+    const isMatchInstantUsd = !searchQuery || 
+        (instantUsdWallet && (
+            instantUsdWallet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            instantUsdWallet.code.toLowerCase().includes(searchQuery.toLowerCase())
+        ));
+
+    const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading || waasWalletsQuery.isLoading || waasDetailsQuery.isLoading;
+
+    const availableNetworks = ['BTC', 'SOL', 'POL', 'TRX', 'ETH', 'BSC', 'LTC', 'XRP', 'BCH'].filter(
+        net => !cryptoWalletsList.some(w => w.code.toUpperCase() === net.toUpperCase())
+    );
 
     return (
         <div className="space-y-8">
-
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between text-left gap-4 select-none">
                 <div className="space-y-1">
@@ -129,7 +217,7 @@ const WalletsPage: React.FC = () => {
                         Wallets
                     </h2>
                     <p className="text-xs font-semibold text-slate-500 font-sans">
-                        Manage all your wallet currencies
+                        Manage fiat and on-chain crypto wallets
                     </p>
                 </div>
                 <div className="flex items-center space-x-2.5">
@@ -147,109 +235,218 @@ const WalletsPage: React.FC = () => {
                         <ArrowDownLeft className="h-4.5 w-4.5 text-emerald-400" />
                         <span>Receive</span>
                     </button>
-                    {/* <Button
-                        onClick={handleCreateWallet}
-                        variant="primary"
-                        className="rounded-full h-[40px] px-5 text-xs font-bold font-sans shadow-lg shadow-primary-500/10 active:scale-95 transition-all"
-                        leftIcon={<Plus className="h-4.5 w-4.5" />}
-                    >
-                        Create Wallet
-                    </Button> */}
                 </div>
             </div>
 
             {/* Reusable Phone Send widget */}
             <PhoneSend />
 
-            {/* Categories & Search Filter Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 select-none">
-                {/* Tabs selection */}
-                <div className="bg-[#0C1224] border border-[#131B30] rounded-xl p-1 flex items-center space-x-1 shrink-0">
-                    {(['all', 'fiat', 'stablecoins'] as const).map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={cn(
-                                "px-5 py-2 text-xs font-bold rounded-lg transition duration-200 capitalize cursor-pointer",
-                                activeTab === tab
-                                    ? "bg-primary-500 text-white shadow-lg shadow-primary-500/15"
-                                    : "text-slate-400 hover:text-white hover:bg-white/5"
-                            )}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Inline filter search input */}
+            {/* Filters Bar */}
+            <div className="flex justify-between items-center select-none gap-4 pb-2 border-b border-white/5">
                 <div className="relative flex items-center max-w-xs w-full">
                     <Search className="absolute left-3 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Filter wallets..."
+                        placeholder="Search wallets..."
                         className="bg-black/30 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 w-full font-sans transition duration-200"
                     />
                 </div>
+
+                {availableNetworks.length > 0 && (
+                    <button
+                        onClick={() => setIsProvisionOpen(true)}
+                        className="bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition duration-200 cursor-pointer flex items-center space-x-1.5 shadow-lg active:scale-98"
+                    >
+                        <Plus className="h-4 w-4" />
+                        <span>Provision Wallet</span>
+                    </button>
+                )}
             </div>
 
-            {/* Wallets Grid List */}
-            {isLoading && walletsList.length === 0 ? (
+            {isLoading && fiatWalletsList.length === 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {[1, 2, 4].map((idx) => (
+                    {[1, 2, 3, 4].map((idx) => (
                         <div key={idx} className="h-[92px] rounded-2xl bg-white/5 border border-white/5 animate-pulse" />
                     ))}
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {filteredWallets.length > 0 ? (
-                        filteredWallets.map((wallet) => {
-                            return (
+                <div className="space-y-8">
+                    {/* Instant USD Section */}
+                    {instantUsdWallet && isMatchInstantUsd && (
+                        <div className="space-y-4">
+                            <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest block text-left select-none">
+                                Instant USD
+                            </span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div
-                                    key={wallet.id}
+                                    key={instantUsdWallet.id}
                                     onClick={() => {
                                         setBackPath('/wallets');
-                                        router.push(`/wallets/${wallet.code.toLowerCase()}`);
+                                        router.push(`/wallets/${instantUsdWallet!.id}?provider=caas`);
                                     }}
                                     className="p-5 rounded-2xl bg-[#080E1E] border border-white/5 hover:border-white/10 hover:bg-[#0C142A] transition duration-200 flex items-center justify-between cursor-pointer select-none group"
                                 >
                                     <div className="flex items-center space-x-3.5 text-left">
                                         <div className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
-                                            <CurrencyIcon code={wallet.code} size="sm" />
+                                            <CurrencyIcon code={instantUsdWallet.code} size="sm" />
                                         </div>
                                         <div className="space-y-0.5">
                                             <span className="text-sm font-bold text-white group-hover:text-primary-400 transition-colors duration-200">
-                                                {wallet.name}
+                                                {instantUsdWallet.name}
                                             </span>
                                             <div className="flex items-center space-x-2">
-                                                <span className="text-[10px] font-bold text-slate-500 tracking-wide">
-                                                    {wallet.code}
-                                                </span>
+                                                <span className="text-[10px] font-bold text-slate-500 tracking-wide">{instantUsdWallet.code}</span>
                                                 <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-                                                <span className="text-[10px] font-semibold text-slate-500 capitalize">
-                                                    {wallet.type}
-                                                </span>
+                                                <span className="text-[10px] font-bold text-slate-500 uppercase font-mono text-[9px]">CaaS</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-right space-y-0.5">
-                                        <span className="text-base font-extrabold text-white font-satoshi">
-                                            {wallet.balance}
-                                        </span>
+                                    <div className="text-right">
+                                        <span className="text-base font-extrabold text-white font-satoshi">{instantUsdWallet.balance}</span>
                                     </div>
                                 </div>
-                            )
-                        })
-                    ) : (
-                        <div className="col-span-2 text-center p-8 bg-[#080E1E]/50 border border-dashed border-white/5 rounded-2xl">
-                            <span className="text-xs font-semibold text-slate-500">No matching wallets found</span>
+                            </div>
                         </div>
                     )}
+
+                    {/* Fiat Accounts Section */}
+                    <div className="space-y-4">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block text-left select-none">
+                            Fiat Accounts
+                        </span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {filteredFiat.length > 0 ? (
+                                filteredFiat.map((wallet) => (
+                                    <div
+                                        key={wallet.id}
+                                        onClick={() => {
+                                            setBackPath('/wallets');
+                                            router.push(`/wallets/${wallet.code.toLowerCase()}`);
+                                        }}
+                                        className="p-5 rounded-2xl bg-[#080E1E] border border-white/5 hover:border-white/10 hover:bg-[#0C142A] transition duration-200 flex items-center justify-between cursor-pointer select-none group"
+                                    >
+                                        <div className="flex items-center space-x-3.5 text-left">
+                                            <div className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+                                                <CurrencyIcon code={wallet.code} size="sm" />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <span className="text-sm font-bold text-white group-hover:text-primary-400 transition-colors duration-200">
+                                                    {wallet.name}
+                                                </span>
+                                                <div className="flex items-center space-x-2">
+                                                    <span className="text-[10px] font-bold text-slate-500 tracking-wide">{wallet.code}</span>
+                                                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                                    <span className="text-[10px] font-semibold text-slate-500 capitalize">{wallet.type}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-base font-extrabold text-white font-satoshi">{wallet.balance}</span>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-span-2 text-center p-8 bg-[#080E1E]/50 border border-dashed border-white/5 rounded-2xl">
+                                    <span className="text-xs font-semibold text-slate-500">No matching fiat accounts found</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Crypto Wallets Section */}
+                    <div className="space-y-4">
+                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block text-left select-none">
+                            On-Chain Crypto Wallets
+                        </span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {filteredCrypto.length > 0 ? (
+                                filteredCrypto.map((wallet) => (
+                                    <div
+                                        key={wallet.id}
+                                        onClick={() => {
+                                            setBackPath('/wallets');
+                                            router.push(`/wallets/${wallet.id}?provider=${wallet.provider}`);
+                                        }}
+                                        className="p-5 rounded-2xl bg-[#080E1E] border border-white/5 hover:border-white/10 hover:bg-[#0C142A] transition duration-200 flex items-center justify-between cursor-pointer select-none group"
+                                    >
+                                        <div className="flex items-center space-x-3.5 text-left">
+                                            <div className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+                                                <CurrencyIcon code={wallet.code} size="sm" />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <span className="text-sm font-bold text-white group-hover:text-primary-400 transition-colors duration-200">
+                                                    {wallet.name}
+                                                </span>
+                                                <div className="flex items-center space-x-2">
+                                                    <span className="text-[10px] font-bold text-slate-550 tracking-wide">{wallet.code}</span>
+                                                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                                    <span className="text-[10px] font-bold text-slate-550 uppercase font-mono text-[9px]">On-Chain</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-base font-extrabold text-white font-satoshi">{wallet.balance}</span>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-span-2 text-center p-8 bg-[#080E1E]/50 border border-dashed border-white/5 rounded-2xl">
+                                    <span className="text-xs font-semibold text-slate-550">No provisioned on-chain crypto wallets found</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Provision Wallet Modal */}
+            {isProvisionOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#0C1224] border border-white/10 rounded-3xl p-6 max-w-sm w-full space-y-5 animate-in fade-in zoom-in-95 duration-200 text-left">
+                        <div className="flex justify-between items-center select-none">
+                            <h4 className="font-satoshi font-black text-white text-base">Provision HD Wallet</h4>
+                            <button
+                                onClick={() => setIsProvisionOpen(false)}
+                                className="text-slate-550 hover:text-white p-1 rounded-lg transition animate-in"
+                            >
+                                <X className="h-4.5 w-4.5" />
+                            </button>
+                        </div>
+
+                        <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                            Generate on-chain BIP-44 HD wallet seed and derive deposit addresses using Rach WaaS.
+                        </p>
+
+                        <form onSubmit={handleCreateWallet} className="space-y-4">
+                            <div className="space-y-1.5 select-none">
+                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Select Network*</span>
+                                <select
+                                    value={selectedNetwork}
+                                    onChange={(e) => setSelectedNetwork(e.target.value)}
+                                    className="bg-[#080E1E] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans cursor-pointer"
+                                >
+                                    {availableNetworks.map(net => (
+                                        <option key={net} value={net}>{net} Network</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={provisionMutation.isPending}
+                                className="w-full bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs py-3.5 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center space-x-2 shadow-lg disabled:cursor-not-allowed"
+                            >
+                                {provisionMutation.isPending && <RefreshCw className="h-4.5 w-4.5 animate-spin" />}
+                                <span>{provisionMutation.isPending ? 'Provisioning Seed...' : 'Generate Wallet'}</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             )}
         </div>
-    )
-}
+    );
+};
 
-export default WalletsPage
+export default WalletsPage;

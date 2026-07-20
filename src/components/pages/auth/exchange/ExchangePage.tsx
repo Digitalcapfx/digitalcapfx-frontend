@@ -304,13 +304,7 @@ export const ExchangePage: React.FC = () => {
     const rawHistory = exchangeHistoryQuery.data?.success && Array.isArray(exchangeHistoryQuery.data.data)
         ? exchangeHistoryQuery.data.data
         : [];
-
-    const recentExchanges = rawHistory.length > 0
-        ? rawHistory.slice(0, 5)
-        : [
-            { id: 'mock-1', fromCode: 'USD', toCode: 'EUR', fromVal: '$100', toVal: '€92.40', date: 'Just now', rate: '0.9240' },
-            { id: 'mock-2', fromCode: 'EUR', toCode: 'GBP', fromVal: '€500', toVal: '£420.50', date: 'Yesterday', rate: '0.8410' },
-        ];
+    const recentExchanges = rawHistory.slice(0, 5);
 
     const isLoading = fiatQuery.isLoading;
 
@@ -598,27 +592,33 @@ export const ExchangePage: React.FC = () => {
                                 Recent Conversions
                             </h3>
                             <div className="space-y-4">
-                                {recentExchanges.map((conv: any) => (
-                                    <div key={conv.id} className="flex justify-between items-center text-xs">
-                                        <div className="flex items-center space-x-2.5 min-w-0">
-                                            <div className="flex items-center -space-x-1.5 shrink-0">
-                                                <CurrencyIcon code={conv.fromCode || conv.sourceCurrency || 'USD'} size="sm" />
-                                                <CurrencyIcon code={conv.toCode || conv.targetCurrency || 'EUR'} size="sm" />
+                                {recentExchanges.length > 0 ? (
+                                    recentExchanges.map((conv: any) => (
+                                        <div key={conv.id} className="flex justify-between items-center text-xs">
+                                            <div className="flex items-center space-x-2.5 min-w-0">
+                                                <div className="flex items-center -space-x-1.5 shrink-0">
+                                                    <CurrencyIcon code={conv.fromCode || conv.sourceCurrency || 'USD'} size="sm" />
+                                                    <CurrencyIcon code={conv.toCode || conv.targetCurrency || 'EUR'} size="sm" />
+                                                </div>
+                                                <div className="text-left">
+                                                    <span className="font-bold text-white block leading-tight">
+                                                        {conv.fromVal || formatBalance(conv.sourceAmount || '0', conv.sourceCurrency || 'USD')} → {conv.toVal || formatBalance(conv.targetAmount || '0', conv.targetCurrency || 'EUR')}
+                                                    </span>
+                                                    <span className="text-[9px] text-slate-500 font-bold block mt-0.5 select-none">
+                                                        {conv.date || (conv.createdAt ? new Date(conv.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A')} • Rate {conv.rate}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="text-left">
-                                                <span className="font-bold text-white block leading-tight">
-                                                    {conv.fromVal || formatBalance(conv.sourceAmount || '0', conv.sourceCurrency || 'USD')} → {conv.toVal || formatBalance(conv.targetAmount || '0', conv.targetCurrency || 'EUR')}
-                                                </span>
-                                                <span className="text-[9px] text-slate-500 font-bold block mt-0.5 select-none">
-                                                    {conv.date || (conv.createdAt ? new Date(conv.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A')} • Rate {conv.rate}
-                                                </span>
+                                            <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                                                <Check className="h-3 w-3" />
                                             </div>
                                         </div>
-                                        <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                                            <Check className="h-3 w-3" />
-                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-6 text-xs text-slate-500 font-sans select-none">
+                                        No recent conversions.
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
 

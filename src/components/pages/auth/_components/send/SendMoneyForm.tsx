@@ -160,83 +160,99 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                 {isCrypto ? (
                     /* Crypto Recipient Input */
                     <div className="space-y-4 animate-in fade-in duration-200">
-                        <div className="space-y-1.5">
-                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Transfer Method</span>
-                            <div className="flex bg-black/30 border border-white/15 p-1 rounded-xl">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setCryptoSendMode('phone');
-                                        setCryptoAddress('');
-                                    }}
-                                    className={cn(
-                                        "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                        cryptoSendMode === 'phone'
-                                            ? "bg-primary-500 text-white shadow-md"
-                                            : "text-slate-400 hover:text-white"
-                                    )}
-                                >
-                                    Send to Phone
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setCryptoSendMode('withdraw');
-                                        setCryptoAddress('');
-                                    }}
-                                    className={cn(
-                                        "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
-                                        cryptoSendMode === 'withdraw'
-                                            ? "bg-primary-500 text-white shadow-md"
-                                            : "text-slate-400 hover:text-white"
-                                    )}
-                                >
-                                    Withdraw to MM
-                                </button>
-                            </div>
-                        </div>
-
-                        {cryptoSendMode === 'phone' && (
-                            <PhoneInput
-                                required
-                                label="Recipient Phone number*"
-                                placeholder="Enter recipient phone"
-                                value={cryptoAddress}
-                                onChange={setCryptoAddress}
-                            />
-                        )}
-                        {cryptoSendMode === 'withdraw' && (
-                            <div className="space-y-4">
-                                <PhoneInput
+                        {activeWallet.provider === 'waas' ? (
+                            <div className="space-y-1.5 animate-in fade-in duration-200">
+                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Recipient {activeWallet.code} Address*</span>
+                                <input
+                                    type="text"
                                     required
-                                    label="Withdraw Phone number*"
-                                    placeholder="Enter phone"
+                                    placeholder={`Enter valid ${activeWallet.code} address`}
                                     value={cryptoAddress}
-                                    onChange={setCryptoAddress}
+                                    onChange={(e) => setCryptoAddress(e.target.value)}
+                                    className="bg-[#0C1224] border border-white/10 rounded-xl px-4 py-3.5 text-xs text-white focus:outline-none w-full font-mono focus:border-primary-500/50"
                                 />
-                                <div className="space-y-1.5">
-                                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Operator*</span>
-                                    <select
-                                        value={operator}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            if (val === 'DigitalCap') {
-                                                setCryptoSendMode('phone');
-                                            } else {
-                                                setCryptoSendMode('withdraw');
-                                                setOperator(val);
-                                            }
-                                        }}
-                                        className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans select-none"
-                                    >
-                                        <option value="DigitalCap">DigitalCap Transfer</option>
-                                        <option value="MTN">MTN Mobile Money</option>
-                                        <option value="Orange">Orange Money</option>
-                                        <option value="Moov">Moov Money</option>
-                                        <option value="Wave">Wave</option>
-                                    </select>
-                                </div>
                             </div>
+                        ) : (
+                            <>
+                                <div className="space-y-1.5">
+                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Transfer Method</span>
+                                    <div className="flex bg-black/30 border border-white/15 p-1 rounded-xl">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCryptoSendMode('phone');
+                                                setCryptoAddress('');
+                                            }}
+                                            className={cn(
+                                                "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
+                                                cryptoSendMode === 'phone'
+                                                    ? "bg-primary-500 text-white shadow-md"
+                                                    : "text-slate-400 hover:text-white"
+                                            )}
+                                        >
+                                            Send to Phone
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCryptoSendMode('withdraw');
+                                                setCryptoAddress('');
+                                            }}
+                                            className={cn(
+                                                "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
+                                                cryptoSendMode === 'withdraw'
+                                                    ? "bg-primary-500 text-white shadow-md"
+                                                    : "text-slate-400 hover:text-white"
+                                            )}
+                                        >
+                                            Withdraw to MM
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {cryptoSendMode === 'phone' && (
+                                    <PhoneInput
+                                        required
+                                        label="Recipient Phone number*"
+                                        placeholder="Enter recipient phone"
+                                        value={cryptoAddress}
+                                        onChange={setCryptoAddress}
+                                    />
+                                )}
+                                {cryptoSendMode === 'withdraw' && (
+                                    <div className="space-y-4">
+                                        <PhoneInput
+                                            required
+                                            label="Withdraw Phone number*"
+                                            placeholder="Enter phone"
+                                            value={cryptoAddress}
+                                            onChange={setCryptoAddress}
+                                        />
+                                        <div className="space-y-1.5">
+                                            <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Operator*</span>
+                                            <select
+                                                value={operator}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    if (val === 'DigitalCap') {
+                                                        setCryptoSendMode('phone');
+                                                    } else {
+                                                        setCryptoSendMode('withdraw');
+                                                        setOperator(val);
+                                                    }
+                                                }}
+                                                className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans select-none"
+                                            >
+                                                <option value="DigitalCap">DigitalCap Transfer</option>
+                                                <option value="MTN">MTN Mobile Money</option>
+                                                <option value="Orange">Orange Money</option>
+                                                <option value="Moov">Moov Money</option>
+                                                <option value="Wave">Wave</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 ) : (
