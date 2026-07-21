@@ -222,9 +222,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const navigationLinks = [
         { label: 'Overview', icon: LayoutDashboard, href: '/dashboard' },
         { label: 'Wallets', icon: Wallet, href: '/wallets' },
-        { label: 'Cards', icon: CreditCard, href: '/cards' },
-        { label: 'Exchange', icon: RefreshCw, href: '/exchange' },
         { label: 'Airtime & Bills', icon: Smartphone, href: '/vtu' },
+        { label: 'Exchange', icon: RefreshCw, href: '/exchange' },
+        { label: 'Cards', icon: CreditCard, href: '/cards' },
         { label: 'Activity', icon: Clock, href: '/activity' },
         ...(isBusiness ? [{ label: 'Teams', icon: Users, href: '/teams' }] : []),
         { label: 'Referrals', icon: Gift, href: '/referrals' },
@@ -273,7 +273,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="space-y-1.5 ">
                         {navigationLinks.map((link) => {
                             const IconComponent = link.icon;
-                            const active = pathname === link.href;
+                            const active = pathname.startsWith(link.href);
                             return (
                                 <Link
                                     key={link.label}
