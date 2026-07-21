@@ -19,6 +19,7 @@ import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Wallet } from './WalletsPage'
 import { useTransactionStore } from '@/store/transactionStore'
 import { cn, formatCurrencyByLocale } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 const formatBalance = (amount: string | number, currency: string) => {
     return formatCurrencyByLocale(amount, currency);
@@ -90,6 +91,7 @@ interface Transaction {
 }
 
 const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactions = [], onBack }) => {
+    const { t } = useLanguageStore();
     const router = useRouter();
     const [revealDetails, setRevealDetails] = useState(false);
     const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -104,16 +106,16 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
 
     // Bank Account details strings
     const rawIban = wallet.iban || wallet.accountNumber || '';
-    const ibanValue = rawIban || 'Not Available';
+    const ibanValue = rawIban || t('details.info.notAvailable');
     const ibanMasked = rawIban 
         ? `${rawIban.slice(0, 4)} **** **** **** **`
-        : 'Not Available';
-    const swiftValue = wallet.swiftCode || wallet.bic || 'Not Available';
-    const routingValue = wallet.routingNumber || 'Not Available';
+        : t('details.info.notAvailable');
+    const swiftValue = wallet.swiftCode || wallet.bic || t('details.info.notAvailable');
+    const routingValue = wallet.routingNumber || t('details.info.notAvailable');
     const cryptoAddressValue = wallet.walletAddress || '';
     const cryptoAddressMasked = wallet.walletAddress
         ? `${wallet.walletAddress.slice(0, 6)}...${wallet.walletAddress.slice(-5)}`
-        : 'Not Available';
+        : t('details.info.notAvailable');
 
     // Map and filter transactions for this wallet
     const filteredTxs = Array.isArray(initialTransactions) && initialTransactions.length > 0
@@ -205,7 +207,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                             <div className="w-8 h-8 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-400 shrink-0">
                                 <Send className="h-4 w-4" />
                             </div>
-                            <span className="text-[11px]">Send</span>
+                            <span className="text-[11px]">{t('action.send')}</span>
                         </button>
                         <button 
                             onClick={() => openReceive(wallet.id)}
@@ -214,7 +216,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                             <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
                                 <ArrowDownLeft className="h-4.5 w-4.5" />
                             </div>
-                            <span className="text-[11px]">Receive</span>
+                            <span className="text-[11px]">{t('action.receive')}</span>
                         </button>
                         <button 
                             onClick={() => router.push('/exchange')}
@@ -223,22 +225,22 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                             <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
                                 <RefreshCw className="h-4 w-4" />
                             </div>
-                            <span className="text-[11px]">Exchange</span>
+                            <span className="text-[11px]">{t('nav.exchange')}</span>
                         </button>
                         <button className="bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01] transition duration-200 font-semibold cursor-pointer">
                             <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0">
                                 <FileText className="h-4 w-4" />
                             </div>
-                            <span className="text-[11px]">Statement</span>
+                            <span className="text-[11px]">{t('details.action.statement')}</span>
                         </button>
                     </div>
 
                     {/* Transaction History list */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 text-left shadow-xl space-y-5">
                         <div className="flex justify-between items-center select-none">
-                            <h3 className="font-satoshi font-bold text-base text-white">Transaction History</h3>
+                            <h3 className="font-satoshi font-bold text-base text-white">{t('section.recent')}</h3>
                             <button className="text-xs font-semibold text-primary-400 hover:text-primary-350 hover:underline">
-                                View all
+                                {t('details.action.viewall')}
                             </button>
                         </div>
 
@@ -285,7 +287,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                                 ))
                             ) : (
                                 <div className="text-center py-6 text-xs text-slate-500 font-sans select-none">
-                                    No recent transactions for this wallet.
+                                    {t('details.tx.empty')}
                                 </div>
                             )}
                         </div>
@@ -299,7 +301,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                     {/* 30-Day Activity wave chart */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 shadow-xl">
                         <div className="flex justify-between items-center select-none mb-3">
-                            <h3 className="font-satoshi font-bold text-sm text-white">30-Day Activity</h3>
+                            <h3 className="font-satoshi font-bold text-sm text-white">{t('details.activity.title')}</h3>
                             <span className="text-[10px] font-bold text-emerald-400 font-mono flex items-center space-x-1">
                                 <TrendingUp className="h-3 w-3 inline" />
                                 <span>+8.2%</span>
@@ -311,14 +313,14 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                     {/* Wallet Bank Account Information panel */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 shadow-xl space-y-4">
                         <h3 className="font-satoshi font-bold text-sm text-white select-none">
-                            Wallet Information
+                            {t('details.info.title')}
                         </h3>
 
                         {wallet.type === 'fiat' ? (
                             <div className="space-y-3.5 text-xs">
                                 {/* IBAN */}
                                 <div className="space-y-1">
-                                    <span className="text-[9px] font-bold text-slate-550 uppercase tracking-wider block select-none">IBAN</span>
+                                    <span className="text-[9px] font-bold text-slate-550 uppercase tracking-wider block select-none">{t('details.info.iban')}</span>
                                     <div className="flex items-center justify-between bg-black/25 border border-white/5 rounded-lg px-2.5 py-1.5 font-mono text-slate-300">
                                         <span className="truncate mr-2">
                                             {revealDetails ? ibanValue : ibanMasked}
@@ -342,7 +344,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
 
                                 {/* SWIFT */}
                                 <div className="space-y-1">
-                                    <span className="text-[9px] font-bold text-slate-550 uppercase tracking-wider block select-none">SWIFT</span>
+                                    <span className="text-[9px] font-bold text-slate-550 uppercase tracking-wider block select-none">{t('details.info.swift')}</span>
                                     <div className="flex items-center justify-between bg-black/25 border border-white/5 rounded-lg px-2.5 py-1.5 font-mono text-slate-300">
                                         <span>{swiftValue}</span>
                                         <button 
@@ -356,7 +358,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
 
                                 {/* ROUTING */}
                                 <div className="space-y-1">
-                                    <span className="text-[9px] font-bold text-slate-550 uppercase tracking-wider block select-none">ROUTING</span>
+                                    <span className="text-[9px] font-bold text-slate-550 uppercase tracking-wider block select-none">{t('details.info.routing')}</span>
                                     <div className="flex items-center justify-between bg-black/25 border border-white/5 rounded-lg px-2.5 py-1.5 font-mono text-slate-300">
                                         <span>{routingValue}</span>
                                         <button 
@@ -372,7 +374,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                             <div className="space-y-3.5 text-xs">
                                 {/* Crypto Address */}
                                 <div className="space-y-1">
-                                    <span className="text-[9px] font-bold text-slate-550 uppercase tracking-wider block select-none">ADDRESS</span>
+                                    <span className="text-[9px] font-bold text-slate-555 uppercase tracking-wider block select-none">{t('details.info.address')}</span>
                                     <div className="flex items-center justify-between bg-black/25 border border-white/5 rounded-lg px-2.5 py-1.5 font-mono text-slate-300">
                                         <span className="truncate mr-2">
                                             {revealDetails ? cryptoAddressValue : cryptoAddressMasked}
@@ -397,14 +399,14 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                         )}
 
                         <div className="pt-2 text-[10px] text-slate-550 leading-relaxed font-sans font-semibold border-t border-white/5 select-none text-left">
-                            This account is held at DigitalCap FX Ltd - FCA registered - Protected under FSCS up to £85,000
+                            {t('details.info.disclaimer')}
                         </div>
                     </div>
 
                     {/* Currency Details panel */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 shadow-xl space-y-4 text-xs font-sans">
                         <h3 className="font-satoshi font-bold text-sm text-white select-none">
-                            Currency
+                            {t('details.currency.title')}
                         </h3>
 
                         {/* Currency name/code details */}
@@ -423,7 +425,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                         {/* Monthly trend selector */}
                         <div className="w-full flex items-center justify-center bg-emerald-500/5 border border-emerald-500/10 rounded-xl py-2 px-3 text-[11px] text-emerald-400 font-semibold select-none">
                             <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
-                            <span>+8.2% vs last month</span>
+                            <span>{t('details.currency.trend')}</span>
                         </div>
                     </div>
 

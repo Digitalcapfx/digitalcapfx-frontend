@@ -6,8 +6,10 @@ import { Plus, Snowflake, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useCardStore } from '@/store/cardStore'
 import { cn } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 export const CardsPage: React.FC = () => {
+    const { t } = useLanguageStore();
     const router = useRouter();
     const { cards, openIssue } = useCardStore();
 
@@ -28,8 +30,8 @@ export const CardsPage: React.FC = () => {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 select-none">
                 <div className="space-y-1">
-                    <h2 className="text-2xl font-black text-white font-satoshi">Cards</h2>
-                    <p className="text-xs font-semibold text-slate-550 font-sans">Manage your virtual cards</p>
+                    <h2 className="text-2xl font-black text-white font-satoshi">{t('nav.cards')}</h2>
+                    <p className="text-xs font-semibold text-slate-550 font-sans">{t('cards.subtitle')}</p>
                 </div>
                 <div>
                     <Button
@@ -38,7 +40,7 @@ export const CardsPage: React.FC = () => {
                         className="rounded-full h-[40px] px-5 text-xs font-bold font-sans shadow-lg shadow-primary-500/10 active:scale-95 transition-all"
                         leftIcon={<Plus className="h-4.5 w-4.5" />}
                     >
-                        New Card
+                        {t('cards.btn.newCard')}
                     </Button>
                 </div>
             </div>
@@ -47,27 +49,27 @@ export const CardsPage: React.FC = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 select-none">
                 
                 <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 shadow-md">
-                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Total Cards</span>
+                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('cards.stat.totalCards')}</span>
                     <span className="text-xl font-black text-white block mt-1 font-satoshi">{totalCards}</span>
-                    <span className="text-[9px] font-semibold text-slate-500 block mt-1">Active this month</span>
+                    <span className="text-[9px] font-semibold text-slate-500 block mt-1">{t('cards.stat.activeThisMonth')}</span>
                 </div>
 
                 <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 shadow-md">
-                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Total Spend</span>
+                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('cards.stat.totalSpend')}</span>
                     <span className="text-xl font-black text-white block mt-1 font-mono">{formatCurrency(totalSpend, 'USD')}</span>
                     <span className="text-[9px] font-semibold text-slate-500 block mt-1">Jun 2026</span>
                 </div>
 
                 <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 shadow-md">
-                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Avg per Card</span>
+                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('cards.stat.avgPerCard')}</span>
                     <span className="text-xl font-black text-white block mt-1 font-mono">{formatCurrency(avgSpent, 'USD')}</span>
-                    <span className="text-[9px] font-semibold text-slate-500 block mt-1">Monthly average</span>
+                    <span className="text-[9px] font-semibold text-slate-500 block mt-1">{t('cards.stat.monthlyAverage')}</span>
                 </div>
 
                 <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 shadow-md">
-                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Frozen</span>
+                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('cards.stat.frozen')}</span>
                     <span className="text-xl font-black text-white block mt-1 font-satoshi">{frozenCount}</span>
-                    <span className="text-[9px] font-semibold text-slate-500 block mt-1">Cards paused</span>
+                    <span className="text-[9px] font-semibold text-slate-500 block mt-1">{t('cards.stat.cardsPaused')}</span>
                 </div>
 
             </div>
@@ -96,7 +98,7 @@ export const CardsPage: React.FC = () => {
 
                                 {/* Top card line */}
                                 <div className="flex justify-between items-start z-10">
-                                    <span className="text-[10px] font-black tracking-widest text-white/90 uppercase font-satoshi">Virtual</span>
+                                    <span className="text-[10px] font-black tracking-widest text-white/90 uppercase font-satoshi">{t('cards.badge.virtual')}</span>
                                     <span className="text-xs font-black italic text-white/95 tracking-tight font-satoshi">DigitalCap FX</span>
                                 </div>
 
@@ -105,7 +107,7 @@ export const CardsPage: React.FC = () => {
                                     {isFrozen ? (
                                         <div className="flex flex-col items-center justify-center space-y-1 py-1 bg-black/25 backdrop-blur-xs rounded-xl border border-white/5 w-fit px-4 mx-auto select-none">
                                             <Snowflake className="h-4 w-4 text-white animate-pulse" />
-                                            <span className="text-[9px] font-bold text-white uppercase tracking-widest">Frozen</span>
+                                            <span className="text-[9px] font-bold text-white uppercase tracking-widest">{t('cards.stat.frozen')}</span>
                                         </div>
                                     ) : (
                                         <span className="font-mono text-base font-bold text-white tracking-widest block select-all">
@@ -136,7 +138,7 @@ export const CardsPage: React.FC = () => {
                                             ? "bg-slate-500/10 border-slate-500/20 text-slate-400" 
                                             : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                                     )}>
-                                        {c.status}
+                                        {isFrozen ? t('cards.stat.frozen') : c.status}
                                     </span>
                                 </div>
 
@@ -152,8 +154,8 @@ export const CardsPage: React.FC = () => {
                                         ></div>
                                     </div>
                                     <div className="flex justify-between items-center text-[10px] text-slate-500 select-none font-bold">
-                                        <span>Spent: <strong className="text-white font-mono">{formatCurrency(c.spent, c.currency)}</strong></span>
-                                        <span>Limit: <strong className="text-slate-400 font-mono">{formatCurrency(c.limit, c.currency)}</strong></span>
+                                        <span>{t('cards.spent')} <strong className="text-white font-mono">{formatCurrency(c.spent, c.currency)}</strong></span>
+                                        <span>{t('cards.limit')} <strong className="text-slate-400 font-mono">{formatCurrency(c.limit, c.currency)}</strong></span>
                                     </div>
                                 </div>
 
@@ -170,7 +172,7 @@ export const CardsPage: React.FC = () => {
                     <div className="w-11 h-11 rounded-full bg-white/5 flex items-center justify-center text-slate-400">
                         <Plus className="h-5 w-5" />
                     </div>
-                    <span className="font-satoshi font-bold text-sm text-slate-350 block">Issue New Card</span>
+                    <span className="font-satoshi font-bold text-sm text-slate-350 block">{t('cards.placeholder.issueNew')}</span>
                 </div>
 
             </div>

@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { Plus, X, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { useLanguageStore } from '@/store/languageStore'
 
 const getCardBg = (currency: string) => {
     switch (currency.toUpperCase()) {
@@ -35,6 +36,7 @@ const formatBalance = (amount: string | number, currency: string) => {
 };
 
 const WalletCarousel: React.FC = () => {
+    const { t } = useLanguageStore();
     const router = useRouter();
     const queryClient = useQueryClient();
     const setBackPath = useNavigationStore((state) => state.setBackPath);
@@ -178,7 +180,7 @@ const WalletCarousel: React.FC = () => {
             {instantUsdWallet && (
                 <div className="space-y-3">
                     <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest block select-none">
-                        Instant USD
+                        {t('section.instant')}
                     </span>
                     <div className="flex select-none">
                         <div
@@ -211,8 +213,8 @@ const WalletCarousel: React.FC = () => {
 
             {/* Fiat Accounts Section */}
             <div className="space-y-3">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block select-none">
-                    Fiat Accounts
+                <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest block select-none">
+                    {t('section.fiat')}
                 </span>
 
                 {isFiatLoading && fiatWallets.length === 0 ? (
@@ -255,7 +257,7 @@ const WalletCarousel: React.FC = () => {
             <div className="space-y-3">
                 <div className="flex justify-between items-center select-none">
                     <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block">
-                        On-Chain Crypto Wallets
+                        {t('section.crypto')}
                     </span>
                     {availableNetworks.length > 0 && (
                         <button
@@ -263,7 +265,7 @@ const WalletCarousel: React.FC = () => {
                             className="text-[10px] font-bold text-primary-400 hover:text-primary-350 hover:underline cursor-pointer flex items-center space-x-1"
                         >
                             <Plus className="h-3.5 w-3.5" />
-                            <span>Provision Wallet</span>
+                            <span>{t('action.provision')}</span>
                         </button>
                     )}
                 </div>
@@ -276,7 +278,7 @@ const WalletCarousel: React.FC = () => {
                     </div>
                 ) : cryptoWallets.length === 0 ? (
                     <div className="p-8 text-center border border-dashed border-white/5 rounded-2xl text-xs text-slate-500 font-sans select-none">
-                        No active on-chain wallets. Click provision to generate.
+                        {t('carousel.crypto.empty')}
                     </div>
                 ) : (
                     <div className="flex overflow-x-auto pb-2 scrollbar-none select-none gap-4">
@@ -319,7 +321,7 @@ const WalletCarousel: React.FC = () => {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#0C1224] border border-white/10 rounded-3xl p-6 max-w-sm w-full space-y-5 animate-in fade-in zoom-in-95 duration-200 text-left">
                         <div className="flex justify-between items-center select-none">
-                            <h4 className="font-satoshi font-black text-white text-base">Provision HD Wallet</h4>
+                            <h4 className="font-satoshi font-black text-white text-base">{t('provision.title')}</h4>
                             <button
                                 onClick={() => setIsProvisionOpen(false)}
                                 className="text-slate-500 hover:text-white p-1 rounded-lg transition"
@@ -329,19 +331,19 @@ const WalletCarousel: React.FC = () => {
                         </div>
 
                         <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
-                            Generate on-chain BIP-44 HD wallet seed and derive deposit addresses using Rach WaaS.
+                            {t('provision.subtitle')}
                         </p>
 
                         <form onSubmit={handleCreateWallet} className="space-y-4">
                             <div className="space-y-1.5 select-none">
-                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Select Network*</span>
+                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('provision.selectNetwork')}</span>
                                 <select
                                     value={selectedNetwork}
                                     onChange={(e) => setSelectedNetwork(e.target.value)}
                                     className="bg-[#080E1E] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans cursor-pointer"
                                 >
                                     {availableNetworks.map(net => (
-                                        <option key={net} value={net}>{net} Network</option>
+                                        <option key={net} value={net}>{net} {t('provision.networkSuffix')}</option>
                                     ))}
                                 </select>
                             </div>
@@ -352,7 +354,7 @@ const WalletCarousel: React.FC = () => {
                                 className="w-full bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs py-3.5 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center space-x-2 shadow-lg disabled:cursor-not-allowed"
                             >
                                 {provisionMutation.isPending && <RefreshCw className="h-4.5 w-4.5 animate-spin" />}
-                                <span>{provisionMutation.isPending ? 'Provisioning Seed...' : 'Generate Wallet'}</span>
+                                <span>{provisionMutation.isPending ? t('provision.btn.pending') : t('provision.btn.generate')}</span>
                             </button>
                         </form>
                     </div>

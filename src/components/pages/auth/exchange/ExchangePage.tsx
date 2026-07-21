@@ -20,6 +20,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { exchangeService, QuoteData } from '@/services/exchange.service'
 import { toast } from 'sonner'
+import { useLanguageStore } from '@/store/languageStore'
 
 export interface Wallet {
     id: string;
@@ -80,6 +81,7 @@ const LIVE_RATES = [
 ];
 
 export const ExchangePage: React.FC = () => {
+    const { t } = useLanguageStore();
     const queryClient = useQueryClient();
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
@@ -471,22 +473,20 @@ export const ExchangePage: React.FC = () => {
         return (
             <div className="text-center py-16 min-h-[400px] flex flex-col items-center justify-center space-y-4">
                 <div className="w-10 h-10 border-4 border-t-primary-500 border-white/10 rounded-full animate-spin"></div>
-                <p className="text-xs text-slate-550 font-sans">Connecting conversion rates...</p>
+                <p className="text-xs text-slate-555 font-sans">{t('exchange.loading')}</p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
-
-            <div className="space-y-6 text-left">
+        <div className="space-y-6">            <div className="space-y-6 text-left">
                 {/* Header Area */}
                 <div className="space-y-1 select-none">
                     <h2 className="text-2xl font-black text-white font-satoshi">
-                        Exchange
+                        {t('nav.exchange')}
                     </h2>
-                    <p className="text-xs font-semibold text-slate-550 font-sans">
-                        Swap currencies instantly
+                    <p className="text-xs font-semibold text-slate-555 font-sans">
+                        {t('exchange.subtitle')}
                     </p>
                 </div>
 
@@ -500,7 +500,7 @@ export const ExchangePage: React.FC = () => {
 
                             {/* FROM Input Card */}
                             <div className="space-y-2 text-left">
-                                <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">From</span>
+                                <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('exchange.from')}</span>
                                 <div className="relative">
                                     <div
                                         className="bg-[#0C1224] border border-white/10 rounded-2xl p-4 flex-wrap flex items-center justify-between transition focus-within:border-primary-500/50"
@@ -563,16 +563,16 @@ export const ExchangePage: React.FC = () => {
                                     )}
                                 </div>
                                 <div className="flex justify-between items-center text-[10px] text-slate-555 font-bold select-none px-1">
-                                    <span>Wallet balance: {fromWallet.balance}</span>
+                                    <span>{t('exchange.walletBalance')} {fromWallet.balance}</span>
                                     <button
                                         type="button"
                                         onClick={() => {
                                             const num = fromWallet.rawBalance;
                                             setFromAmount(num > 0 ? num.toString() : '0');
                                         }}
-                                        className="text-primary-400 hover:text-primary-350 hover:underline cursor-pointer"
+                                        className="text-primary-400 hover:text-primary-355 hover:underline cursor-pointer"
                                     >
-                                        Use max
+                                        {t('exchange.useMax')}
                                     </button>
                                 </div>
                             </div>
@@ -590,7 +590,7 @@ export const ExchangePage: React.FC = () => {
 
                             {/* TO Input Card */}
                             <div className="space-y-2 text-left">
-                                <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">To</span>
+                                <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('exchange.to')}</span>
                                 <div className="relative">
                                     <div
                                         className="bg-[#0C1224] border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between transition focus-within:border-primary-500/50"
@@ -655,7 +655,7 @@ export const ExchangePage: React.FC = () => {
                             <div className="bg-black/25 border border-white/5 rounded-2xl p-4.5 flex justify-between items-center text-xs font-semibold select-none">
                                 <div className="text-left space-y-0.5">
                                     <span className="text-white block font-bold font-mono">1 {fromWallet.code} = {activeRate.toFixed(4)} {toWallet.code}</span>
-                                    <span className="text-[10px] text-slate-555 block">Mid-market rate • Updated live</span>
+                                    <span className="text-[10px] text-slate-555 block">{t('exchange.midMarketRate')}</span>
                                 </div>
                                 <div className="bg-[#0C1224] border border-white/5 text-[10px] text-slate-400 font-mono px-3 py-1.5 rounded-xl flex items-center space-x-1">
                                     <RefreshCw className="h-3 w-3 text-slate-500 animate-spin" />
@@ -666,14 +666,14 @@ export const ExchangePage: React.FC = () => {
                             {/* Fee Breakdown Block */}
                             <div className="bg-black/20 border border-white/5 rounded-2.5xl p-5 space-y-3.5 select-none font-sans text-xs">
                                 <div className="flex justify-between items-center pb-1 border-b border-white/[0.03]">
-                                    <span className="text-slate-400 font-bold">Fee breakdown</span>
+                                    <span className="text-slate-400 font-bold">{t('exchange.feeBreakdown')}</span>
                                     <span className="font-bold text-emerald-400 font-mono">
                                         {formatBalance(estimatedFee, fromWallet.code)}
                                     </span>
                                 </div>
 
                                 <div className="flex justify-between items-center py-0.5">
-                                    <span className="text-slate-555 font-semibold">Exchange fee</span>
+                                    <span className="text-slate-555 font-semibold">{t('exchange.exchangeFee')}</span>
                                     <span className="font-bold text-white font-mono flex items-center space-x-1">
                                         <CurrencyIcon code={fromWallet.code} size="sm" />
                                         <span>{estimatedFee.toFixed(fromWallet.type === 'fiat' ? 2 : 4)} {fromWallet.code} (0.15%)</span>
@@ -681,13 +681,13 @@ export const ExchangePage: React.FC = () => {
                                 </div>
 
                                 <div className="flex justify-between items-center py-0.5">
-                                    <span className="text-slate-555 font-semibold">Network fee</span>
-                                    <span className="font-bold text-emerald-500">Free</span>
+                                    <span className="text-slate-555 font-semibold">{t('exchange.networkFee')}</span>
+                                    <span className="font-bold text-emerald-500">{t('exchange.free')}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center py-0.5">
-                                    <span className="text-slate-555 font-semibold">Settlement</span>
-                                    <span className="font-bold text-white">Instant</span>
+                                    <span className="text-slate-555 font-semibold">{t('exchange.settlement')}</span>
+                                    <span className="font-bold text-white">{t('exchange.instant')}</span>
                                 </div>
                             </div>
 
@@ -702,7 +702,7 @@ export const ExchangePage: React.FC = () => {
                                         : "bg-slate-800 text-slate-550 cursor-not-allowed"
                                 )}
                             >
-                                {isCryptoSwap && cryptoRateQuery.isFetching ? 'Fetching swap rate...' : createQuoteMutation.isPending ? 'Requesting quote...' : 'Exchange Now'}
+                                {isCryptoSwap && cryptoRateQuery.isFetching ? t('exchange.cta.fetchingRate') : createQuoteMutation.isPending ? t('exchange.cta.requestingQuote') : t('exchange.cta.exchangeNow')}
                             </button>
 
                         </div>
@@ -715,10 +715,10 @@ export const ExchangePage: React.FC = () => {
                         {/* Live Rates panel */}
                         <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 shadow-xl space-y-4">
                             <div className="flex justify-between items-center select-none pb-1 border-b border-white/[0.03]">
-                                <h3 className="font-satoshi font-bold text-sm text-white">Live Rates</h3>
+                                <h3 className="font-satoshi font-bold text-sm text-white">{t('live.rates')}</h3>
                                 <span className="text-[10px] font-bold text-emerald-400 font-mono flex items-center space-x-1 select-none">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-ping"></span>
-                                    <span>Live</span>
+                                    <span>{t('exchange.live')}</span>
                                 </span>
                             </div>
                             <div className="space-y-3.5">
@@ -748,7 +748,7 @@ export const ExchangePage: React.FC = () => {
                         {/* Recent Conversions panel */}
                         <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 shadow-xl space-y-4">
                             <h3 className="font-satoshi font-bold text-sm text-white select-none pb-1 border-b border-white/[0.03] text-left">
-                                Recent Conversions
+                                {t('exchange.recentConversions')}
                             </h3>
                             <div className="space-y-4">
                                 {recentExchanges.length > 0 ? (
@@ -775,7 +775,7 @@ export const ExchangePage: React.FC = () => {
                                     ))
                                 ) : (
                                     <div className="text-center py-6 text-xs text-slate-500 font-sans select-none">
-                                        No recent conversions.
+                                        {t('exchange.noRecentConversions')}
                                     </div>
                                 )}
                             </div>
@@ -785,9 +785,9 @@ export const ExchangePage: React.FC = () => {
                         <div className="bg-primary-500/5 border border-primary-500/10 rounded-2.5xl p-5 flex items-start space-x-3 text-left">
                             <Info className="h-4.5 w-4.5 text-primary-400 shrink-0 mt-0.5" />
                             <div className="space-y-1">
-                                <h4 className="text-xs font-bold text-white">Institutional Rates</h4>
+                                <h4 className="text-xs font-bold text-white">{t('exchange.institutionalRates')}</h4>
                                 <p className="text-[10.5px] leading-relaxed text-slate-400">
-                                    DigitalCap FX offers interbank-equivalent rates with a flat 0.15% margin. No hidden spreads. No markup on mid-market rates.
+                                    {t('exchange.institutionalRatesDesc')}
                                 </p>
                             </div>
                         </div>
@@ -805,34 +805,34 @@ export const ExchangePage: React.FC = () => {
                 <div className="space-y-6 flex flex-col justify-between h-full text-center">
                     <div className="space-y-6 select-none pt-8 text-left">
                         <div className="space-y-2">
-                            <h3 className="font-satoshi font-black text-2xl text-white tracking-tight">Confirm Exchange</h3>
+                            <h3 className="font-satoshi font-black text-2xl text-white tracking-tight">{t('exchange.confirm.title')}</h3>
                             <p className="text-[#6D778A] text-xs font-sans">
-                                Please review your conversion parameters before accepting. Quotes expire dynamically to protect against volatility.
+                                {t('exchange.confirm.subtitle')}
                             </p>
                         </div>
 
                         {confirmQuote && (
                             <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 space-y-4 font-sans text-xs">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-slate-400 font-semibold">You Sell</span>
+                                    <span className="text-slate-400 font-semibold">{t('exchange.confirm.youSell')}</span>
                                     <span className="font-extrabold text-white font-mono text-sm">
                                         {formatBalance(confirmQuote.sourceAmount, fromWallet.code)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-slate-400 font-semibold">You Receive</span>
+                                    <span className="text-slate-400 font-semibold">{t('exchange.confirm.youReceive')}</span>
                                     <span className="font-extrabold text-emerald-400 font-mono text-sm">
                                         {formatBalance(confirmQuote.targetAmount, toWallet.code)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-slate-400 font-semibold">Exchange Rate</span>
+                                    <span className="text-slate-400 font-semibold">{t('exchange.confirm.rate')}</span>
                                     <span className="font-bold text-white font-mono">
                                         1 {fromWallet.code} = {confirmQuote.rate.toFixed(4)} {toWallet.code}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-slate-400 font-semibold">Margin Fee (0.15%)</span>
+                                    <span className="text-slate-400 font-semibold">{t('exchange.confirm.marginFee')}</span>
                                     <span className="font-bold text-slate-300 font-mono">
                                         {formatBalance(confirmQuote.fee, fromWallet.code)}
                                     </span>
@@ -841,7 +841,7 @@ export const ExchangePage: React.FC = () => {
                         )}
 
                         <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-4 flex items-center justify-between text-xs select-none">
-                            <span className="text-amber-400 font-bold font-sans">Quote Lock Expiration</span>
+                            <span className="text-amber-400 font-bold font-sans">{t('exchange.confirm.lockExpiration')}</span>
                             <div className="bg-[#0C1224] border border-white/5 font-mono text-amber-400 px-3 py-1 rounded-xl flex items-center space-x-1 shrink-0">
                                 <RefreshCw className="h-3 w-3 text-amber-500 animate-spin" />
                                 <span>00:{confirmTimer.toString().padStart(2, '0')}</span>
@@ -855,13 +855,13 @@ export const ExchangePage: React.FC = () => {
                             disabled={executeExchangeMutation.isPending || executeWaaSSwapMutation.isPending}
                             className="w-full bg-emerald-500 hover:bg-emerald-450 text-white font-bold text-sm py-4 rounded-xl shadow-lg transition duration-200 cursor-pointer active:scale-[0.98]"
                         >
-                            {executeExchangeMutation.isPending || executeWaaSSwapMutation.isPending ? 'Executing Exchange...' : 'Confirm & Convert'}
+                            {executeExchangeMutation.isPending || executeWaaSSwapMutation.isPending ? t('exchange.confirm.btn.pending') : t('exchange.confirm.btn.confirm')}
                         </button>
                         <button
                             onClick={() => setIsConfirmOpen(false)}
                             className="w-full bg-[#0C1224] border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white font-bold text-sm py-4 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98]"
                         >
-                            Cancel
+                            {t('exchange.confirm.btn.cancel')}
                         </button>
                     </div>
                 </div>
@@ -885,7 +885,7 @@ export const ExchangePage: React.FC = () => {
 
                         <div className="space-y-3">
                             <span className="text-[10px] font-bold text-emerald-400 tracking-[0.2em] uppercase font-mono block">
-                                Exchange Successful
+                                {t('exchange.success.title')}
                             </span>
 
                             <div className="flex items-center justify-center space-x-2 text-2xl font-black text-white font-satoshi">
@@ -894,7 +894,7 @@ export const ExchangePage: React.FC = () => {
                             </div>
 
                             <span className="text-[9px] font-bold text-slate-555 uppercase tracking-widest block py-0.5 select-none">
-                                Exchanged to
+                                {t('exchange.success.exchangedTo')}
                             </span>
 
                             <div className="flex items-center justify-center space-x-2 text-2.5xl font-black text-emerald-400 font-satoshi">
@@ -907,12 +907,12 @@ export const ExchangePage: React.FC = () => {
                     {/* Receipt Details Card */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 text-left space-y-3.5 select-none font-sans text-xs max-w-md mx-auto w-full">
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">Exchange rate</span>
+                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">{t('exchange.confirm.rate')}</span>
                             <span className="font-mono text-slate-350">1 {fromWallet.code} = {activeRate.toFixed(4)} {toWallet.code}</span>
                         </div>
 
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Exchange fee</span>
+                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('exchange.exchangeFee')}</span>
                             <span className="font-bold text-white font-mono flex items-center space-x-1.5">
                                 <CurrencyIcon code={fromWallet.code} size="sm" />
                                 <span>{estimatedFee.toFixed(fromWallet.type === 'fiat' ? 2 : 4)} {fromWallet.code}</span>
@@ -920,12 +920,12 @@ export const ExchangePage: React.FC = () => {
                         </div>
 
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Settlement</span>
-                            <span className="text-white">Instant (same day)</span>
+                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('exchange.settlement')}</span>
+                            <span className="text-white">{t('exchange.success.instantSameDay')}</span>
                         </div>
 
                         <div className="flex justify-between items-center py-0.5 border-t border-white/5 pt-3">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Transaction ID</span>
+                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('exchange.success.txId')}</span>
                             <span className="font-mono text-slate-350">CNV-EXEC-OK</span>
                         </div>
                     </div>
@@ -935,7 +935,7 @@ export const ExchangePage: React.FC = () => {
                         onClick={handleCloseSuccess}
                         className="w-full bg-primary-500 hover:bg-primary-450 text-white font-bold text-sm py-4 rounded-xl shadow-lg transition duration-200 cursor-pointer active:scale-[0.98] mt-auto select-none"
                     >
-                        Done
+                        {t('exchange.success.btn.done')}
                     </button>
 
                 </div>

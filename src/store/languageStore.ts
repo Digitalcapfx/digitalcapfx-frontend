@@ -6,7 +6,7 @@ export type Language = 'en' | 'fr' | 'es'
 interface LanguageState {
     language: Language
     setLanguage: (lang: Language) => void
-    t: (key: string) => string
+    t: (key: string, options?: any) => string
 }
 
 export const useLanguageStore = create<LanguageState>((set) => {
@@ -24,8 +24,8 @@ export const useLanguageStore = create<LanguageState>((set) => {
         setLanguage: (lang: Language) => {
             i18n.changeLanguage(lang)
         },
-        t: (key: string) => {
-            return i18n.t(key)
+        t: (key: string, options?: any) => {
+            return i18n.t(key, options) as string
         }
     }
 })

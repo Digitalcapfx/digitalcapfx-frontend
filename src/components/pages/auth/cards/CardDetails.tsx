@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { VirtualCard, useCardStore } from '@/store/cardStore'
 import { cn } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface CardDetailsProps {
     card: VirtualCard;
@@ -42,6 +43,7 @@ const MOCK_TRANSACTIONS: CardTransaction[] = [
 ];
 
 export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
+    const { t } = useLanguageStore();
     const { toggleFreeze, terminateCard, openFund } = useCardStore();
     
     const [revealDetails, setRevealDetails] = useState(false);
@@ -54,7 +56,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
     };
 
     const handleTerminate = () => {
-        if (confirm('Are you sure you want to permanently terminate this virtual card? This action cannot be undone.')) {
+        if (confirm(t('cards.terminate.confirm'))) {
             terminateCard(card.id);
             onBack();
         }
@@ -86,7 +88,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
                         <ChevronLeft className="h-5 w-5" />
                     </button>
                     <h2 className="font-satoshi font-black text-xl text-white">
-                        {card.name} Card
+                        {card.name} ({t('cards.badge.virtual')})
                     </h2>
                 </div>
                 <button className="w-9 h-9 rounded-full bg-[#0C1224] border border-white/5 hover:border-white/15 flex items-center justify-center text-slate-400 hover:text-white transition duration-200 cursor-pointer">
@@ -111,7 +113,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
 
                         {/* Top Line */}
                         <div className="flex justify-between items-start z-10">
-                            <span className="text-[11px] font-black tracking-widest text-white/90 uppercase font-satoshi">Virtual</span>
+                            <span className="text-[11px] font-black tracking-widest text-white/90 uppercase font-satoshi">{t('cards.badge.virtual')}</span>
                             <span className="text-sm font-black italic text-white/95 tracking-tight font-satoshi">DigitalCap FX</span>
                         </div>
 
@@ -120,7 +122,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
                             {isFrozen ? (
                                 <div className="flex flex-col items-center justify-center space-y-1 py-1.5 bg-black/35 backdrop-blur-xs rounded-2xl border border-white/5 w-fit px-5 mx-auto">
                                     <Snowflake className="h-4.5 w-4.5 text-white animate-pulse" />
-                                    <span className="text-[9px] font-bold text-white uppercase tracking-widest">Frozen</span>
+                                    <span className="text-[9px] font-bold text-white uppercase tracking-widest">{t('cards.stat.frozen')}</span>
                                 </div>
                             ) : (
                                 <div className="space-y-1.5">
@@ -129,8 +131,8 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
                                     </span>
                                     {revealDetails && (
                                         <div className="flex space-x-6 text-[10px] text-white/80 font-mono">
-                                            <span>Expiry: {cardExpiry}</span>
-                                            <span>CVV: {cardCVV}</span>
+                                            <span>{t('cards.expiry')} {cardExpiry}</span>
+                                            <span>{t('cards.cvv')} {cardCVV}</span>
                                         </div>
                                     )}
                                 </div>
@@ -161,7 +163,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
                             <div className="w-8 h-8 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-400 shrink-0">
                                 <Plus className="h-4.5 w-4.5" />
                             </div>
-                            <span className="text-[10px]">Add Fund</span>
+                            <span className="text-[10px]">{t('cards.btn.addFund')}</span>
                         </button>
 
                         {/* Reveal Details */}
@@ -178,7 +180,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
                             <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center text-slate-300 shrink-0">
                                 {revealDetails ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </div>
-                            <span className="text-[10px] truncate w-full">Details</span>
+                            <span className="text-[10px] truncate w-full">{t('cards.expiry').replace(':', '')}</span>
                         </button>
 
                         {/* Freeze */}
@@ -192,7 +194,7 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
                             )}>
                                 {isFrozen ? <Check className="h-4 w-4" /> : <Snowflake className="h-4 w-4" />}
                             </div>
-                            <span className="text-[10px]">{isFrozen ? 'Unfreeze' : 'Freeze'}</span>
+                            <span className="text-[10px]">{isFrozen ? t('cards.btn.unfreeze') : t('cards.btn.freeze')}</span>
                         </button>
 
                         {/* Terminate */}
@@ -203,14 +205,14 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
                             <div className="w-8 h-8 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
                                 <Trash2 className="h-4 w-4" />
                             </div>
-                            <span className="text-[10px]">Terminate</span>
+                            <span className="text-[10px]">{t('cards.btn.terminate')}</span>
                         </button>
 
                     </div>
 
                     {/* Spend Limit card block */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 space-y-3.5 shadow-xl select-none">
-                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Monthly spend</span>
+                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('cards.stat.monthlySpend')}</span>
                         
                         <div className="space-y-2.5">
                             <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
@@ -232,19 +234,19 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
                     {/* Specifications parameters list */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 shadow-xl space-y-4 select-none font-sans text-xs">
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-500 font-semibold">Linked Wallet</span>
-                            <span className="font-bold text-white uppercase">{card.currency} Wallet</span>
+                            <span className="text-slate-500 font-semibold">{t('cards.details.linkedWallet')}</span>
+                            <span className="font-bold text-white uppercase">{card.currency} {t('cards.sheet.walletSuffix')}</span>
                         </div>
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-555 font-semibold">Card Type</span>
+                            <span className="text-slate-555 font-semibold">{t('cards.details.cardType')}</span>
                             <span className="font-bold text-white capitalize">{card.type}</span>
                         </div>
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-555 font-semibold">Status</span>
+                            <span className="text-slate-555 font-semibold">{t('exchange.receipt.status')}</span>
                             <span className={cn(
                                 "font-bold uppercase",
                                 isFrozen ? "text-slate-400" : "text-emerald-400"
-                            )}>{card.status}</span>
+                            )}>{isFrozen ? t('cards.stat.frozen') : card.status}</span>
                         </div>
                     </div>
 
@@ -256,13 +258,13 @@ export const CardDetails: React.FC<CardDetailsProps> = ({ card, onBack }) => {
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6.5 text-left shadow-xl space-y-5">
                         
                         <div className="flex justify-between items-center select-none pb-1 border-b border-white/[0.03]">
-                            <h3 className="font-satoshi font-bold text-base text-white">Recent Transactions</h3>
+                            <h3 className="font-satoshi font-bold text-base text-white">{t('cards.history.title')}</h3>
                             <div className="flex space-x-2">
                                 <button className="text-xs font-bold text-slate-400 hover:text-white bg-white/5 border border-white/5 hover:border-white/10 px-3 py-1.5 rounded-xl cursor-pointer">
-                                    Filter
+                                    {t('cards.history.filter')}
                                 </button>
                                 <button className="text-xs font-bold text-slate-400 hover:text-white bg-white/5 border border-white/5 hover:border-white/10 px-3 py-1.5 rounded-xl cursor-pointer">
-                                    Export
+                                    {t('cards.history.export')}
                                 </button>
                             </div>
                         </div>

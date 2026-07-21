@@ -6,6 +6,7 @@ import { NumberInput } from '@/components/ui/NumberInput'
 import { Button } from '@/components/ui/Button'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 const OPERATORS = ['MTN', 'Orange', 'Moov', 'Airtel', 'Nexttel'];
 
@@ -16,6 +17,7 @@ interface AirtimeFormProps {
 }
 
 export const AirtimeForm: React.FC<AirtimeFormProps> = ({ currency, isPending, onSubmit }) => {
+    const { t } = useLanguageStore();
     const [operator, setOperator] = useState('MTN');
     const [phone, setPhone] = useState('');
     const [amount, setAmount] = useState('');
@@ -36,8 +38,8 @@ export const AirtimeForm: React.FC<AirtimeFormProps> = ({ currency, isPending, o
         const amt = parseFloat(amount.replace(/,/g, ''));
         const newErrors: Record<string, string> = {};
 
-        if (!phone) newErrors.phone = 'Phone number is required';
-        if (isNaN(amt) || amt <= 0) newErrors.amount = 'Enter a valid amount greater than 0';
+        if (!phone) newErrors.phone = t('vtu.airtime.phoneRequired');
+        if (isNaN(amt) || amt <= 0) newErrors.amount = t('vtu.airtime.amountInvalid');
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -50,7 +52,7 @@ export const AirtimeForm: React.FC<AirtimeFormProps> = ({ currency, isPending, o
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Network Operator</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t('vtu.airtime.network')}</label>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
                     {OPERATORS.map(op => (
                         <button
@@ -72,8 +74,8 @@ export const AirtimeForm: React.FC<AirtimeFormProps> = ({ currency, isPending, o
 
             <PhoneInput 
                 required
-                label="Recipient Phone number*"
-                placeholder="Enter recipient phone"
+                label={t('vtu.airtime.phoneLabel')}
+                placeholder={t('vtu.airtime.phonePlaceholder')}
                 value={phone}
                 onChange={(val) => {
                     setPhone(val);
@@ -84,12 +86,12 @@ export const AirtimeForm: React.FC<AirtimeFormProps> = ({ currency, isPending, o
 
             <div className="w-full space-y-1.5 text-left">
                 <label className="text-xs font-semibold text-slate-400 block tracking-wide">
-                    {`Top-up Amount (${currency})*`}
+                    {t('vtu.airtime.amountLabel', { currency })}
                 </label>
                 <div className="relative flex items-center">
                     <NumberInput 
                         required
-                        placeholder="e.g. 1,000"
+                        placeholder={t('vtu.airtime.amountPlaceholder')}
                         value={amount}
                         onChange={(val) => {
                             setAmount(val);
@@ -115,7 +117,7 @@ export const AirtimeForm: React.FC<AirtimeFormProps> = ({ currency, isPending, o
                     className="w-full rounded-xl h-[52px] font-bold text-base shadow-lg shadow-primary-500/10"
                     rightIcon={<ArrowRight className="h-5 w-5" />}
                 >
-                    {isPending ? 'Processing...' : 'Buy Airtime'}
+                    {isPending ? t('vtu.btn.processing') : t('vtu.airtime.submit')}
                 </Button>
             </div>
         </form>

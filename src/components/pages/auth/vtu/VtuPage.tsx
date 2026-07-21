@@ -10,8 +10,10 @@ import { DataBundleForm } from './_components/DataBundleForm'
 import { BillPaymentForm } from './_components/BillPaymentForm'
 import { VtuTxHistory } from './_components/VtuTxHistory'
 import { cn } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 export const VtuPage: React.FC = () => {
+    const { t } = useLanguageStore();
     const queryClient = useQueryClient();
     const [activeTab, setActiveTab] = useState<'airtime' | 'data' | 'bill'>('airtime');
     const [currency, setCurrency] = useState<'XAF' | 'XOF'>('XAF');
@@ -29,16 +31,16 @@ export const VtuPage: React.FC = () => {
         mutationFn: (payload: any) => vtuService.purchaseAirtime(payload),
         onSuccess: (data) => {
             if (data?.success) {
-                toast.success('Airtime purchase request submitted successfully!');
+                toast.success(t('vtu.toast.airtimeSuccess'));
                 queryClient.invalidateQueries({ queryKey: ['vtuTransactions'] });
             } else {
-                toast.error(data?.error?.message || 'Airtime purchase failed.');
+                toast.error(data?.error?.message || t('vtu.toast.airtimeFailed'));
             }
         },
         onError: (err: any) => {
             console.error('Airtime purchase error:', err);
             const rawError = err.response?.data?.error;
-            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to purchase airtime.');
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || t('vtu.toast.airtimeError'));
             toast.error(msg);
         }
     });
@@ -47,16 +49,16 @@ export const VtuPage: React.FC = () => {
         mutationFn: (payload: any) => vtuService.purchaseData(payload),
         onSuccess: (data) => {
             if (data?.success) {
-                toast.success('Data bundle purchase request submitted successfully!');
+                toast.success(t('vtu.toast.dataSuccess'));
                 queryClient.invalidateQueries({ queryKey: ['vtuTransactions'] });
             } else {
-                toast.error(data?.error?.message || 'Data purchase failed.');
+                toast.error(data?.error?.message || t('vtu.toast.dataFailed'));
             }
         },
         onError: (err: any) => {
             console.error('Data purchase error:', err);
             const rawError = err.response?.data?.error;
-            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to purchase data bundle.');
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || t('vtu.toast.dataError'));
             toast.error(msg);
         }
     });
@@ -65,16 +67,16 @@ export const VtuPage: React.FC = () => {
         mutationFn: (payload: any) => vtuService.payBill(payload),
         onSuccess: (data) => {
             if (data?.success) {
-                toast.success('Utility bill payment request submitted successfully!');
+                toast.success(t('vtu.toast.billSuccess'));
                 queryClient.invalidateQueries({ queryKey: ['vtuTransactions'] });
             } else {
-                toast.error(data?.error?.message || 'Bill payment failed.');
+                toast.error(data?.error?.message || t('vtu.toast.billFailed'));
             }
         },
         onError: (err: any) => {
             console.error('Bill payment error:', err);
             const rawError = err.response?.data?.error;
-            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to process bill payment.');
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || t('vtu.toast.billError'));
             toast.error(msg);
         }
     });
@@ -103,9 +105,9 @@ export const VtuPage: React.FC = () => {
     const isPending = purchaseAirtimeMutation.isPending || purchaseDataMutation.isPending || payBillMutation.isPending;
 
     const tabsList = [
-        { id: 'airtime', label: 'Airtime Top-up' },
-        { id: 'data', label: 'Data Bundles' },
-        { id: 'bill', label: 'Utility Bills' }
+        { id: 'airtime', label: t('vtu.tabs.airtime') },
+        { id: 'data', label: t('vtu.tabs.data') },
+        { id: 'bill', label: t('vtu.tabs.bill') }
     ];
 
     return (
@@ -113,10 +115,10 @@ export const VtuPage: React.FC = () => {
             {/* Header section */}
             <div>
                 <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
-                    Airtime & Bill Payments (VTU)
+                    {t('vtu.title')}
                 </h1>
                 <p className="text-slate-400 text-xs mt-1.5 leading-relaxed font-sans max-w-xl">
-                    Pay utility bills or top up mobile credit instantly. Direct settlement is made from your local African fiat (XAF / XOF) wallets.
+                    {t('vtu.subtitle')}
                 </p>
             </div>
 
@@ -141,10 +143,10 @@ export const VtuPage: React.FC = () => {
                     {/* Header inside card */}
                     <div className="border-b border-white/[0.04] pb-4 flex justify-between items-center select-none">
                         <div>
-                            <h3 className="text-sm font-bold text-white capitalize">
-                                {activeTab} Details
+                            <h3 className="text-sm font-bold text-white">
+                                {t('vtu.card.details', { type: t(`vtu.tabs.${activeTab}`) })}
                             </h3>
-                            <p className="text-[10px] text-slate-555 mt-0.5">Fill in fields to proceed</p>
+                            <p className="text-[10px] text-slate-555 mt-0.5">{t('vtu.card.fillFields')}</p>
                         </div>
                         {/* Currency toggle */}
                         <div className="flex bg-[#070C19] rounded-xl p-0.5 border border-white/5 text-[10px] font-bold">

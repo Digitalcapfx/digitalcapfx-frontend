@@ -14,6 +14,7 @@ import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Sheet } from '@/components/ui/Sheet'
 import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { NumberInput } from '@/components/ui/NumberInput'
+import { useLanguageStore } from '@/store/languageStore'
 import { useQuery } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 
@@ -32,6 +33,7 @@ const formatBalance = (amount: string | number, currency: string) => {
 };
 
 export const FundCardSheet: React.FC = () => {
+    const { t } = useLanguageStore();
     const { isFundOpen, closeFund, activeCardId, cards, fundCard } = useCardStore();
     
     // Wizard step state: 1 = Form, 2 = Confirm, 3 = Success
@@ -121,8 +123,8 @@ export const FundCardSheet: React.FC = () => {
         <Sheet
             isOpen={isFundOpen}
             onClose={closeFund}
-            title={step === 1 ? "Fund Card" : step === 2 ? "Review & confirm" : undefined}
-            description={step === 1 ? "Top up your virtual card instantly" : step === 2 ? "Please verify all details before funding." : undefined}
+            title={step === 1 ? t('cards.sheet.fundTitle') : step === 2 ? t('cards.sheet.reviewTitle') : undefined}
+            description={step === 1 ? t('cards.sheet.fundDesc') : step === 2 ? t('cards.sheet.reviewDesc') : undefined}
         >
             {step === 1 && (
                 <form onSubmit={handleProceed} className="space-y-6 flex flex-col justify-between h-full text-left">
@@ -130,18 +132,18 @@ export const FundCardSheet: React.FC = () => {
                     <div className="space-y-5">
                         {/* FROM - Wallet display (No Dropdown Chevron) */}
                         <div className="space-y-2">
-                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">From</span>
+                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('cards.sheet.from')}</span>
                             <div className="bg-[#0C1224] border border-white/15 rounded-2xl p-4 flex items-center justify-between transition select-none">
                                 {fundingWallet ? (
                                     <div className="flex items-center space-x-3">
                                         <CurrencyIcon code={fundingWallet.code} size="md" />
                                         <div className="text-left">
                                             <span className="font-bold text-white block text-sm leading-tight">{fundingWallet.name}</span>
-                                            <span className="text-[9px] text-slate-550 font-bold uppercase block mt-0.5">{fundingWallet.code} Wallet</span>
+                                            <span className="text-[9px] text-slate-550 font-bold uppercase block mt-0.5">{fundingWallet.code} {t('cards.sheet.walletSuffix')}</span>
                                         </div>
                                     </div>
                                 ) : (
-                                    <span className="text-xs text-rose-400">No matching wallet found</span>
+                                    <span className="text-xs text-rose-400">{t('cards.sheet.noWallet')}</span>
                                 )}
 
                                 {/* Amount Input */}
@@ -164,13 +166,13 @@ export const FundCardSheet: React.FC = () => {
                             </div>
 
                             <div className="text-[10px] text-slate-550 font-bold select-none px-1">
-                                Account Balance: <span className="text-slate-350 font-mono">{fundingWallet ? fundingWallet.balance : '--'}</span>
+                                {t('cards.sheet.accountBalance')} <span className="text-slate-350 font-mono">{fundingWallet ? fundingWallet.balance : '--'}</span>
                             </div>
                         </div>
 
                         {/* TO - Target Suffix Card */}
                         <div className="space-y-2">
-                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">To Card</span>
+                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('cards.sheet.toCard')}</span>
                             <div className="bg-[#0C1224] border border-white/5 rounded-2xl p-4 flex items-center justify-between select-none">
                                 <div className="flex items-center space-x-3 text-left">
                                     <div className="w-8 h-8 rounded-lg bg-primary-500/15 flex items-center justify-center text-primary-400 shrink-0">
@@ -201,10 +203,10 @@ export const FundCardSheet: React.FC = () => {
                                     : "bg-slate-800 text-slate-500 cursor-not-allowed"
                             )}
                         >
-                            Fund Card {amount ? `(${parseFloat(amount).toLocaleString()} ${card.currency})` : ''}
+                            {t('cards.sheet.btn.fundCard')} {amount ? `(${parseFloat(amount).toLocaleString()} ${card.currency})` : ''}
                         </button>
                         <span className="text-[10px] text-slate-555 block text-center select-none leading-relaxed">
-                            Funds reflect instantly on card balance
+                            {t('cards.sheet.instantlyReflected')}
                         </span>
                     </div>
 
@@ -217,47 +219,47 @@ export const FundCardSheet: React.FC = () => {
                         
                         {/* Summary Display Card */}
                         <div className="bg-gradient-to-br from-[#0F172A] to-[#0A0F1D] border border-white/5 rounded-3xl p-6.5 text-center shadow-xl select-none">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">You are Funding</span>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">{t('cards.sheet.youAreFunding')}</span>
                             <span className="text-2.5xl md:text-3.5xl font-black text-white block mt-1.5 font-satoshi">
                                 {card.currency === 'USD' ? '$' : ''}{parseFloat(amount).toLocaleString()} {card.currency}
                             </span>
                             <span className="text-[10px] font-bold text-slate-400 block mt-1">
-                                from your {fundingWallet?.name} Wallet
+                                {t('cards.sheet.fromYour', { walletName: fundingWallet?.name })}
                             </span>
                         </div>
 
                         {/* Details parameters table */}
                         <div className="bg-black/20 border border-white/5 rounded-2.5xl p-5 space-y-3.5 select-none font-sans text-xs">
                             <div className="flex justify-between items-center py-0.5">
-                                <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">Card Recipient</span>
+                                <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">{t('cards.sheet.cardRecipient')}</span>
                                 <div className="text-right">
                                     <span className="font-bold text-white block">{card.holder}</span>
-                                    <span className="text-[9.5px] font-medium text-slate-500 block mt-0.5">Virtual Card **** {card.number}</span>
+                                    <span className="text-[9.5px] font-medium text-slate-500 block mt-0.5">{t('cards.sheet.virtualCardPrefix')} **** {card.number}</span>
                                 </div>
                             </div>
                             
                             <div className="flex justify-between items-center py-0.5">
-                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Card gets</span>
+                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('cards.sheet.cardGets')}</span>
                                 <span className="font-bold text-emerald-400 font-mono">
                                     {card.currency === 'USD' ? '$' : ''}{parseFloat(amount).toLocaleString()} {card.currency}
                                 </span>
                             </div>
 
                             <div className="flex justify-between items-center py-0.5">
-                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Exchange rate</span>
-                                <span className="font-bold text-slate-400 font-mono">No conversion (same currency)</span>
+                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('cards.sheet.exchangeRate')}</span>
+                                <span className="font-bold text-slate-400 font-mono">{t('cards.sheet.noConversion')}</span>
                             </div>
 
                             <div className="flex justify-between items-center py-0.5">
-                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Transfer fee</span>
+                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('cards.sheet.transferFee')}</span>
                                 <span className="font-bold text-white font-mono">
                                     {card.currency === 'USD' ? '$' : ''}{fee.toFixed(2)} (0.1%)
                                 </span>
                             </div>
 
                             <div className="flex justify-between items-center py-0.5">
-                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Settlement time</span>
-                                <span className="font-bold text-white">Instant</span>
+                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('cards.sheet.settlementTime')}</span>
+                                <span className="font-bold text-white">{t('exchange.receipt.instant')}</span>
                             </div>
                         </div>
 
@@ -265,7 +267,7 @@ export const FundCardSheet: React.FC = () => {
                         <div className="bg-orange-500/5 border border-orange-500/10 rounded-2xl p-4 flex items-start space-x-3 text-xs text-orange-400 leading-relaxed select-none">
                             <Info className="h-4.5 w-4.5 shrink-0 mt-0.5" />
                             <p className="font-semibold text-[11px]">
-                                Card funding operations are final. Please make sure card limits allow this top up.
+                                {t('cards.sheet.caution')}
                             </p>
                         </div>
 
@@ -277,13 +279,13 @@ export const FundCardSheet: React.FC = () => {
                             onClick={handleConfirm}
                             className="w-full bg-primary-500 hover:bg-primary-450 text-white py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg transition duration-200 cursor-pointer active:scale-[0.98]"
                         >
-                            Confirm & Send
+                            {t('cards.sheet.btn.confirmSend')}
                         </button>
                         <button
                             onClick={() => setStep(1)}
                             className="w-full bg-slate-800/50 hover:bg-slate-800 text-slate-400 py-3.5 rounded-xl font-bold text-sm tracking-wide transition duration-200 border border-white/5 cursor-pointer"
                         >
-                            Back
+                            {t('cards.sheet.btn.back')}
                         </button>
                     </div>
                 </div>
@@ -303,13 +305,13 @@ export const FundCardSheet: React.FC = () => {
                         
                         <div className="space-y-2 max-w-sm mx-auto">
                             <span className="text-[10px] font-bold text-emerald-400 tracking-[0.2em] uppercase font-mono block">
-                                Funding Success
+                                {t('cards.sheet.successTitle')}
                             </span>
                             <h2 className="font-satoshi font-black text-2.5xl text-white tracking-tight">
                                 {card.currency === 'USD' ? '$' : ''}{parseFloat(amount).toLocaleString()} {card.currency}
                             </h2>
                             <p className="text-slate-400 text-xs font-sans leading-relaxed">
-                                successfully loaded to card <strong className="text-white font-bold">{card.name} (**** {card.number})</strong>
+                                {t('cards.sheet.successLoaded')} <strong className="text-white font-bold">{card.name} (**** {card.number})</strong>
                             </p>
                         </div>
                     </div>
@@ -317,23 +319,23 @@ export const FundCardSheet: React.FC = () => {
                     {/* Transaction logs receipt block */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 text-left space-y-3.5 select-none font-sans text-xs max-w-md mx-auto w-full">
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">Transaction ID</span>
+                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">{t('cards.sheet.txId')}</span>
                             <span className="font-mono text-slate-350">TXN-CARD-{Math.floor(1000 + Math.random() * 9000)}</span>
                         </div>
                         
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">Target Card</span>
+                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">{t('cards.sheet.targetCard')}</span>
                             <span className="text-white font-bold">{card.name} (**** {card.number})</span>
                         </div>
 
                         <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">Fund Holder</span>
+                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">{t('cards.sheet.fundHolder')}</span>
                             <span className="text-white font-bold">{card.holder}</span>
                         </div>
 
                         <div className="flex justify-between items-center py-0.5 border-t border-white/5 pt-3">
-                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">Status</span>
-                            <span className="text-emerald-400 font-bold">Completed</span>
+                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">{t('exchange.receipt.status')}</span>
+                            <span className="text-emerald-400 font-bold">{t('cards.sheet.completed')}</span>
                         </div>
                     </div>
 
@@ -342,7 +344,7 @@ export const FundCardSheet: React.FC = () => {
                         onClick={handleDone}
                         className="w-full bg-primary-500 hover:bg-primary-450 text-white font-bold text-sm py-4 rounded-xl shadow-lg transition duration-200 cursor-pointer active:scale-[0.98] mt-auto select-none"
                     >
-                        Done
+                        {t('cards.sheet.btn.done')}
                     </button>
 
                 </div>

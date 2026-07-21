@@ -6,6 +6,7 @@ import { NumberInput } from '@/components/ui/NumberInput'
 import { Button } from '@/components/ui/Button'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 const BILLERS = [
     { id: 'ENEO', name: 'ENEO (Cameroon Electricity)' },
@@ -23,6 +24,7 @@ interface BillPaymentFormProps {
 }
 
 export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({ currency, isPending, onSubmit }) => {
+    const { t } = useLanguageStore();
     const [billerId, setBillerId] = useState('ENEO');
     const [accountNumber, setAccountNumber] = useState('');
     const [amount, setAmount] = useState('');
@@ -43,8 +45,8 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({ currency, isPe
         const amt = parseFloat(amount.replace(/,/g, ''));
         const newErrors: Record<string, string> = {};
 
-        if (!accountNumber) newErrors.accountNumber = 'Account/Meter number is required';
-        if (isNaN(amt) || amt <= 0) newErrors.amount = 'Enter a valid amount greater than 0';
+        if (!accountNumber) newErrors.accountNumber = t('vtu.bill.accountRequired');
+        if (isNaN(amt) || amt <= 0) newErrors.amount = t('vtu.airtime.amountInvalid');
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -57,7 +59,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({ currency, isPe
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Utility Provider / Biller</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t('vtu.bill.provider')}</label>
                 <select
                     value={billerId}
                     onChange={(e) => setBillerId(e.target.value)}
@@ -73,8 +75,8 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({ currency, isPe
 
             <Input 
                 required
-                label="Account / Meter Number*"
-                placeholder="Enter meter or account reference"
+                label={t('vtu.bill.accountLabel')}
+                placeholder={t('vtu.bill.accountPlaceholder')}
                 value={accountNumber}
                 onChange={(e) => {
                     setAccountNumber(e.target.value);
@@ -85,12 +87,12 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({ currency, isPe
 
             <div className="w-full space-y-1.5 text-left">
                 <label className="text-xs font-semibold text-slate-400 block tracking-wide">
-                    {`Payment Amount (${currency})*`}
+                    {t('vtu.bill.amountLabel', { currency })}
                 </label>
                 <div className="relative flex items-center">
                     <NumberInput 
                         required
-                        placeholder="e.g. 5,000"
+                        placeholder={t('vtu.bill.amountPlaceholder')}
                         value={amount}
                         onChange={(val) => {
                             setAmount(val);
@@ -116,7 +118,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({ currency, isPe
                     className="w-full rounded-xl h-[52px] font-bold text-base shadow-lg shadow-primary-500/10"
                     rightIcon={<ArrowRight className="h-5 w-5" />}
                 >
-                    {isPending ? 'Processing...' : 'Pay Bill'}
+                    {isPending ? t('vtu.btn.processing') : t('vtu.bill.submit')}
                 </Button>
             </div>
         </form>

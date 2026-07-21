@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { activityService, ActivityItem } from '@/services/activity.service'
+import { useLanguageStore } from '@/store/languageStore'
 
 const getIcon = (type: string) => {
     switch (type.toLowerCase()) {
@@ -56,6 +57,7 @@ const getBadgeStyles = (status: string) => {
 };
 
 export const ActivityPage: React.FC = () => {
+    const { t } = useLanguageStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedType, setSelectedType] = useState('all');
 
@@ -84,10 +86,10 @@ export const ActivityPage: React.FC = () => {
         <div className="space-y-6 mx-auto text-left">
             <div>
                 <h1 className="font-satoshi font-black text-2xl text-white tracking-tight">
-                    Activity History
+                    {t('activity.logs.title')}
                 </h1>
                 <p className="text-slate-400 text-xs font-semibold mt-1">
-                    An audit log of all account operations, transactions, and security settings changes.
+                    {t('activity.logs.subtitle')}
                 </p>
             </div>
 
@@ -99,7 +101,7 @@ export const ActivityPage: React.FC = () => {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search logs by keyword..."
+                        placeholder={t('activity.logs.searchPlaceholder')}
                         className="bg-[#0C1224] border border-[#131B30] rounded-xl pl-9.5 pr-4 py-2.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-primary-500/50 w-full"
                     />
                 </div>
@@ -114,7 +116,7 @@ export const ActivityPage: React.FC = () => {
                                 : 'bg-[#0C1224] text-slate-400 hover:text-white'
                                 }`}
                         >
-                            {cat}
+                            {t('activity.categories.' + cat)}
                         </button>
                     ))}
                 </div>
@@ -125,22 +127,22 @@ export const ActivityPage: React.FC = () => {
                 {isLoading ? (
                     <div className="py-20 flex flex-col items-center justify-center space-y-3 text-xs text-slate-500">
                         <RefreshCw className="h-6 w-6 animate-spin text-primary-400" />
-                        <span>Loading activity logs...</span>
+                        <span>{t('activity.logs.loading')}</span>
                     </div>
                 ) : error ? (
                     <div className="py-16 flex flex-col items-center justify-center space-y-3 text-center">
                         <AlertCircle className="h-8 w-8 text-rose-500" />
-                        <span className="text-xs text-rose-455 font-bold">Failed to load system activity.</span>
+                        <span className="text-xs text-rose-455 font-bold">{t('activity.logs.loadFailed')}</span>
                         <button
                             onClick={() => refetch()}
                             className="text-xs font-bold text-primary-400 hover:underline cursor-pointer"
                         >
-                            Retry
+                            {t('activity.logs.retry')}
                         </button>
                     </div>
                 ) : filteredFeed.length === 0 ? (
                     <div className="py-24 text-center select-none space-y-2">
-                        <p className="text-xs text-slate-500">No activity logs match your filter criteria.</p>
+                        <p className="text-xs text-slate-500">{t('activity.logs.empty')}</p>
                     </div>
                 ) : (
                     <div className="relative border-l border-white/5 ml-3.5 pl-6 space-y-6">
@@ -162,9 +164,9 @@ export const ActivityPage: React.FC = () => {
                                             </span>
                                         </div>
                                         <div className="text-[10px] text-slate-500 font-semibold space-x-2 block">
-                                            <span className="font-mono">Ref: {item.reference || 'N/A'}</span>
+                                            <span className="font-mono">{t('activity.logs.ref')} {item.reference || 'N/A'}</span>
                                             <span>•</span>
-                                            <span className="font-mono uppercase">{item.type}</span>
+                                            <span className="font-mono uppercase">{t('activity.categories.' + item.type.toLowerCase())}</span>
                                             {item.amount && parseFloat(item.amount) > 0 && (
                                                 <>
                                                     <span>•</span>

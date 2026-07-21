@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useLanguageStore } from '@/store/languageStore'
 
 const OPERATORS = ['MTN', 'Orange', 'Moov', 'Airtel', 'Nexttel'];
 
@@ -43,6 +44,7 @@ interface DataBundleFormProps {
 }
 
 export const DataBundleForm: React.FC<DataBundleFormProps> = ({ currency, isPending, onSubmit }) => {
+    const { t } = useLanguageStore();
     const [operator, setOperator] = useState('MTN');
     const [phone, setPhone] = useState('');
     const [bundleId, setBundleId] = useState('');
@@ -62,8 +64,8 @@ export const DataBundleForm: React.FC<DataBundleFormProps> = ({ currency, isPend
         e.preventDefault();
         const newErrors: Record<string, string> = {};
 
-        if (!phone) newErrors.phone = 'Phone number is required';
-        if (!bundleId) newErrors.bundleId = 'Select a data bundle';
+        if (!phone) newErrors.phone = t('vtu.airtime.phoneRequired');
+        if (!bundleId) newErrors.bundleId = t('vtu.data.bundleRequired');
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -89,7 +91,7 @@ export const DataBundleForm: React.FC<DataBundleFormProps> = ({ currency, isPend
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Network Operator</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t('vtu.airtime.network')}</label>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
                     {OPERATORS.map(op => (
                         <button
@@ -114,8 +116,8 @@ export const DataBundleForm: React.FC<DataBundleFormProps> = ({ currency, isPend
 
             <PhoneInput 
                 required
-                label="Recipient Phone number*"
-                placeholder="Enter recipient phone"
+                label={t('vtu.airtime.phoneLabel')}
+                placeholder={t('vtu.airtime.phonePlaceholder')}
                 value={phone}
                 onChange={(val) => {
                     setPhone(val);
@@ -125,7 +127,7 @@ export const DataBundleForm: React.FC<DataBundleFormProps> = ({ currency, isPend
             />
 
             <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Data Bundle Pack</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t('vtu.data.bundlePack')}</label>
                 <select
                     value={bundleId}
                     onChange={(e) => {
@@ -134,7 +136,7 @@ export const DataBundleForm: React.FC<DataBundleFormProps> = ({ currency, isPend
                     }}
                     className="bg-black/35 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-semibold [&>option]:bg-[#080E1E]"
                 >
-                    <option value="" disabled>-- Select data bundle package --</option>
+                    <option value="" disabled>{t('vtu.data.selectOption')}</option>
                     {activeBundles.map(bundle => (
                         <option key={bundle.id} value={bundle.id}>
                             {bundle.name}
@@ -155,7 +157,7 @@ export const DataBundleForm: React.FC<DataBundleFormProps> = ({ currency, isPend
                     className="w-full rounded-xl h-[52px] font-bold text-base shadow-lg shadow-primary-500/10"
                     rightIcon={<ArrowRight className="h-5 w-5" />}
                 >
-                    {isPending ? 'Processing...' : 'Buy Data Bundle'}
+                    {isPending ? t('vtu.btn.processing') : t('vtu.data.submit')}
                 </Button>
             </div>
         </form>

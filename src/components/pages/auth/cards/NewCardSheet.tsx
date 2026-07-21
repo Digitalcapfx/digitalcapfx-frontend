@@ -6,6 +6,7 @@ import { useCardStore } from '@/store/cardStore'
 import { Sheet } from '@/components/ui/Sheet'
 import { cn } from '@/lib/utils'
 import { NumberInput } from '@/components/ui/NumberInput'
+import { useLanguageStore } from '@/store/languageStore'
 
 const CURRENCIES = [
     { code: 'USD', name: 'US Dollar' },
@@ -15,6 +16,7 @@ const CURRENCIES = [
 ];
 
 export const NewCardSheet: React.FC = () => {
+    const { t } = useLanguageStore();
     const { isIssueOpen, closeIssue, addCard } = useCardStore();
     
     const [name, setName] = useState('');
@@ -54,8 +56,8 @@ export const NewCardSheet: React.FC = () => {
         <Sheet
             isOpen={isIssueOpen}
             onClose={closeIssue}
-            title="Issue Virtual Card"
-            description="Create a virtual card for fast and secure payments"
+            title={t('cards.sheet.issueTitle')}
+            description={t('cards.sheet.issueDesc')}
         >
             <form onSubmit={handleSubmit} className="space-y-6 flex flex-col justify-between h-full text-left">
                 
@@ -63,19 +65,19 @@ export const NewCardSheet: React.FC = () => {
                     
                     {/* Card Name */}
                     <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Card Name</span>
+                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('cards.sheet.cardName')}</span>
                         <input 
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="e.g. Figma Subscription, AWS Card"
+                            placeholder={t('cards.sheet.cardNamePlaceholder')}
                             className="bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-primary-500/50 w-full font-sans"
                         />
                     </div>
 
                     {/* Card Holder */}
                     <div className="space-y-1 opacity-70">
-                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Card Holder</span>
+                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('cards.sheet.cardHolder')}</span>
                         <input 
                             type="text"
                             value={holder}
@@ -86,7 +88,7 @@ export const NewCardSheet: React.FC = () => {
 
                     {/* Currency Selector */}
                     <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Currency</span>
+                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('cards.sheet.currency')}</span>
                         <div className="relative">
                             <div 
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -123,7 +125,7 @@ export const NewCardSheet: React.FC = () => {
 
                     {/* Card Spend Limit */}
                     <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Spend Limit</span>
+                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('cards.sheet.spendLimit')}</span>
                         <div className="relative flex items-center bg-black/30 border border-white/10 focus-within:border-primary-500/50 rounded-xl w-full">
                             {currency === 'USD' && (
                                 <span className="absolute left-4.5 font-mono text-xs text-slate-550 font-bold">$</span>
@@ -156,10 +158,10 @@ export const NewCardSheet: React.FC = () => {
                             "w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg transition duration-200 cursor-pointer active:scale-[0.98]",
                             isFormValid() 
                                 ? "bg-primary-500 hover:bg-primary-450 text-white" 
-                                : "bg-slate-800 text-slate-550 cursor-not-allowed"
+                                : "bg-slate-800 text-slate-555 cursor-not-allowed"
                         )}
                     >
-                        Issue Card
+                        {t('cards.sheet.btn.issue')}
                     </button>
                 </div>
 
