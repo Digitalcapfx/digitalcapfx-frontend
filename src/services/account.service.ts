@@ -125,8 +125,8 @@ class AccountService extends BaseService {
     return response.data;
   }
 
-  async getWaaSWallets(): Promise<{ success: boolean; data: any[]; error?: any }> {
-    const response = await this.api.get('/wallets');
+  async getWaaSWallets(refresh = false): Promise<{ success: boolean; data: any; error?: any }> {
+    const response = await this.api.get('/wallets/addresses', { params: { refresh } });
     return response.data;
   }
 

@@ -28,6 +28,7 @@ export interface Wallet {
     type: 'fiat' | 'stablecoin';
     balance: string;
     rawBalance: number;
+    provider?: 'caas' | 'waas';
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
@@ -43,6 +44,29 @@ const CURRENCY_NAMES: Record<string, string> = {
 
 const formatBalance = (amount: string | number, currency: string) => {
     return formatCurrencyByLocale(amount, currency);
+};
+
+const getDecimals = (network: string): number => {
+    const net = network.toUpperCase();
+    if (net === 'BTC' || net === 'BCH' || net === 'LTC') return 8;
+    if (net === 'SOL') return 9;
+    if (net === 'TRX' || net === 'XRP' || net === 'USDC' || net === 'USDT') return 6;
+    return 18; // Default for ETH, POL, BSC, etc.
+};
+
+const amountInBase = (amount: string, network: string): string => {
+    const val = parseFloat(amount);
+    if (isNaN(val) || val <= 0) return '0';
+    return `${val}`
+    // const decimals = getDecimals(network);
+    // return Math.round(val * Math.pow(10, decimals)).toString();
+};
+
+const amountFromBase = (amountBase: string, network: string): string => {
+    const val = parseFloat(amountBase);
+    if (isNaN(val) || val <= 0) return '0.00';
+    const decimals = getDecimals(network);
+    return (val / Math.pow(10, decimals)).toString();
 };
 
 
@@ -91,6 +115,11 @@ export const ExchangePage: React.FC = () => {
         queryFn: () => exchangeService.getExchangeHistory().catch(() => ({ success: false, data: [] })),
     });
 
+    const waasWalletsQuery = useQuery({
+        queryKey: ['waasWallets'],
+        queryFn: () => accountService.getWaaSWallets(),
+    });
+
     const liveRatesQuery = useQuery({
         queryKey: ['liveExchangeRates'],
         queryFn: async () => {
@@ -98,9 +127,12 @@ export const ExchangePage: React.FC = () => {
                 { from: 'EUR', to: 'USD' },
                 { from: 'GBP', to: 'USD' },
                 { from: 'GBP', to: 'EUR' },
-                { from: 'EUR', to: 'GBP' }
+                { from: 'EUR', to: 'GBP' },
+                { from: 'USDT', to: 'USDC' },
+                { from: 'BTC', to: 'ETH' },
+                { from: 'ETH', to: 'USDT' }
             ];
-            
+
             const results = await Promise.all(
                 pairs.map(async (p) => {
                     try {
@@ -138,6 +170,53 @@ export const ExchangePage: React.FC = () => {
             });
     }
 
+    // Map WaaS wallets
+    const waasAddressesData = waasWalletsQuery.data?.data?.addresses || waasWalletsQuery.data?.data || [];
+    if (Array.isArray(waasAddressesData)) {
+        waasAddressesData.forEach((w: any) => {
+            const balancesArr = Array.isArray(w.balances) ? w.balances : [];
+            
+            // 1. Map the native asset of the network
+            const nativeSymbol = w.network || 'POL';
+            const nativeBalObj = balancesArr.find((b: any) => b.symbol?.toUpperCase() === nativeSymbol.toUpperCase() || b.currency?.toUpperCase() === nativeSymbol.toUpperCase());
+            const nativeBalVal = nativeBalObj?.balance !== undefined ? parseFloat(nativeBalObj.balance.toString()) : 0;
+            const nativeFormattedBal = nativeBalObj?.formatted_balance || 
+                                       nativeBalObj?.formattedBalance || 
+                                       formatBalance(nativeBalVal, nativeSymbol);
+
+            walletsList.push({
+                id: nativeSymbol.toLowerCase(),
+                name: `${w.network} Wallet`,
+                code: nativeSymbol,
+                type: 'stablecoin',
+                balance: nativeFormattedBal,
+                rawBalance: nativeBalVal,
+                provider: 'waas'
+            });
+
+            // 2. Map other stablecoins/tokens in balances list (e.g., USDC, USDT)
+            balancesArr.forEach((b: any) => {
+                const sym = b.symbol || b.currency || '';
+                if (!sym || sym.toUpperCase() === nativeSymbol.toUpperCase()) return;
+
+                const balVal = b.balance !== undefined ? parseFloat(b.balance.toString()) : 0;
+                const formattedBal = b.formatted_balance || 
+                                     b.formattedBalance || 
+                                     formatBalance(balVal, sym);
+
+                walletsList.push({
+                    id: sym.toLowerCase(),
+                    name: `${sym} Wallet`,
+                    code: sym,
+                    type: 'stablecoin',
+                    balance: formattedBal,
+                    rawBalance: balVal,
+                    provider: 'waas'
+                });
+            });
+        });
+    }
+
     // Default configuration fallbacks
     const fromWallet = walletsList.find(w => w.id === fromWalletId) || walletsList[0] || {
         id: 'usd',
@@ -150,8 +229,8 @@ export const ExchangePage: React.FC = () => {
 
     const isFromFiat = fromWallet.type === 'fiat';
 
-    // Target wallets matching constraints: EUR, USD, GBP (excluding the selected From wallet)
-    const filteredToWallets = walletsList.filter(w => w.id !== fromWallet.id);
+    // Target wallets matching constraints: matching type (crypto/crypto or fiat/fiat) and excluding the selected From wallet
+    const filteredToWallets = walletsList.filter(w => w.id !== fromWallet.id && w.type === fromWallet.type);
 
     const toWallet = walletsList.find(w => w.id === toWalletId) || filteredToWallets[0] || walletsList[1] || {
         id: 'eur',
@@ -165,23 +244,42 @@ export const ExchangePage: React.FC = () => {
     // Auto update selection if violated
     useEffect(() => {
         if (walletsList.length > 0) {
-            if (fromWallet.id === toWallet.id) {
+            if (fromWallet.id === toWallet.id || fromWallet.type !== toWallet.type) {
                 const firstValid = filteredToWallets[0];
                 if (firstValid) {
                     setToWalletId(firstValid.id);
                 }
             }
         }
-    }, [fromWalletId, walletsList.length]);
+    }, [fromWalletId, walletsList.length, fromWallet.type, toWallet.type]);
+
+    const isCryptoSwap = fromWallet.type === 'stablecoin';
 
     // Live rates query
     const rateQuery = useQuery({
         queryKey: ['exchangeRate', fromWallet.code, toWallet.code],
         queryFn: () => exchangeService.getRate(fromWallet.code, toWallet.code),
-        enabled: !!fromWallet.code && !!toWallet.code && fromWallet.code !== toWallet.code && walletsList.length > 0,
+        enabled: !isCryptoSwap && !!fromWallet.code && !!toWallet.code && fromWallet.code !== toWallet.code && walletsList.length > 0,
     });
 
-    const activeRate = rateQuery.data?.success ? rateQuery.data.data.rate * rateMultiplier : 1.0 * rateMultiplier;
+    const cryptoRateQuery = useQuery({
+        queryKey: ['cryptoExchangeRate', fromWallet.code, toWallet.code, fromAmount],
+        queryFn: () => exchangeService.getWaaSSwapQuote({
+            fromChain: fromWallet.code,
+            toChain: toWallet.code,
+            fromToken: fromWallet.code,
+            toToken: toWallet.code,
+            amountIn: amountInBase(fromAmount || '1', fromWallet.code)
+        }),
+        enabled: isCryptoSwap && !!fromWallet.code && !!toWallet.code && fromWallet.code !== toWallet.code && walletsList.length > 0 && parseFloat(fromAmount || '0') > 0,
+        refetchInterval: 15000,
+    });
+
+    const activeRate = isCryptoSwap
+        ? (cryptoRateQuery.data?.success && cryptoRateQuery.data.data && parseFloat(cryptoRateQuery.data.data.fromAmount) > 0
+            ? (parseFloat(cryptoRateQuery.data.data.toAmountExpected) / parseFloat(cryptoRateQuery.data.data.fromAmount)) * (Math.pow(10, getDecimals(fromWallet.code)) / Math.pow(10, getDecimals(toWallet.code)))
+            : 1.0)
+        : (rateQuery.data?.success ? rateQuery.data.data.rate * rateMultiplier : 1.0 * rateMultiplier);
 
     // Estimate conversions
     useEffect(() => {
@@ -189,9 +287,19 @@ export const ExchangePage: React.FC = () => {
             setToAmount('');
             return;
         }
-        const val = parseFloat(fromAmount) * activeRate;
-        setToAmount(val.toFixed(toWallet.type === 'fiat' ? 2 : 6));
-    }, [fromAmount, fromWallet.code, toWallet.code, activeRate]);
+        if (isCryptoSwap) {
+            if (cryptoRateQuery.data?.success && cryptoRateQuery.data.data) {
+                const amtExpectedBase = cryptoRateQuery.data.data.toAmountExpected || '0';
+                const humanReadable = amountFromBase(amtExpectedBase, toWallet.code);
+                setToAmount(parseFloat(humanReadable).toFixed(6));
+            } else {
+                setToAmount('');
+            }
+        } else {
+            const val = parseFloat(fromAmount) * activeRate;
+            setToAmount(val.toFixed(2));
+        }
+    }, [fromAmount, fromWallet.code, toWallet.code, activeRate, isCryptoSwap, cryptoRateQuery.data]);
 
     // simulated live ticks
     useEffect(() => {
@@ -259,13 +367,42 @@ export const ExchangePage: React.FC = () => {
             if (data?.success) {
                 setIsConfirmOpen(false);
                 setIsSuccessOpen(true);
-                // invalidate accounts
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
-                queryClient.invalidateQueries({ queryKey: ['cryptoBalances'] });
+                queryClient.invalidateQueries({ queryKey: ['waasWallets'] });
+                queryClient.invalidateQueries({ queryKey: ['waasWalletsDetails'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
                 queryClient.invalidateQueries({ queryKey: ['exchangeHistory'] });
             } else {
                 toast.error(data?.error?.message || 'Failed to execute conversion.');
+            }
+        },
+        onError: (err: any) => {
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to convert.');
+            toast.error(msg);
+        }
+    });
+
+    const executeWaaSSwapMutation = useMutation({
+        mutationFn: () => exchangeService.executeWaaSSwap({
+            fromChain: fromWallet.code,
+            toChain: toWallet.code,
+            fromToken: fromWallet.code,
+            toToken: toWallet.code,
+            amountIn: amountInBase(fromAmount, fromWallet.code),
+            amountOutMin: cryptoRateQuery.data?.data?.toAmountMin || amountInBase((parseFloat(toAmount) * 0.99).toString(), toWallet.code) // 1% slippage fallback
+        }),
+        onSuccess: (data) => {
+            if (data?.success) {
+                setIsConfirmOpen(false);
+                setIsSuccessOpen(true);
+                queryClient.invalidateQueries({ queryKey: ['accounts'] });
+                queryClient.invalidateQueries({ queryKey: ['waasWallets'] });
+                queryClient.invalidateQueries({ queryKey: ['waasWalletsDetails'] });
+                queryClient.invalidateQueries({ queryKey: ['activity'] });
+                queryClient.invalidateQueries({ queryKey: ['exchangeHistory'] });
+            } else {
+                toast.error(data?.error?.message || 'Failed to execute swap.');
             }
         },
         onError: (err: any) => {
@@ -284,11 +421,33 @@ export const ExchangePage: React.FC = () => {
     const handleConvert = (e: React.FormEvent) => {
         e.preventDefault();
         if (!fromAmount || parseFloat(fromAmount) <= 0) return;
-        createQuoteMutation.mutate();
+        if (isCryptoSwap) {
+            if (!cryptoRateQuery.data?.success || !cryptoRateQuery.data.data) {
+                toast.error('No crypto swap rate quote available. Please wait a moment.');
+                return;
+            }
+            const q = cryptoRateQuery.data.data;
+            const feeVal = parseFloat(amountFromBase(q.platformFee || '0', fromWallet.code));
+            const targetVal = parseFloat(amountFromBase(q.toAmountExpected || '0', toWallet.code));
+            setConfirmQuote({
+                quoteId: 'waas-swap-quote',
+                rate: activeRate,
+                sourceAmount: parseFloat(fromAmount),
+                targetAmount: targetVal,
+                fee: feeVal,
+                expiresAt: new Date(Date.now() + 30000).toISOString()
+            });
+            setConfirmTimer(30);
+            setIsConfirmOpen(true);
+        } else {
+            createQuoteMutation.mutate();
+        }
     };
 
     const handleConfirmExchange = () => {
-        if (confirmQuote?.quoteId) {
+        if (isCryptoSwap) {
+            executeWaaSSwapMutation.mutate();
+        } else if (confirmQuote?.quoteId) {
             executeExchangeMutation.mutate(confirmQuote.quoteId);
         }
     };
@@ -543,7 +702,7 @@ export const ExchangePage: React.FC = () => {
                                         : "bg-slate-800 text-slate-550 cursor-not-allowed"
                                 )}
                             >
-                                {createQuoteMutation.isPending ? 'Requesting quote...' : 'Exchange Now'}
+                                {isCryptoSwap && cryptoRateQuery.isFetching ? 'Fetching swap rate...' : createQuoteMutation.isPending ? 'Requesting quote...' : 'Exchange Now'}
                             </button>
 
                         </div>
@@ -693,10 +852,10 @@ export const ExchangePage: React.FC = () => {
                     <div className="space-y-3 mt-auto">
                         <button
                             onClick={handleConfirmExchange}
-                            disabled={executeExchangeMutation.isPending}
+                            disabled={executeExchangeMutation.isPending || executeWaaSSwapMutation.isPending}
                             className="w-full bg-emerald-500 hover:bg-emerald-450 text-white font-bold text-sm py-4 rounded-xl shadow-lg transition duration-200 cursor-pointer active:scale-[0.98]"
                         >
-                            {executeExchangeMutation.isPending ? 'Executing Exchange...' : 'Confirm & Convert'}
+                            {executeExchangeMutation.isPending || executeWaaSSwapMutation.isPending ? 'Executing Exchange...' : 'Confirm & Convert'}
                         </button>
                         <button
                             onClick={() => setIsConfirmOpen(false)}

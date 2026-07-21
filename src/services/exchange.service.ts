@@ -90,6 +90,16 @@ class ExchangeService extends BaseService {
     const response = await this.api.get('/exchange/history');
     return response.data;
   }
+
+  async getWaaSSwapQuote(params: { fromChain: string; toChain: string; fromToken: string; toToken: string; amountIn: string }): Promise<any> {
+    const response = await this.api.get('/wallets/swap/quote', { params });
+    return response.data;
+  }
+
+  async executeWaaSSwap(payload: { fromChain: string; toChain: string; fromToken: string; toToken: string; amountIn: string; amountOutMin: string }): Promise<any> {
+    const response = await this.api.post('/wallets/swap/execute', payload);
+    return response.data;
+  }
 }
 
 export const exchangeService = new ExchangeService();

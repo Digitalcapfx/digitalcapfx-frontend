@@ -12,6 +12,7 @@ import { formatCurrencyByLocale } from '@/lib/utils'
 interface WalletDetailsPageClientProps {
     id: string;
     provider?: string;
+    network?: string;
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
@@ -30,26 +31,28 @@ const formatBalance = (amount: string | number, currency: string) => {
     return formatCurrencyByLocale(amount, currency);
 };
 
-export default function WalletDetailsPageClient({ id, provider }: WalletDetailsPageClientProps) {
+export default function WalletDetailsPageClient({ id, provider, network }: WalletDetailsPageClientProps) {
     const router = useRouter();
     const searchId = id.toUpperCase();
     const isWaaS = provider === 'waas';
     const isCrypto = searchId === 'USDC' || searchId === 'IUSD' || isWaaS;
     const apiSymbol = searchId === 'IUSD' ? 'iUSD' : searchId;
 
+    const queryNetwork = network ? network.toUpperCase() : searchId;
+
     // Fetch live wallet header details from abstracted endpoint router or WaaS details
     const detailQuery = useQuery({
-        queryKey: ['walletDetail', searchId, provider],
+        queryKey: ['walletDetail', searchId, provider, queryNetwork],
         queryFn: () => isWaaS 
-            ? accountService.getWaaSWalletDetail(searchId) 
+            ? accountService.getWaaSWalletDetail(queryNetwork) 
             : accountService.getWalletDetail(searchId),
     });
 
     // Fetch live transactions for specific fiat/stablecoin endpoint
     const txQuery = useQuery({
-        queryKey: ['walletTransactions', searchId, provider],
+        queryKey: ['walletTransactions', searchId, provider, queryNetwork],
         queryFn: () => isWaaS
-            ? accountService.getWaaSWalletTransactions(searchId)
+            ? accountService.getWaaSWalletTransactions(queryNetwork)
             : accountService.getWalletTransactions(searchId),
     });
 
@@ -59,7 +62,10 @@ export default function WalletDetailsPageClient({ id, provider }: WalletDetailsP
     if (detailQuery.data?.success && detailQuery.data.data) {
         const d = detailQuery.data.data;
         if (isWaaS) {
-            const balObj = d.wallet || d;
+            const balObj = searchId === queryNetwork
+                ? (d.wallet || d)
+                : (d.tokens?.find((t: any) => t.symbol?.toUpperCase() === searchId) || { balance: '0', symbol: searchId });
+
             const balSymbol = balObj?.symbol || searchId;
             const balVal = balObj?.balance !== undefined ? parseFloat(balObj.balance.toString()) : 0;
             activeWallet = {
@@ -67,9 +73,9 @@ export default function WalletDetailsPageClient({ id, provider }: WalletDetailsP
                 name: `${searchId} Wallet`,
                 code: balSymbol,
                 type: 'stablecoin',
-                balance: `${balVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${balSymbol}`,
+                balance: balObj?.formatted_balance || balObj?.formattedBalance || `${balVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${balSymbol}`,
                 rawBalance: balVal,
-                walletAddress: balObj?.address || d.address || '',
+                walletAddress: d.wallet?.address || d.address || '',
             };
         } else {
             const curCode = (isCrypto ? apiSymbol : d.currency) || searchId;

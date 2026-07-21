@@ -129,9 +129,9 @@ const InsightsAllocation: React.FC<InsightsAllocationProps> = ({ period }) => {
                             <span className="text-[11px] font-bold text-white font-mono mt-1 block">
                                 {formatCurrency(item.totalAmount)}
                             </span>
-                            <div className="flex justify-between text-[8px] text-slate-555 font-mono mt-1 pt-1 border-t border-white/[0.03]">
-                                <span>F: {item.fiatAmount > 0 ? `$${item.fiatAmount}` : '0'}</span>
-                                <span>C: {item.cryptoAmount > 0 ? `$${item.cryptoAmount}` : '0'}</span>
+                            <div className="flex flex-col space-y-0.5 text-[8px] text-slate-550 font-mono mt-1.5 pt-1.5 border-t border-white/[0.03] text-left">
+                                <span className='line-clamp-1 break-all'>F: {formatCurrency(item.fiatAmount)}</span>
+                                <span className='line-clamp-1 break-all'>C: {formatCurrency(item.cryptoAmount)}</span>
                             </div>
                         </div>
                     ))}
