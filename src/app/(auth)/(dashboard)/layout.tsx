@@ -33,6 +33,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { profileService } from '@/services/profile.service'
 import { authService } from '@/services/auth.service'
 import { toast } from 'sonner'
+import { useLanguageStore, Language } from '@/store/languageStore'
+import '@/lib/i18n'
 
 const SIDEBAR_LINKS = [
     { label: 'Overview', icon: LayoutDashboard, href: '/dashboard' },
@@ -50,6 +52,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const router = useRouter();
     const queryClient = useQueryClient();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const { t, language, setLanguage } = useLanguageStore();
 
     // Verification blocker states
     const [otpCode, setOtpCode] = useState('');
@@ -220,15 +224,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const isBusiness = accountType === 'business';
     const navigationLinks = [
-        { label: 'Overview', icon: LayoutDashboard, href: '/dashboard' },
-        { label: 'Wallets', icon: Wallet, href: '/wallets' },
-        { label: 'Airtime & Bills', icon: Smartphone, href: '/vtu' },
-        { label: 'Exchange', icon: RefreshCw, href: '/exchange' },
-        { label: 'Cards', icon: CreditCard, href: '/cards' },
-        { label: 'Activity', icon: Clock, href: '/activity' },
+        { label: t('nav.overview'), icon: LayoutDashboard, href: '/dashboard' },
+        { label: t('nav.wallets'), icon: Wallet, href: '/wallets' },
+        { label: t('nav.vtu'), icon: Smartphone, href: '/vtu' },
+        { label: t('nav.exchange'), icon: RefreshCw, href: '/exchange' },
+        { label: t('nav.cards'), icon: CreditCard, href: '/cards' },
+        { label: t('nav.activity'), icon: Clock, href: '/activity' },
         ...(isBusiness ? [{ label: 'Teams', icon: Users, href: '/teams' }] : []),
-        { label: 'Referrals', icon: Gift, href: '/referrals' },
-        { label: 'Support Desk', icon: HelpCircle, href: '/support' },
+        { label: t('nav.referrals'), icon: Gift, href: '/referrals' },
+        { label: t('nav.support'), icon: HelpCircle, href: '/support' },
     ];
     const initials = profile ? `${profile.firstName.slice(0, 1)}${profile.lastName.slice(0, 1)}`.toUpperCase() : 'US';
     const profileName = isBusiness ? (profile?.companyLegalName || 'Company') : `${profile?.firstName} ${profile?.lastName}`;
@@ -304,7 +308,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             )}
                         >
                             <Settings className="h-5 w-5" />
-                            <span>Settings</span>
+                            <span>{t('nav.settings')}</span>
                         </Link>
                     </div>
                 </div>
@@ -339,7 +343,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             className="w-full flex items-center space-x-3 px-4 py-2 text-xs font-semibold text-rose-455 hover:text-rose-350 transition rounded-lg"
                         >
                             <LogOut className="h-4 w-4" />
-                            <span>Sign out</span>
+                            <span>{t('nav.signout')}</span>
                         </button>
                     </div>
                 </div>
@@ -366,6 +370,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     {/* Notification & Avatar controls + Hamburger beside it on Mobile */}
                     <div className="flex items-center space-x-3 lg:space-x-4">
+                        <div className="relative select-none shrink-0">
+                            <select
+                                value={language}
+                                onChange={(e) => setLanguage(e.target.value as Language)}
+                                className="bg-[#0C1224] border border-white/10 rounded-xl px-2.5 py-1.5 text-[10px] font-bold text-slate-300 hover:text-white transition cursor-pointer focus:outline-none uppercase font-mono"
+                            >
+                                <option value="en">🇺🇸 EN</option>
+                                <option value="fr">🇫🇷 FR</option>
+                                <option value="es">🇪🇸 ES</option>
+                            </select>
+                        </div>
+
                         <Link
                             href="/settings/notifications"
                             className="relative w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition"

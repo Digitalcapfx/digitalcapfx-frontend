@@ -11,6 +11,7 @@ import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { toast } from 'sonner'
+import { useLanguageStore } from '@/store/languageStore'
 
 export interface Wallet {
     id: string;
@@ -46,6 +47,7 @@ const formatBalance = (amount: string | number, currency: string) => {
 };
 
 const WalletsPage: React.FC = () => {
+    const { t } = useLanguageStore();
     const router = useRouter();
     const queryClient = useQueryClient();
     const setBackPath = useNavigationStore((state) => state.setBackPath);
@@ -220,10 +222,10 @@ const WalletsPage: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between text-left gap-4 select-none">
                 <div className="space-y-1">
                     <h2 className="text-2xl font-black text-white font-satoshi">
-                        Wallets
+                        {t('nav.wallets')}
                     </h2>
                     <p className="text-xs font-semibold text-slate-500 font-sans">
-                        Manage fiat and on-chain crypto wallets
+                        {t('wallets.subtitle')}
                     </p>
                 </div>
                 <div className="flex items-center space-x-2.5">
@@ -232,14 +234,14 @@ const WalletsPage: React.FC = () => {
                         className="h-[40px] px-5 text-xs font-bold font-sans rounded-full bg-[#0C1224] border border-white/10 hover:border-white/20 text-slate-300 hover:text-white transition duration-200 cursor-pointer active:scale-95 flex items-center space-x-1.5"
                     >
                         <Send className="h-4 w-4 text-primary-400" />
-                        <span>Send</span>
+                        <span>{t('action.send')}</span>
                     </button>
                     <button
                         onClick={() => openReceive(null)}
                         className="h-[40px] px-5 text-xs font-bold font-sans rounded-full bg-[#0C1224] border border-white/10 hover:border-white/20 text-slate-300 hover:text-white transition duration-200 cursor-pointer active:scale-95 flex items-center space-x-1.5"
                     >
                         <ArrowDownLeft className="h-4.5 w-4.5 text-emerald-400" />
-                        <span>Receive</span>
+                        <span>{t('action.receive')}</span>
                     </button>
                 </div>
             </div>
@@ -255,7 +257,7 @@ const WalletsPage: React.FC = () => {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search wallets..."
+                        placeholder={t('wallets.search')}
                         className="bg-black/30 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-primary-500/50 w-full font-sans transition duration-200"
                     />
                 </div>
@@ -266,7 +268,7 @@ const WalletsPage: React.FC = () => {
                         className="bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition duration-200 cursor-pointer flex items-center space-x-1.5 shadow-lg active:scale-98"
                     >
                         <Plus className="h-4 w-4" />
-                        <span>Provision Wallet</span>
+                        <span>{t('action.provision')}</span>
                     </button>
                 )}
             </div>
@@ -283,7 +285,7 @@ const WalletsPage: React.FC = () => {
                     {instantUsdWallet && isMatchInstantUsd && (
                         <div className="space-y-4">
                             <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest block text-left select-none">
-                                Instant USD
+                                {t('section.instant')}
                             </span>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div
@@ -320,7 +322,7 @@ const WalletsPage: React.FC = () => {
                     {/* Fiat Accounts Section */}
                     <div className="space-y-4">
                         <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest block text-left select-none">
-                            Fiat Accounts
+                            {t('section.fiat')}
                         </span>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {filteredFiat.length > 0 ? (
@@ -355,7 +357,7 @@ const WalletsPage: React.FC = () => {
                                 ))
                             ) : (
                                 <div className="col-span-2 text-center p-8 bg-[#080E1E]/50 border border-dashed border-white/5 rounded-2xl">
-                                    <span className="text-xs font-semibold text-slate-500">No matching fiat accounts found</span>
+                                    <span className="text-xs font-semibold text-slate-500">{t('wallets.empty.fiat')}</span>
                                 </div>
                             )}
                         </div>
@@ -364,7 +366,7 @@ const WalletsPage: React.FC = () => {
                     {/* Crypto Wallets Section */}
                     <div className="space-y-4">
                         <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block text-left select-none">
-                            On-Chain Crypto Wallets
+                            {t('section.crypto')}
                         </span>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {filteredCrypto.length > 0 ? (
@@ -389,9 +391,7 @@ const WalletsPage: React.FC = () => {
                                                     {wallet.name}
                                                 </span>
                                                 <div className="flex items-center space-x-2">
-                                                    <span className="text-[10px] font-bold text-slate-550 tracking-wide">{wallet.code}</span>
-                                                    {/* <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-                                                    <span className="text-[10px] font-bold text-slate-550 uppercase font-mono text-[9px]">On-Chain</span> */}
+                                                    <span className="text-[10px] font-bold text-slate-555 tracking-wide">{wallet.code}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -402,7 +402,7 @@ const WalletsPage: React.FC = () => {
                                 ))
                             ) : (
                                 <div className="col-span-2 text-center p-8 bg-[#080E1E]/50 border border-dashed border-white/5 rounded-2xl">
-                                    <span className="text-xs font-semibold text-slate-550">No provisioned on-chain crypto wallets found</span>
+                                    <span className="text-xs font-semibold text-slate-550">{t('wallets.empty.crypto')}</span>
                                 </div>
                             )}
                         </div>

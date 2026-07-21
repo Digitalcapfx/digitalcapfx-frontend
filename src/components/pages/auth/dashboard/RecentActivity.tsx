@@ -5,12 +5,14 @@ import { ArrowDownLeft, Send, RefreshCw, CheckCircle, XCircle } from 'lucide-rea
 import { useQuery } from '@tanstack/react-query'
 import { transferService } from '@/services/transfer.service'
 import { cn, formatCurrencyByLocale } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 const formatBalance = (amount: string | number, currency: string) => {
     return formatCurrencyByLocale(amount, currency);
 };
 
 const RecentActivity: React.FC = () => {
+    const { t } = useLanguageStore();
     const activityQuery = useQuery({
         queryKey: ['activity'],
         queryFn: () => transferService.getActivity(),
@@ -25,13 +27,13 @@ const RecentActivity: React.FC = () => {
             
             {/* Header split */}
             <div className="flex justify-between items-center select-none">
-                <h3 className="font-satoshi font-bold text-base text-white">Recent Activity</h3>
+                <h3 className="font-satoshi font-bold text-base text-white">{t('section.recent')}</h3>
                 <button 
                     onClick={() => activityQuery.refetch()}
                     className="text-xs font-semibold text-primary-400 hover:text-primary-350 hover:underline flex items-center space-x-1"
                 >
                     <RefreshCw className={cn("h-3.5 w-3.5", activityQuery.isFetching && "animate-spin")} />
-                    <span>Refresh</span>
+                    <span>{t('action.refresh')}</span>
                 </button>
             </div>
 
@@ -39,7 +41,7 @@ const RecentActivity: React.FC = () => {
             {activityQuery.isLoading ? (
                 <div className="py-12 flex flex-col items-center justify-center space-y-2 select-none">
                     <div className="w-8 h-8 border-4 border-t-primary-500 border-white/10 rounded-full animate-spin"></div>
-                    <p className="text-[11px] text-slate-550 font-sans">Loading transaction logs...</p>
+                    <p className="text-[11px] text-slate-550 font-sans">{t('activity.loading')}</p>
                 </div>
             ) : txList.length > 0 ? (
                 <div className="space-y-4">
@@ -104,8 +106,8 @@ const RecentActivity: React.FC = () => {
                         <RefreshCw className="h-5 w-5 opacity-40" />
                     </div>
                     <div className="text-center space-y-0.5">
-                        <h4 className="text-xs font-bold text-white font-satoshi">No transactions yet</h4>
-                        <p className="text-[11px] text-slate-550 font-sans">Your activity will appear here</p>
+                        <h4 className="text-xs font-bold text-white font-satoshi">{t('activity.empty.title')}</h4>
+                        <p className="text-[11px] text-slate-550 font-sans">{t('activity.empty.subtitle')}</p>
                     </div>
                 </div>
             )}

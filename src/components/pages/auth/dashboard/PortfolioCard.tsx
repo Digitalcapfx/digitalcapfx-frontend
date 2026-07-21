@@ -5,8 +5,10 @@ import { Zap, Eye, EyeOff } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { exchangeService } from '@/services/exchange.service'
+import { useLanguageStore } from '@/store/languageStore'
 
 const PortfolioCard: React.FC = () => {
+    const { t } = useLanguageStore();
     const [showPortfolio, setShowPortfolio] = useState(true);
 
     const fiatQuery = useQuery({
@@ -69,7 +71,7 @@ const PortfolioCard: React.FC = () => {
                 <div className="space-y-1 text-left">
                     <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest flex items-center space-x-1.5">
                         <Zap className="h-3 w-3 text-primary-400" />
-                        <span>Total Portfolio</span>
+                        <span>{t('portfolio.total')}</span>
                     </span>
                     <div className="flex items-center space-x-3 pt-1">
                         <span className="text-3xl font-black text-white font-satoshi">
@@ -106,7 +108,7 @@ const PortfolioCard: React.FC = () => {
 
             {/* Bottom detail */}
             <div className="text-left text-[10px] font-bold text-slate-550 font-mono tracking-wide select-none pt-4">
-                Estimated value in USD
+                {t('portfolio.estimated')}
             </div>
         </div>
     );

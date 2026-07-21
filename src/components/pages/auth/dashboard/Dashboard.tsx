@@ -9,8 +9,10 @@ import PhoneSend from '../_components/PhoneSend'
 import RecentActivity from './RecentActivity'
 import { useQuery } from '@tanstack/react-query'
 import { profileService } from '@/services/profile.service'
+import { useLanguageStore } from '@/store/languageStore'
 
 const Dashboard: React.FC = () => {
+    const { t } = useLanguageStore();
     const profileQuery = useQuery({
         queryKey: ['profile'],
         queryFn: () => profileService.getProfile(),
@@ -31,7 +33,7 @@ const Dashboard: React.FC = () => {
             
             {/* Welcome greeting */}
             <div className="text-left space-y-1 select-none">
-                <span className="text-xs font-semibold text-slate-500 font-sans block">Welcome back</span>
+                <span className="text-xs font-semibold text-slate-500 font-sans block">{t('welcome.back')}</span>
                 <h2 className="text-2xl font-black text-white font-satoshi flex items-center space-x-1.5">
                     {profileQuery.isLoading ? (
                         <span className="inline-block w-32 h-6 bg-white/5 animate-pulse rounded"></span>

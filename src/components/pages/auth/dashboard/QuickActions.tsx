@@ -4,8 +4,10 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import { Send, ArrowDownLeft, RefreshCw, Zap } from 'lucide-react'
 import { useTransactionStore } from '@/store/transactionStore'
+import { useLanguageStore } from '@/store/languageStore'
 
 const QuickActions: React.FC = () => {
+    const { t } = useLanguageStore();
     const router = useRouter();
     const openSend = useTransactionStore((state) => state.openSend);
     const openReceive = useTransactionStore((state) => state.openReceive);
@@ -21,7 +23,7 @@ const QuickActions: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-primary-500/15 flex items-center justify-center text-primary-400">
                     <Send className="h-4 w-4" />
                 </div>
-                <span>Send Money</span>
+                <span>{t('action.sendmoney')}</span>
             </button>
             <button 
                 onClick={() => openReceive(null)}
@@ -30,7 +32,7 @@ const QuickActions: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400">
                     <ArrowDownLeft className="h-5 w-5" />
                 </div>
-                <span>Receive</span>
+                <span>{t('action.receive')}</span>
             </button>
             <button 
                 onClick={() => router.push('/exchange')}
@@ -39,7 +41,7 @@ const QuickActions: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-400">
                     <RefreshCw className="h-4 w-4" />
                 </div>
-                <span>Exchange</span>
+                <span>{t('nav.exchange')}</span>
             </button>
             <button 
                 onClick={openInstant}
@@ -48,7 +50,7 @@ const QuickActions: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400">
                     <Zap className="h-4 w-4" />
                 </div>
-                <span>Instant</span>
+                <span>{t('action.instant')}</span>
             </button>
         </div>
     );
