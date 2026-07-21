@@ -34,6 +34,7 @@ import { profileService } from '@/services/profile.service'
 import { authService } from '@/services/auth.service'
 import { toast } from 'sonner'
 import { useLanguageStore, Language } from '@/store/languageStore'
+import { Select } from '@/components/ui/Select'
 import '@/lib/i18n'
 
 const SIDEBAR_LINKS = [
@@ -370,29 +371,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     {/* Notification & Avatar controls + Hamburger beside it on Mobile */}
                     <div className="flex items-center space-x-3 lg:space-x-4">
-                        <div className="relative select-none shrink-0">
-                            <select
+                        <div className="relative select-none shrink-0 w-[95px]">
+                            <Select
+                                options={[
+                                    { value: 'en', label: '🇺🇸 EN' },
+                                    { value: 'fr', label: '🇫🇷 FR' },
+                                    { value: 'es', label: '🇪🇸 ES' }
+                                ]}
                                 value={language}
-                                onChange={(e) => setLanguage(e.target.value as Language)}
-                                className="bg-[#0C1224] border border-white/10 rounded-xl px-2.5 py-1.5 text-[10px] font-bold text-slate-300 hover:text-white transition cursor-pointer focus:outline-none uppercase font-mono"
-                            >
-                                <option value="en">🇺🇸 EN</option>
-                                <option value="fr">🇫🇷 FR</option>
-                                <option value="es">🇪🇸 ES</option>
-                            </select>
+                                onChange={(val) => setLanguage(val as Language)}
+                                searchable={false}
+                                className="h-[36px] text-[10px] uppercase font-mono px-2 py-1 bg-black/40"
+                            />
                         </div>
 
-                        <Link
+                        {/* <Link
                             href="/settings/notifications"
                             className="relative w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition"
                         >
                             <Bell className="h-4 w-4" />
                             <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary-400"></span>
-                        </Link>
+                        </Link> */}
 
                         <Link
                             href="/settings"
-                            className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center font-bold text-white text-xs select-none hover:opacity-90 transition cursor-pointer active:scale-95"
+                            className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center font-bold text-white text-xs select-none hover:opacity-90 transition cursor-pointer active:scale-95 max-[400px]:hidden"
                         >
                             {initials}
                         </Link>

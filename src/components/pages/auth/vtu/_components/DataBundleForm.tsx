@@ -7,6 +7,7 @@ import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
+import { Select } from '@/components/ui/Select'
 
 const OPERATORS = ['MTN', 'Orange', 'Moov', 'Airtel', 'Nexttel'];
 
@@ -126,38 +127,31 @@ export const DataBundleForm: React.FC<DataBundleFormProps> = ({ currency, isPend
                 error={errors.phone}
             />
 
-            <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t('vtu.data.bundlePack')}</label>
-                <select
-                    value={bundleId}
-                    onChange={(e) => {
-                        setBundleId(e.target.value);
-                        clearError('bundleId');
-                    }}
-                    className="bg-black/35 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-semibold [&>option]:bg-[#080E1E]"
-                >
-                    <option value="" disabled>{t('vtu.data.selectOption')}</option>
-                    {activeBundles.map(bundle => (
-                        <option key={bundle.id} value={bundle.id}>
-                            {bundle.name}
-                        </option>
-                    ))}
-                </select>
-                {errors.bundleId && (
-                    <p className="text-xs text-red-500 font-semibold mt-1">
-                        {errors.bundleId}
-                    </p>
-                )}
-            </div>
+            <Select
+                label={t('vtu.data.bundlePack')}
+                options={activeBundles.map(bundle => ({
+                    value: bundle.id,
+                    label: bundle.name
+                }))}
+                value={bundleId}
+                onChange={(val) => {
+                    setBundleId(val);
+                    clearError('bundleId');
+                }}
+                searchable={false}
+                placeholder={t('vtu.data.selectOption')}
+                error={errors.bundleId}
+            />
 
             <div className="pt-2">
                 <Button
                     type="submit"
-                    disabled={isPending || !bundleId}
+                    isLoading={isPending}
+                    disabled={!bundleId}
                     className="w-full rounded-xl h-[52px] font-bold text-base shadow-lg shadow-primary-500/10"
                     rightIcon={<ArrowRight className="h-5 w-5" />}
                 >
-                    {isPending ? t('vtu.btn.processing') : t('vtu.data.submit')}
+                    {t('vtu.data.submit')}
                 </Button>
             </div>
         </form>

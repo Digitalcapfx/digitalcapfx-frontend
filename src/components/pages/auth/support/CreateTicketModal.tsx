@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useLanguageStore } from '@/store/languageStore';
+import { Select } from '@/components/ui/Select';
 
 interface CreateTicketModalProps {
     isOpen: boolean;
@@ -25,6 +26,15 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
         category: 'general',
         message: ''
     });
+
+    const categoryOptions = [
+        { value: 'general', label: t('support.faq.cat.general') },
+        { value: 'account', label: t('support.faq.cat.account') },
+        { value: 'payment', label: t('support.faq.cat.payment') },
+        { value: 'kyc', label: t('support.create.categoryKyc') },
+        { value: 'technical', label: t('support.faq.cat.technical') },
+        { value: 'card', label: t('support.create.categoryCards') }
+    ];
 
     if (!isOpen) return null;
 
@@ -56,7 +66,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
 
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('support.create.subjectLabel')}</label>
+                        <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('support.create.subjectLabel')}</label>
                         <input
                             type="text"
                             required
@@ -67,24 +77,16 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                         />
                     </div>
 
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('support.create.categoryLabel')}</label>
-                        <select
-                            value={form.category}
-                            onChange={(e) => setForm({ ...form, category: e.target.value })}
-                            className="bg-[#0C1224] border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none w-full cursor-pointer"
-                        >
-                            <option value="general">{t('support.faq.cat.general')}</option>
-                            <option value="account">{t('support.faq.cat.account')}</option>
-                            <option value="payment">{t('support.faq.cat.payment')}</option>
-                            <option value="kyc">{t('support.create.categoryKyc')}</option>
-                            <option value="technical">{t('support.faq.cat.technical')}</option>
-                            <option value="card">{t('support.create.categoryCards')}</option>
-                        </select>
-                    </div>
+                    <Select
+                        label={t('support.create.categoryLabel')}
+                        options={categoryOptions}
+                        value={form.category}
+                        onChange={(val) => setForm({ ...form, category: val })}
+                        searchable={false}
+                    />
 
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('support.create.messageLabel')}</label>
+                        <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('support.create.messageLabel')}</label>
                         <textarea
                             required
                             rows={4}
@@ -107,10 +109,10 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                         <Button
                             type="submit"
                             variant="primary"
-                            disabled={isPending}
+                            isLoading={isPending}
                             className="w-1/2 rounded-xl h-11 text-xs"
                         >
-                            {isPending ? t('support.create.btn.submitting') : t('support.create.btn.submit')}
+                            {t('support.create.btn.submit')}
                         </Button>
                     </div>
                 </form>

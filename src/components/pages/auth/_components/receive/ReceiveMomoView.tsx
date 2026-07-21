@@ -7,6 +7,8 @@ import { NumberInput } from '@/components/ui/NumberInput'
 import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { Wallet } from '../ReceiveMoneySheet'
 import { useLanguageStore } from '@/store/languageStore'
+import { Select } from '@/components/ui/Select'
+import { Button } from '@/components/ui/Button'
 
 interface ReceiveMomoViewProps {
     activeWallet: Wallet;
@@ -41,6 +43,18 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
 }) => {
     const { t } = useLanguageStore();
 
+    const currencyOptions = [
+        { value: 'XOF', label: 'XOF (West African CFA)' },
+        { value: 'XAF', label: 'XAF (Central African CFA)' }
+    ];
+
+    const operatorOptions = [
+        { value: 'MTN', label: 'MTN Mobile Money' },
+        { value: 'Orange', label: 'Orange Money' },
+        { value: 'Moov', label: 'Moov Money' },
+        { value: 'Wave', label: 'Wave' }
+    ];
+
     return (
         <div className="space-y-5 animate-in fade-in duration-200">
             {depositSuccess ? (
@@ -61,31 +75,23 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
             ) : (
                 <form onSubmit={onSubmit} className="space-y-4">
                     {isCrypto && (
-                        <div className="space-y-1.5 animate-in fade-in duration-200">
-                            <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block font-sans">{t('receive.momo.paymentCurrency')}</span>
-                            <select
+                        <div className="animate-in fade-in duration-200">
+                            <Select
+                                label={t('receive.momo.paymentCurrency')}
+                                options={currencyOptions}
                                 value={fundingCurrency}
-                                onChange={(e) => setFundingCurrency(e.target.value as 'XOF' | 'XAF')}
-                                className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans select-none"
-                            >
-                                <option value="XOF">XOF (West African CFA)</option>
-                                <option value="XAF">XAF (Central African CFA)</option>
-                            </select>
+                                onChange={(val) => setFundingCurrency(val as 'XOF' | 'XAF')}
+                                searchable={false}
+                            />
                         </div>
                     )}
-                    <div className="space-y-1.5">
-                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('receive.momo.operator')}</span>
-                        <select
-                            value={operator}
-                            onChange={(e) => setOperator(e.target.value)}
-                            className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans select-none"
-                        >
-                            <option value="MTN">MTN Mobile Money</option>
-                            <option value="Orange">Orange Money</option>
-                            <option value="Moov">Moov Money</option>
-                            <option value="Wave">Wave</option>
-                        </select>
-                    </div>
+                    <Select
+                        label={t('receive.momo.operator')}
+                        options={operatorOptions}
+                        value={operator}
+                        onChange={setOperator}
+                        searchable={false}
+                    />
                     <PhoneInput
                         required
                         label={t('receive.momo.phone')}
@@ -106,18 +112,14 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
                         />
                     </div>
 
-                    <button
+                    <Button
                         type="submit"
-                        disabled={isPending || !depositAmount || !phone}
-                        className={cn(
-                            "w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg transition duration-200 cursor-pointer active:scale-[0.98] mt-2",
-                            (depositAmount && phone && !isPending)
-                                ? "bg-primary-500 hover:bg-primary-450 text-white shadow-primary-500/10"
-                                : "bg-slate-800 text-slate-555 cursor-not-allowed"
-                        )}
+                        isLoading={isPending}
+                        disabled={!depositAmount || !phone}
+                        className="w-full h-[52px] rounded-xl font-bold text-sm shadow-lg shadow-primary-500/10 mt-2"
                     >
-                        {isPending ? t('receive.momo.btn.requesting') : t('receive.momo.btn.initiate')}
-                    </button>
+                        {t('receive.momo.btn.initiate')}
+                    </Button>
                 </form>
             )}
         </div>

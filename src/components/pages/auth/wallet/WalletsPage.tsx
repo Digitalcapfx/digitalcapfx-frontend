@@ -12,6 +12,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
+import { Select } from '@/components/ui/Select'
+import { Button } from '@/components/ui/Button'
 
 export interface Wallet {
     id: string;
@@ -429,27 +431,24 @@ const WalletsPage: React.FC = () => {
                         </p>
 
                         <form onSubmit={handleCreateWallet} className="space-y-4">
-                            <div className="space-y-1.5 select-none">
-                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Select Network*</span>
-                                <select
-                                    value={selectedNetwork}
-                                    onChange={(e) => setSelectedNetwork(e.target.value)}
-                                    className="bg-[#080E1E] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans cursor-pointer"
-                                >
-                                    {availableNetworks.map(net => (
-                                        <option key={net} value={net}>{net} Network</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <Select
+                                label="Select Network*"
+                                options={availableNetworks.map(net => ({
+                                    value: net,
+                                    label: `${net} Network`
+                                }))}
+                                value={selectedNetwork}
+                                onChange={setSelectedNetwork}
+                                searchable={false}
+                            />
 
-                            <button
+                            <Button
                                 type="submit"
-                                disabled={provisionMutation.isPending}
-                                className="w-full bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs py-3.5 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center space-x-2 shadow-lg disabled:cursor-not-allowed"
+                                isLoading={provisionMutation.isPending}
+                                className="w-full font-bold text-xs h-[48px] rounded-xl shadow-lg mt-2"
                             >
-                                {provisionMutation.isPending && <RefreshCw className="h-4.5 w-4.5 animate-spin" />}
-                                <span>{provisionMutation.isPending ? 'Provisioning Seed...' : 'Generate Wallet'}</span>
-                            </button>
+                                Generate Wallet
+                            </Button>
                         </form>
                     </div>
                 </div>

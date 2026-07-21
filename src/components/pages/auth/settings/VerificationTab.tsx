@@ -11,6 +11,7 @@ import { uploadService } from '@/services/upload.service'
 import { FileUpload } from '@/components/ui/FileUpload'
 import { FilePreviewDialog } from '@/components/ui/FilePreviewDialog'
 import { useLanguageStore } from '@/store/languageStore'
+import { Select } from '@/components/ui/Select'
 
 const loadSumsubScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -318,19 +319,18 @@ export const VerificationTab: React.FC = () => {
 
                         <form onSubmit={handleManualSubmit} className="space-y-4 pt-1">
                             {/* Document Type Dropdown */}
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('settings.verification.docType')}</label>
-                                <select
-                                    value={manualDocType}
-                                    onChange={(e) => setManualDocType(e.target.value as any)}
-                                    className="bg-black/35 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-semibold [&>option]:bg-[#080E1E]"
-                                >
-                                    <option value="national_id">{t('settings.verification.docs.nationalId')}</option>
-                                    <option value="passport">{t('settings.verification.docs.passport')}</option>
-                                    <option value="selfie">{t('settings.verification.docs.selfie')}</option>
-                                    <option value="proof_of_address">{t('settings.verification.docs.address')}</option>
-                                </select>
-                            </div>
+                            <Select
+                                label={t('settings.verification.docType')}
+                                options={[
+                                    { value: 'national_id', label: t('settings.verification.docs.nationalId') },
+                                    { value: 'passport', label: t('settings.verification.docs.passport') },
+                                    { value: 'selfie', label: t('settings.verification.docs.selfie') },
+                                    { value: 'proof_of_address', label: t('settings.verification.docs.address') }
+                                ]}
+                                value={manualDocType}
+                                onChange={(val) => setManualDocType(val as any)}
+                                searchable={false}
+                            />
 
                             {/* Reusable File Upload Input */}
                             <FileUpload
@@ -344,11 +344,11 @@ export const VerificationTab: React.FC = () => {
                             {/* Submit Action */}
                             <Button
                                 type="submit"
-                                disabled={!docUrl || manualUploading}
+                                isLoading={manualUploading}
+                                disabled={!docUrl}
                                 className="w-full rounded-xl h-[46px] text-xs font-bold"
-                                leftIcon={manualUploading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                             >
-                                {manualUploading ? t('settings.verification.submitting') : t('settings.verification.submitDoc')}
+                                {t('settings.verification.submitDoc')}
                             </Button>
                         </form>
                     </div>

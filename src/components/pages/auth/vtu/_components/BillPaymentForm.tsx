@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
+import { Select } from '@/components/ui/Select'
 
 const BILLERS = [
     { id: 'ENEO', name: 'ENEO (Cameroon Electricity)' },
@@ -58,20 +59,16 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({ currency, isPe
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t('vtu.bill.provider')}</label>
-                <select
-                    value={billerId}
-                    onChange={(e) => setBillerId(e.target.value)}
-                    className="bg-black/35 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary-500/50 w-full font-semibold [&>option]:bg-[#080E1E]"
-                >
-                    {BILLERS.map(biller => (
-                        <option key={biller.id} value={biller.id}>
-                            {biller.name}
-                        </option>
-                    ))}
-                </select>
-            </div>
+            <Select
+                label={t('vtu.bill.provider')}
+                options={BILLERS.map(biller => ({
+                    value: biller.id,
+                    label: biller.name
+                }))}
+                value={billerId}
+                onChange={setBillerId}
+                searchable={false}
+            />
 
             <Input 
                 required
@@ -89,7 +86,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({ currency, isPe
                 <label className="text-xs font-semibold text-slate-400 block tracking-wide">
                     {t('vtu.bill.amountLabel', { currency })}
                 </label>
-                <div className="relative flex items-center">
+                <div className="relative">
                     <NumberInput 
                         required
                         placeholder={t('vtu.bill.amountPlaceholder')}
@@ -114,11 +111,11 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({ currency, isPe
             <div className="pt-2">
                 <Button
                     type="submit"
-                    disabled={isPending}
+                    isLoading={isPending}
                     className="w-full rounded-xl h-[52px] font-bold text-base shadow-lg shadow-primary-500/10"
                     rightIcon={<ArrowRight className="h-5 w-5" />}
                 >
-                    {isPending ? t('vtu.btn.processing') : t('vtu.bill.submit')}
+                    {t('vtu.bill.submit')}
                 </Button>
             </div>
         </form>

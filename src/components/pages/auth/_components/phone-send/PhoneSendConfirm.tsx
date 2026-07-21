@@ -75,11 +75,10 @@ export const PhoneSendConfirm: React.FC<PhoneSendConfirmProps> = ({
             <div className="pt-2 space-y-2">
                 <Button
                     onClick={onConfirm}
-                    disabled={isPending}
+                    isLoading={isPending}
                     className="w-full rounded-xl h-[48px] font-semibold text-sm shadow-md"
-                    leftIcon={isPending && <RefreshCw className="h-4 w-4 animate-spin" />}
                 >
-                    {isPending ? t('phone.send.confirm.processing') : t('phone.send.confirm.btn.send')}
+                    {t('phone.send.confirm.btn.send')}
                 </Button>
             </div>
         </div>

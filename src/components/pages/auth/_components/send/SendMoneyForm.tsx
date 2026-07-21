@@ -10,6 +10,7 @@ import { Wallet } from '../SendMoneySheet'
 import { Beneficiary } from '@/services/withdrawal.service'
 import { Button } from '@/components/ui/Button'
 import { useLanguageStore } from '@/store/languageStore'
+import { Select } from '@/components/ui/Select'
 
 interface SendMoneyFormProps {
     walletsList: Wallet[];
@@ -47,7 +48,6 @@ interface SendMoneyFormProps {
     onSubmit: (e: React.FormEvent) => void;
     isFormValid: boolean;
 }
-
 export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
     walletsList,
     activeWallet,
@@ -85,6 +85,22 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
     isFormValid,
 }) => {
     const { t } = useLanguageStore();
+
+    const operatorOptionsCrypto = [
+        { value: 'DigitalCap', label: t('send.form.operatorDigitalCap') },
+        { value: 'MTN', label: 'MTN Mobile Money' },
+        { value: 'Orange', label: 'Orange Money' },
+        { value: 'Moov', label: 'Moov Money' },
+        { value: 'Wave', label: 'Wave' }
+    ];
+
+    const operatorOptionsFiat = [
+        { value: 'DigitalCap', label: t('send.form.operatorDigitalCap') },
+        { value: 'Orange', label: 'Orange Money' },
+        { value: 'MTN', label: 'MTN MoMo' },
+        { value: 'Moov', label: 'Moov Money' },
+        { value: 'Wave', label: 'Wave' }
+    ];
 
     return (
         <form onSubmit={onSubmit} className="space-y-6 flex flex-col justify-between h-full text-left">
@@ -165,7 +181,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                     <div className="space-y-4 animate-in fade-in duration-200">
                         {activeWallet.provider === 'waas' ? (
                             <div className="space-y-1.5 animate-in fade-in duration-200">
-                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('send.form.recipientAddress', { code: activeWallet.code })}</span>
+                                <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('send.form.recipientAddress', { code: activeWallet.code })}</span>
                                 <input
                                     type="text"
                                     required
@@ -178,7 +194,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                         ) : (
                             <>
                                 <div className="space-y-1.5">
-                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('send.form.transferMethod')}</span>
+                                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('send.form.transferMethod')}</span>
                                     <div className="flex bg-black/30 border border-white/15 p-1 rounded-xl">
                                         <button
                                             type="button"
@@ -231,28 +247,20 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                             value={cryptoAddress}
                                             onChange={setCryptoAddress}
                                         />
-                                        <div className="space-y-1.5">
-                                            <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('send.form.operator')}</span>
-                                            <select
-                                                value={operator}
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    if (val === 'DigitalCap') {
-                                                        setCryptoSendMode('phone');
-                                                    } else {
-                                                        setCryptoSendMode('withdraw');
-                                                        setOperator(val);
-                                                    }
-                                                }}
-                                                className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans select-none"
-                                            >
-                                                <option value="DigitalCap">{t('send.form.operatorDigitalCap')}</option>
-                                                <option value="MTN">MTN Mobile Money</option>
-                                                <option value="Orange">Orange Money</option>
-                                                <option value="Moov">Moov Money</option>
-                                                <option value="Wave">Wave</option>
-                                            </select>
-                                        </div>
+                                        <Select
+                                            label={t('send.form.operator')}
+                                            options={operatorOptionsCrypto}
+                                            value={operator}
+                                            onChange={(val) => {
+                                                if (val === 'DigitalCap') {
+                                                    setCryptoSendMode('phone');
+                                                } else {
+                                                    setCryptoSendMode('withdraw');
+                                                    setOperator(val);
+                                                }
+                                            }}
+                                            searchable={false}
+                                        />
                                     </div>
                                 )}
                             </>
@@ -345,28 +353,20 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
 
                                 {isMobileMoney ? (
                                     /* Mobile Money Network Selector */
-                                    <div className="space-y-1.5">
-                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('send.form.momoOperator')}</span>
-                                        <select
-                                            value={operator}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setOperator(val);
-                                                if (val === 'DigitalCap') {
-                                                    setIsInternal(true);
-                                                } else {
-                                                    setIsInternal(false);
-                                                }
-                                            }}
-                                            className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans cursor-pointer"
-                                        >
-                                            <option value="DigitalCap">{t('send.form.operatorDigitalCap')}</option>
-                                            <option value="Orange">Orange Money</option>
-                                            <option value="MTN">MTN MoMo</option>
-                                            <option value="Moov">Moov Money</option>
-                                            <option value="Wave">Wave</option>
-                                        </select>
-                                    </div>
+                                    <Select
+                                        label={t('send.form.momoOperator')}
+                                        options={operatorOptionsFiat}
+                                        value={operator}
+                                        onChange={(val) => {
+                                            setOperator(val);
+                                            if (val === 'DigitalCap') {
+                                                setIsInternal(true);
+                                            } else {
+                                                setIsInternal(false);
+                                            }
+                                        }}
+                                        searchable={false}
+                                    />
                                 ) : !isInternal && (
                                     /* Standard bank wire inputs */
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

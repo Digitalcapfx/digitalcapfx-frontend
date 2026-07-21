@@ -21,6 +21,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { teamService, TeamMember } from '@/services/team.service'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
+import { Select } from '@/components/ui/Select'
 import { cn } from '@/lib/utils'
 
 export const TeamsPage: React.FC = () => {
@@ -228,17 +229,19 @@ export const TeamsPage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-white/5 pt-3.5 gap-3.5 text-xs">
                   <div className="flex items-center space-x-2">
                     <ShieldCheck className="h-4 w-4 text-primary-400" />
-                    <div>
-                      <span className="text-[9px] text-slate-550 block font-bold uppercase tracking-wider">Access Tier</span>
-                      <select
+                    <div className="w-[120px]">
+                      <Select
+                        label="Access Tier"
+                        options={[
+                          { value: 'manager', label: 'Manager' },
+                          { value: 'developer', label: 'Developer' },
+                          { value: 'viewer', label: 'Viewer' }
+                        ]}
                         value={member.role}
-                        onChange={(e) => updateRoleMutation.mutate({ id: member.id, role: e.target.value })}
-                        className="bg-[#0C1224] border border-white/10 rounded-lg px-2 py-1 text-[11px] font-bold text-white focus:outline-none cursor-pointer mt-0.5 capitalize"
-                      >
-                        <option value="manager">Manager</option>
-                        <option value="developer">Developer</option>
-                        <option value="viewer">Viewer</option>
-                      </select>
+                        onChange={(val) => updateRoleMutation.mutate({ id: member.id, role: val })}
+                        searchable={false}
+                        className="h-[36px] py-1 px-2.5 text-[11px]"
+                      />
                     </div>
                   </div>
 
@@ -316,18 +319,17 @@ export const TeamsPage: React.FC = () => {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Access Role</label>
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as any)}
-                  className="bg-[#0C1224] border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none w-full cursor-pointer capitalize"
-                >
-                  <option value="manager">Manager (Full Operations)</option>
-                  <option value="developer">Developer (API Keys)</option>
-                  <option value="viewer">Viewer (Read-only)</option>
-                </select>
-              </div>
+              <Select
+                label="Access Role"
+                options={[
+                  { value: 'manager', label: 'Manager (Full Operations)' },
+                  { value: 'developer', label: 'Developer (API Keys)' },
+                  { value: 'viewer', label: 'Viewer (Read-only)' }
+                ]}
+                value={inviteRole}
+                onChange={(val) => setInviteRole(val as any)}
+                searchable={false}
+              />
 
               <Button
                 type="submit"

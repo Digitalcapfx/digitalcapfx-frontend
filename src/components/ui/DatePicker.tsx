@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Select } from "./Select";
+import { Button } from "./Button";
 
 export interface DatePickerProps {
   value: string; // Expected format: YYYY-MM-DD
@@ -109,7 +111,27 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const nextMonthDaysCount = totalGridCells - (prevMonthDays.length + currentMonthDays.length);
   const nextMonthDays = Array.from({ length: nextMonthDaysCount }, (_, i) => i + 1);
 
+  const isFutureDate = (day: number, monthOffset = 0) => {
+    let targetMonth = currentViewMonth + monthOffset;
+    let targetYear = currentViewYear;
+
+    if (targetMonth < 0) {
+      targetMonth = 11;
+      targetYear -= 1;
+    } else if (targetMonth > 11) {
+      targetMonth = 0;
+      targetYear += 1;
+    }
+
+    const d = new Date(targetYear, targetMonth, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return d > today;
+  };
+
   const handleDateSelect = (day: number, monthOffset = 0) => {
+    if (isFutureDate(day, monthOffset)) return;
+
     let targetMonth = currentViewMonth + monthOffset;
     let targetYear = currentViewYear;
 
@@ -137,13 +159,22 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         setCurrentViewMonth(prev => prev - 1);
       }
     } else {
-      if (currentViewMonth === 11) {
-        setCurrentViewMonth(0);
-        setCurrentViewYear(prev => prev + 1);
-      } else {
-        setCurrentViewMonth(prev => prev + 1);
+      if (direction === "next") {
+        if (!canNavigateNext()) return;
+        if (currentViewMonth === 11) {
+          setCurrentViewMonth(0);
+          setCurrentViewYear(prev => prev + 1);
+        } else {
+          setCurrentViewMonth(prev => prev + 1);
+        }
       }
     }
+  };
+
+  const canNavigateNext = () => {
+    const today = new Date();
+    const nextMonthFirst = new Date(currentViewYear, currentViewMonth + 1, 1);
+    return nextMonthFirst <= today;
   };
 
   const isToday = (day: number) => {
@@ -160,6 +191,32 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       d.getMonth() === currentViewMonth &&
       d.getFullYear() === currentViewYear;
   };
+
+  const handleYearChange = (yearVal: string) => {
+    const year = parseInt(yearVal);
+    setCurrentViewYear(year);
+    if (year === currentYear) {
+      const thisMonth = new Date().getMonth();
+      if (currentViewMonth > thisMonth) {
+        setCurrentViewMonth(thisMonth);
+      }
+    }
+  };
+
+  const allowedMonths = MONTHS.map((m, idx) => ({
+    value: idx.toString(),
+    label: m.slice(0, 3)
+  })).filter((_, idx) => {
+    if (currentViewYear === currentYear) {
+      return idx <= new Date().getMonth();
+    }
+    return true;
+  });
+
+  const allowedYears = YEARS.map(y => ({
+    value: y.toString(),
+    label: y.toString()
+  }));
 
   return (
     <div className={cn("w-full space-y-1.5 text-left relative", className)} ref={containerRef}>
@@ -201,37 +258,35 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               <ChevronLeft className="h-4 w-4" />
             </button>
 
-            {/* Quick selectors for Month & Year */}
-            <div className="flex items-center space-x-1.5 select-none">
-              <select
-                value={currentViewMonth}
-                onChange={(e) => setCurrentViewMonth(parseInt(e.target.value))}
-                className="bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none cursor-pointer font-bold"
-              >
-                {MONTHS.map((m, idx) => (
-                  <option key={m} value={idx} className="bg-[#0C1224] text-white font-semibold">
-                    {m.slice(0, 3)}
-                  </option>
-                ))}
-              </select>
+            {/* Quick selectors for Month & Year using custom Select component */}
+            <div className="flex items-center space-x-1.5 select-none z-50">
+              <div className="w-[75px]">
+                <Select
+                  options={allowedMonths}
+                  value={currentViewMonth.toString()}
+                  onChange={(val) => setCurrentViewMonth(parseInt(val))}
+                  searchable={false}
+                  className="h-[32px] text-xs py-1 px-2 text-white bg-black/40 border-white/10 hover:border-slate-500/50"
+                />
+              </div>
 
-              <select
-                value={currentViewYear}
-                onChange={(e) => setCurrentViewYear(parseInt(e.target.value))}
-                className="bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none cursor-pointer font-bold font-mono"
-              >
-                {YEARS.map(y => (
-                  <option key={y} value={y} className="bg-[#0C1224] text-white font-semibold font-mono">
-                    {y}
-                  </option>
-                ))}
-              </select>
+              <div className="w-[85px]">
+                <Select
+                  options={allowedYears}
+                  value={currentViewYear.toString()}
+                  onChange={handleYearChange}
+                  searchable={true}
+                  searchPlaceholder="Year..."
+                  className="h-[32px] text-xs py-1 px-2 text-white bg-black/40 border-white/10 hover:border-slate-500/50"
+                />
+              </div>
             </div>
 
             <button
               type="button"
+              disabled={!canNavigateNext()}
               onClick={() => navigateMonth("next")}
-              className="p-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white transition cursor-pointer"
+              className="p-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white transition cursor-pointer disabled:opacity-20 disabled:pointer-events-none"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -240,7 +295,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           {/* Weekday Labels */}
           <div className="grid grid-cols-7 gap-1 text-center mb-2 select-none">
             {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(day => (
-              <span key={day} className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block py-1 font-mono">
+              <span key={day} className="text-[10px] font-extrabold text-slate-550 uppercase tracking-wider block py-1 font-mono">
                 {day}
               </span>
             ))}
@@ -249,73 +304,89 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           {/* Grid Cells */}
           <div className="grid grid-cols-7 gap-1">
             {/* Previous Month Days */}
-            {prevMonthDays.map(day => (
-              <button
-                key={`prev-${day}`}
-                type="button"
-                onClick={() => handleDateSelect(day, -1)}
-                className="h-8 text-xs font-semibold text-slate-700 hover:text-slate-400 transition rounded-lg hover:bg-white/[0.02] cursor-pointer font-mono"
-              >
-                {day}
-              </button>
-            ))}
+            {prevMonthDays.map(day => {
+              const disabledDay = isFutureDate(day, -1);
+              return (
+                <button
+                  key={`prev-${day}`}
+                  type="button"
+                  disabled={disabledDay}
+                  onClick={() => handleDateSelect(day, -1)}
+                  className="h-8 text-xs font-semibold text-slate-700 hover:text-slate-400 transition rounded-lg hover:bg-white/[0.02] cursor-pointer font-mono disabled:opacity-10 disabled:pointer-events-none"
+                >
+                  {day}
+                </button>
+              );
+            })}
 
             {/* Current Month Days */}
-            {currentMonthDays.map(day => (
-              <button
-                key={`current-${day}`}
-                type="button"
-                onClick={() => handleDateSelect(day, 0)}
-                className={cn(
-                  "h-8 text-xs font-bold transition rounded-lg cursor-pointer font-mono relative",
-                  isToday(day) && "text-primary-400 after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary-500",
-                  isSelected(day)
-                    ? "bg-primary-500 text-white shadow-md shadow-primary-500/20"
-                    : "text-slate-350 hover:bg-white/5 hover:text-white"
-                )}
-              >
-                {day}
-              </button>
-            ))}
+            {currentMonthDays.map(day => {
+              const disabledDay = isFutureDate(day, 0);
+              return (
+                <button
+                  key={`current-${day}`}
+                  type="button"
+                  disabled={disabledDay}
+                  onClick={() => handleDateSelect(day, 0)}
+                  className={cn(
+                    "h-8 text-xs font-bold transition rounded-lg cursor-pointer font-mono relative disabled:opacity-10 disabled:pointer-events-none",
+                    isToday(day) && "text-primary-400 after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary-500",
+                    isSelected(day)
+                      ? "bg-primary-500 text-white shadow-md shadow-primary-500/20"
+                      : "text-slate-350 hover:bg-white/5 hover:text-white"
+                  )}
+                >
+                  {day}
+                </button>
+              );
+            })}
 
             {/* Next Month Days */}
-            {nextMonthDays.map(day => (
-              <button
-                key={`next-${day}`}
-                type="button"
-                onClick={() => handleDateSelect(day, 1)}
-                className="h-8 text-xs font-semibold text-slate-700 hover:text-slate-400 transition rounded-lg hover:bg-white/[0.02] cursor-pointer font-mono"
-              >
-                {day}
-              </button>
-            ))}
+            {nextMonthDays.map(day => {
+              const disabledDay = isFutureDate(day, 1);
+              return (
+                <button
+                  key={`next-${day}`}
+                  type="button"
+                  disabled={disabledDay}
+                  onClick={() => handleDateSelect(day, 1)}
+                  className="h-8 text-xs font-semibold text-slate-700 hover:text-slate-400 transition rounded-lg hover:bg-white/[0.02] cursor-pointer font-mono disabled:opacity-10 disabled:pointer-events-none"
+                >
+                  {day}
+                </button>
+              );
+            })}
           </div>
 
           {/* Footer controls */}
           <div className="flex items-center justify-between mt-3.5 pt-3 border-t border-white/[0.03] text-[10px] font-bold">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="small"
               onClick={() => {
                 onChange("");
                 setIsOpen(false);
               }}
-              className="text-rose-455 hover:underline cursor-pointer"
+              className="text-rose-455 hover:underline cursor-pointer h-7 text-[10px] px-2"
             >
               Clear
-            </button>
+            </Button>
             
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="small"
               onClick={() => {
                 const today = new Date();
                 const formatted = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
                 onChange(formatted);
                 setIsOpen(false);
               }}
-              className="text-primary-400 hover:underline cursor-pointer"
+              className="text-primary-400 hover:underline cursor-pointer h-7 text-[10px] px-2"
             >
               Today
-            </button>
+            </Button>
           </div>
 
         </div>

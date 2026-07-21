@@ -5,6 +5,7 @@ import { Search, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { FAQ } from '@/services/support.service';
 import { cn } from '@/lib/utils';
 import { useLanguageStore } from '@/store/languageStore';
+import { Select } from '@/components/ui/Select';
 
 interface FAQSectionProps {
     faqList: FAQ[];
@@ -46,15 +47,18 @@ export const FAQSection: React.FC<FAQSectionProps> = ({
                     />
                 </div>
 
-                <select
-                    value={selectedCategory}
-                    onChange={(e) => onCategoryChange(e.target.value)}
-                    className="bg-[#0C1224] border border-[#131B30] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none cursor-pointer"
-                >
-                    {categories.map(c => (
-                        <option key={c} value={c}>{t('support.faq.cat.' + c).toUpperCase()}</option>
-                    ))}
-                </select>
+                <div className="sm:w-[180px]">
+                    <Select
+                        options={categories.map(c => ({
+                            value: c,
+                            label: t('support.faq.cat.' + c).toUpperCase()
+                        }))}
+                        value={selectedCategory}
+                        onChange={onCategoryChange}
+                        searchable={false}
+                        className="h-[44px] text-xs py-2 px-3"
+                    />
+                </div>
             </div>
 
             <div className="space-y-4">

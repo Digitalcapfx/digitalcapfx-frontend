@@ -4,6 +4,7 @@ import React from 'react'
 import { Download, CheckCircle2 } from 'lucide-react'
 import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
+import { Button } from '@/components/ui/Button'
 
 interface PhoneSendSuccessProps {
     amount: string;
@@ -82,19 +83,21 @@ export const PhoneSendSuccess: React.FC<PhoneSendSuccessProps> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-2">
-                <button
+                <Button
                     onClick={handleDownloadReceipt}
-                    className="bg-transparent hover:bg-white/[0.02] border border-white/15 text-white font-bold text-xs py-3 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center space-x-1.5"
+                    variant="ghost"
+                    leftIcon={<Download className="h-4 w-4 text-slate-400" />}
+                    className="border border-white/15 h-[44px] rounded-xl text-xs"
                 >
-                    <Download className="h-4 w-4 text-slate-400" />
-                    <span>{t('phone.send.success.btn.receipt')}</span>
-                </button>
-                <button
+                    {t('phone.send.success.btn.receipt')}
+                </Button>
+                <Button
                     onClick={handleReset}
-                    className="bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs py-3 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center space-x-1.5 active:scale-[0.98]"
+                    variant="primary"
+                    className="h-[44px] rounded-xl text-xs"
                 >
-                    <span>{t('phone.send.success.btn.done')}</span>
-                </button>
+                    {t('phone.send.success.btn.done')}
+                </Button>
             </div>
         </div>
     );
