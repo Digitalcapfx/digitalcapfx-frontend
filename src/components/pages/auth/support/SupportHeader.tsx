@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { supportService } from '@/services/support.service';
 import { cn } from '@/lib/utils';
+import { useLanguageStore } from '@/store/languageStore';
 
 export const SupportHeader: React.FC = () => {
     const pathname = usePathname();
@@ -20,14 +21,16 @@ export const SupportHeader: React.FC = () => {
         ? ticketsQuery.data.data.tickets.length
         : 0;
 
+    const { t } = useLanguageStore();
+
     return (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <h1 className="font-satoshi font-black text-2xl text-white tracking-tight">
-                    Support Desk
+                    {t('support.header.title')}
                 </h1>
                 <p className="text-slate-400 text-xs font-semibold mt-1">
-                    Find answers to frequently asked questions or open a ticket with our compliance agents.
+                    {t('support.header.subtitle')}
                 </p>
             </div>
 
@@ -39,7 +42,7 @@ export const SupportHeader: React.FC = () => {
                         !isTicketsActive ? "bg-primary-500 text-white shadow-md" : "text-slate-400 hover:text-white"
                     )}
                 >
-                    FAQs & Links
+                    {t('support.header.tab.faqs')}
                 </Link>
                 <Link
                     href="/support/tickets"
@@ -48,7 +51,7 @@ export const SupportHeader: React.FC = () => {
                         isTicketsActive ? "bg-primary-500 text-white shadow-md" : "text-slate-400 hover:text-white"
                     )}
                 >
-                    Help Tickets ({ticketsCount})
+                    {t('support.header.tab.tickets', { count: ticketsCount })}
                 </Link>
             </div>
         </div>

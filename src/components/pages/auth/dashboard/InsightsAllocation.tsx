@@ -4,11 +4,11 @@ import React from 'react'
 import { RefreshCw, Wallet, ShieldAlert, Sparkles, TrendingUp, TrendingDown, ArrowUpRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { insightsService } from '@/services/insights.service'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrencyByLocale } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 const formatCurrency = (val: number) => {
-    const value = val ?? 0;
-    return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return formatCurrencyByLocale(val ?? 0, 'USD');
 };
 
 interface InsightsAllocationProps {
@@ -16,6 +16,8 @@ interface InsightsAllocationProps {
 }
 
 const InsightsAllocation: React.FC<InsightsAllocationProps> = ({ period }) => {
+    const { t } = useLanguageStore();
+
     const insightsQuery = useQuery({
         queryKey: ['insights', period],
         queryFn: () => insightsService.getInsights(period),
@@ -25,7 +27,7 @@ const InsightsAllocation: React.FC<InsightsAllocationProps> = ({ period }) => {
         return (
             <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 flex flex-col items-center justify-center min-h-[280px]">
                 <RefreshCw className="h-6 w-6 text-primary-400 animate-spin" />
-                <span className="text-[10px] font-bold text-slate-550 mt-2 tracking-wider">Loading portfolio insights...</span>
+                <span className="text-[10px] font-bold text-slate-555 mt-2 tracking-wider">{t('insights.allocation.loading')}</span>
             </div>
         );
     }
@@ -35,7 +37,7 @@ const InsightsAllocation: React.FC<InsightsAllocationProps> = ({ period }) => {
         return (
             <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 flex items-center space-x-3 text-xs text-rose-455">
                 <ShieldAlert className="h-5 w-5 shrink-0" />
-                <span>Could not load asset allocation data.</span>
+                <span>{t('insights.allocation.error')}</span>
             </div>
         );
     }
@@ -63,8 +65,8 @@ const InsightsAllocation: React.FC<InsightsAllocationProps> = ({ period }) => {
                             <Sparkles className="h-4.5 w-4.5" />
                         </div>
                         <div>
-                            <h3 className="font-satoshi font-bold text-base text-white">Portfolio Allocation</h3>
-                            <span className="text-[10px] font-semibold text-slate-500">Asset distribution</span>
+                            <h3 className="font-satoshi font-bold text-base text-white">{t('insights.allocation.title')}</h3>
+                            <span className="text-[10px] font-semibold text-slate-500">{t('insights.allocation.subtitle')}</span>
                         </div>
                     </div>
 
@@ -97,7 +99,7 @@ const InsightsAllocation: React.FC<InsightsAllocationProps> = ({ period }) => {
                         <div className="space-y-0.5">
                             <div className="flex items-center space-x-1.5">
                                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-                                <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider">Fiat Balance</span>
+                                <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider">{t('insights.allocation.fiatBalance')}</span>
                             </div>
                             <div className="font-bold text-white font-mono text-sm pl-4">
                                 {formatCurrency(allocation.fiatUsd)}
@@ -108,7 +110,7 @@ const InsightsAllocation: React.FC<InsightsAllocationProps> = ({ period }) => {
                         <div className="space-y-0.5">
                             <div className="flex items-center space-x-1.5">
                                 <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span>
-                                <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider">Crypto Balance</span>
+                                <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider">{t('insights.allocation.cryptoBalance')}</span>
                             </div>
                             <div className="font-bold text-white font-mono text-sm pl-4">
                                 {formatCurrency(allocation.cryptoUsd)}
@@ -121,17 +123,19 @@ const InsightsAllocation: React.FC<InsightsAllocationProps> = ({ period }) => {
 
             {/* Spending Breakdown by Type */}
             <div className="space-y-3 pt-3 border-t border-white/5 select-none">
-                <span className="text-[9px] font-bold text-slate-550 uppercase tracking-widest block">Outflow Breakdown</span>
+                <span className="text-[9px] font-bold text-slate-550 uppercase tracking-widest block">{t('insights.allocation.outflowBreakdown')}</span>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {(data.spendingByType || []).map((item) => (
                         <div key={item.type} className="bg-black/20 border border-white/5 rounded-xl p-3.5 text-center flex flex-col justify-between">
-                            <span className="text-[10px] font-bold text-slate-500 capitalize">{item.label}</span>
+                            <span className="text-[10px] font-bold text-slate-500 capitalize">
+                                {t(`insights.allocation.category.${(item.type || '').toLowerCase()}`, { defaultValue: item.label })}
+                            </span>
                             <span className="text-[11px] font-bold text-white font-mono mt-1 block">
                                 {formatCurrency(item.totalAmount)}
                             </span>
-                            <div className="flex flex-col space-y-0.5 text-[8px] text-slate-550 font-mono mt-1.5 pt-1.5 border-t border-white/[0.03] text-left">
-                                <span className='line-clamp-1 break-all'>F: {formatCurrency(item.fiatAmount)}</span>
-                                <span className='line-clamp-1 break-all'>C: {formatCurrency(item.cryptoAmount)}</span>
+                            <div className="flex flex-col space-y-0.5 text-[8px] text-slate-555 font-mono mt-1.5 pt-1.5 border-t border-white/[0.03] text-left">
+                                <span className='line-clamp-1 break-all'>{t('insights.allocation.fiatShort')}: {formatCurrency(item.fiatAmount)}</span>
+                                <span className='line-clamp-1 break-all'>{t('insights.allocation.cryptoShort')}: {formatCurrency(item.cryptoAmount)}</span>
                             </div>
                         </div>
                     ))}

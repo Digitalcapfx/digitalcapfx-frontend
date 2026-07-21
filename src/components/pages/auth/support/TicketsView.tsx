@@ -9,12 +9,14 @@ import { toast } from 'sonner';
 import { TicketsSidebar } from './TicketsSidebar';
 import { MessageDesk } from './MessageDesk';
 import { CreateTicketModal } from './CreateTicketModal';
+import { useLanguageStore } from '@/store/languageStore';
 
 interface TicketsViewProps {
     ticketId?: string;
 }
 
 export const TicketsView: React.FC<TicketsViewProps> = ({ ticketId }) => {
+    const { t } = useLanguageStore();
     const queryClient = useQueryClient();
     const router = useRouter();
 
@@ -40,7 +42,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({ ticketId }) => {
         mutationFn: (payload: { subject: string; category: string; message: string }) =>
             supportService.createTicket(payload),
         onSuccess: (res) => {
-            toast.success('Support ticket created successfully!');
+            toast.success(t('support.toast.createSuccess'));
             setIsCreateOpen(false);
             queryClient.invalidateQueries({ queryKey: ['ticketsList'] });
             if (res?.data?.id) {
@@ -49,7 +51,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({ ticketId }) => {
                 router.push('/support/tickets');
             }
         },
-        onError: () => toast.error('Failed to open support ticket.')
+        onError: () => toast.error(t('support.toast.createError'))
     });
 
     const sendReplyMutation = useMutation({
@@ -59,7 +61,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({ ticketId }) => {
             setReplyMsg('');
             queryClient.invalidateQueries({ queryKey: ['ticketDetails', activeTicketId] });
         },
-        onError: () => toast.error('Failed to send reply message.')
+        onError: () => toast.error(t('support.toast.replyError'))
     });
 
     const handleCreateSubmit = (payload: { subject: string; category: string; message: string }) => {

@@ -5,8 +5,10 @@ import CashflowStats from './CashflowStats'
 import InsightsAllocation from './InsightsAllocation'
 import { cn } from '@/lib/utils'
 import { Calendar } from 'lucide-react'
+import { useLanguageStore } from '@/store/languageStore'
 
 const InsightsContainer: React.FC = () => {
+    const { t } = useLanguageStore();
     const [period, setPeriod] = useState<'1w' | '1m' | '3m' | '6m'>('1m');
 
     const periods: { id: '1w' | '1m' | '3m' | '6m'; label: string }[] = [
@@ -23,8 +25,8 @@ const InsightsContainer: React.FC = () => {
                 <div className="flex items-center space-x-2">
                     <Calendar className="h-4.5 w-4.5 text-primary-400 animate-pulse" />
                     <div>
-                        <h3 className="font-satoshi font-black text-md text-white tracking-wide">Performance Insights</h3>
-                        <span className="text-[10px] text-slate-500 font-semibold block">Filtered for active period</span>
+                        <h3 className="font-satoshi font-black text-md text-white tracking-wide">{t('dashboard.insights.title')}</h3>
+                        <span className="text-[10px] text-slate-500 font-semibold block">{t('dashboard.insights.subtitle')}</span>
                     </div>
                 </div>
                 

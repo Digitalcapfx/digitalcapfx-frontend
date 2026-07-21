@@ -4,6 +4,7 @@ import React from 'react';
 import { MessageSquare, Loader2, Shield, User, Send } from 'lucide-react';
 import { SupportTicket } from '@/services/support.service';
 import { cn } from '@/lib/utils';
+import { useLanguageStore } from '@/store/languageStore';
 
 interface MessageDeskProps {
     activeTicketId: string | null;
@@ -26,6 +27,8 @@ export const MessageDesk: React.FC<MessageDeskProps> = ({
     isSending,
     getStatusColor
 }) => {
+    const { t } = useLanguageStore();
+
     return (
         <div className="lg:col-span-2 bg-[#0C1224] border border-[#131B30] rounded-3xl p-5 shadow-xl flex flex-col h-full min-h-[500px] justify-between relative">
             {activeTicketId ? (
@@ -33,10 +36,10 @@ export const MessageDesk: React.FC<MessageDeskProps> = ({
                     <div className="border-b border-white/[0.03] pb-3 mb-3 flex items-center justify-between">
                         <div>
                             <h4 className="font-satoshi font-black text-sm text-white">
-                                {activeTicket?.subject || 'Ticket Details'}
+                                {activeTicket?.subject || t('support.desk.ticketDetails')}
                             </h4>
-                            <span className="text-[9.5px] text-slate-500 font-semibold block uppercase mt-0.5">
-                                Category: {activeTicket?.category}
+                            <span className="text-[9.5px] text-slate-550 font-semibold block uppercase mt-0.5">
+                                {t('support.desk.categoryLabel', { category: activeTicket ? t('support.faq.cat.' + activeTicket.category) : '' })}
                             </span>
                         </div>
                         {activeTicket && (
@@ -50,7 +53,7 @@ export const MessageDesk: React.FC<MessageDeskProps> = ({
                         {isLoading ? (
                             <div className="flex justify-center items-center py-20 text-xs text-slate-500 space-x-1.5">
                                 <Loader2 className="h-4 w-4 animate-spin text-primary-400" />
-                                <span>Syncing messages...</span>
+                                <span>{t('support.desk.syncing')}</span>
                             </div>
                         ) : activeTicket?.messages && activeTicket.messages.length > 0 ? (
                             activeTicket.messages.map((msg) => {
@@ -84,7 +87,7 @@ export const MessageDesk: React.FC<MessageDeskProps> = ({
                                 );
                             })
                         ) : (
-                            <p className="text-xs text-slate-555 text-center py-16">No messages in this ticket yet.</p>
+                            <p className="text-xs text-slate-555 text-center py-16">{t('support.desk.empty')}</p>
                         )}
                     </div>
 
@@ -93,7 +96,7 @@ export const MessageDesk: React.FC<MessageDeskProps> = ({
                             type="text"
                             value={replyMsg}
                             onChange={(e) => onReplyMsgChange(e.target.value)}
-                            placeholder="Type reply message..."
+                            placeholder={t('support.desk.replyPlaceholder')}
                             disabled={isSending || activeTicket?.status === 'closed'}
                             className="bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-primary-500/50 flex-1"
                         />
@@ -109,9 +112,9 @@ export const MessageDesk: React.FC<MessageDeskProps> = ({
             ) : (
                 <div className="flex-1 flex flex-col items-center justify-center py-20 text-center select-none space-y-3">
                     <MessageSquare className="h-9 w-9 text-slate-700" />
-                    <h4 className="text-sm font-bold text-white leading-none">Support Conversation Desk</h4>
+                    <h4 className="text-sm font-bold text-white leading-none">{t('support.desk.welcomeTitle')}</h4>
                     <p className="text-[11px] text-slate-555 max-w-xs leading-normal">
-                        Select an active support ticket from the sidebar to chat with an agent, or open a new support desk ticket.
+                        {t('support.desk.welcomeDesc')}
                     </p>
                 </div>
             )}

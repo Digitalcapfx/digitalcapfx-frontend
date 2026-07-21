@@ -6,6 +6,7 @@ import { PhoneInput } from '@/components/ui/PhoneInput'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { Wallet } from '../ReceiveMoneySheet'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface ReceiveMomoViewProps {
     activeWallet: Wallet;
@@ -38,6 +39,8 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
     isPending,
     onSubmit,
 }) => {
+    const { t } = useLanguageStore();
+
     return (
         <div className="space-y-5 animate-in fade-in duration-200">
             {depositSuccess ? (
@@ -46,9 +49,12 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
                         <CheckCircle2 className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
-                        <h4 className="text-sm font-bold text-white">Deposit Request Sent</h4>
+                        <h4 className="text-sm font-bold text-white">{t('receive.momo.success.title')}</h4>
                         <p className="text-xs text-slate-400 leading-relaxed">
-                            Please authorize the checkout prompt of {formatCurrencyByLocale(depositAmount, activeWallet.code)} MTN/Orange request on your phone.
+                            {t('receive.momo.success.desc', {
+                                amount: formatCurrencyByLocale(depositAmount, activeWallet.code),
+                                operator: operator
+                            })}
                         </p>
                     </div>
                 </div>
@@ -56,7 +62,7 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
                 <form onSubmit={onSubmit} className="space-y-4">
                     {isCrypto && (
                         <div className="space-y-1.5 animate-in fade-in duration-200">
-                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block font-sans">Payment Currency*</span>
+                            <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block font-sans">{t('receive.momo.paymentCurrency')}</span>
                             <select
                                 value={fundingCurrency}
                                 onChange={(e) => setFundingCurrency(e.target.value as 'XOF' | 'XAF')}
@@ -68,7 +74,7 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
                         </div>
                     )}
                     <div className="space-y-1.5">
-                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Operator*</span>
+                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('receive.momo.operator')}</span>
                         <select
                             value={operator}
                             onChange={(e) => setOperator(e.target.value)}
@@ -82,13 +88,15 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
                     </div>
                     <PhoneInput
                         required
-                        label="Phone Number*"
-                        placeholder="Enter phone"
+                        label={t('receive.momo.phone')}
+                        placeholder={t('receive.momo.phonePlaceholder')}
                         value={phone}
                         onChange={setPhone}
                     />
                     <div className="space-y-1.5">
-                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Deposit Amount ({isCrypto ? fundingCurrency : activeWallet.code})*</span>
+                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">
+                            {t('receive.momo.amountLabel', { code: isCrypto ? fundingCurrency : activeWallet.code })}
+                        </span>
                         <NumberInput
                             required
                             value={depositAmount}
@@ -105,10 +113,10 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
                             "w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg transition duration-200 cursor-pointer active:scale-[0.98] mt-2",
                             (depositAmount && phone && !isPending)
                                 ? "bg-primary-500 hover:bg-primary-450 text-white shadow-primary-500/10"
-                                : "bg-slate-800 text-slate-550 cursor-not-allowed"
+                                : "bg-slate-800 text-slate-555 cursor-not-allowed"
                         )}
                     >
-                        {isPending ? 'Requesting Deposit...' : 'Initiate Deposit'}
+                        {isPending ? t('receive.momo.btn.requesting') : t('receive.momo.btn.initiate')}
                     </button>
                 </form>
             )}

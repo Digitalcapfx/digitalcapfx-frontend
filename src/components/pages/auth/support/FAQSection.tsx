@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Search, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { FAQ } from '@/services/support.service';
 import { cn } from '@/lib/utils';
+import { useLanguageStore } from '@/store/languageStore';
 
 interface FAQSectionProps {
     faqList: FAQ[];
@@ -22,6 +23,7 @@ export const FAQSection: React.FC<FAQSectionProps> = ({
     searchQuery,
     onSearchChange
 }) => {
+    const { t } = useLanguageStore();
     const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);
     const categories = ['all', 'general', 'account', 'payment', 'kyc', 'technical', 'card'];
 
@@ -39,7 +41,7 @@ export const FAQSection: React.FC<FAQSectionProps> = ({
                         type="text"
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
-                        placeholder="Search FAQs by keyword..."
+                        placeholder={t('support.faq.searchPlaceholder')}
                         className="bg-[#0C1224] border border-[#131B30] rounded-xl pl-9.5 pr-4 py-2.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-primary-500/50 w-full"
                     />
                 </div>
@@ -50,7 +52,7 @@ export const FAQSection: React.FC<FAQSectionProps> = ({
                     className="bg-[#0C1224] border border-[#131B30] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none cursor-pointer"
                 >
                     {categories.map(c => (
-                        <option key={c} value={c}>{c.toUpperCase()}</option>
+                        <option key={c} value={c}>{t('support.faq.cat.' + c).toUpperCase()}</option>
                     ))}
                 </select>
             </div>
@@ -59,11 +61,11 @@ export const FAQSection: React.FC<FAQSectionProps> = ({
                 {isLoading ? (
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6.5 shadow-xl py-16 flex items-center justify-center space-x-2 text-xs text-slate-500">
                         <Loader2 className="h-4 w-4 animate-spin text-primary-400" />
-                        <span>Loading FAQ database...</span>
+                        <span>{t('support.faq.loading')}</span>
                     </div>
                 ) : filteredFAQs.length === 0 ? (
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6.5 shadow-xl">
-                        <p className="text-xs text-slate-500 py-8 text-center select-none">No FAQs found matching keyword.</p>
+                        <p className="text-xs text-slate-500 py-8 text-center select-none">{t('support.faq.empty')}</p>
                     </div>
                 ) : (
                     filteredFAQs.map((faq) => {

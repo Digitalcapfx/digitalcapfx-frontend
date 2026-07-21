@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 import { SupportTicket } from '@/services/support.service';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { useLanguageStore } from '@/store/languageStore';
 
 interface TicketsSidebarProps {
     ticketsList: SupportTicket[];
@@ -22,6 +23,8 @@ export const TicketsSidebar: React.FC<TicketsSidebarProps> = ({
     onOpenCreate,
     getStatusColor
 }) => {
+    const { t } = useLanguageStore();
+
     return (
         <div className="space-y-4 flex flex-col h-full min-h-[500px]">
             <Button
@@ -29,15 +32,15 @@ export const TicketsSidebar: React.FC<TicketsSidebarProps> = ({
                 className="w-full rounded-xl py-3 text-xs font-bold"
                 leftIcon={<Plus className="h-4 w-4" />}
             >
-                Open Support Ticket
+                {t('support.tickets.openButton')}
             </Button>
 
             <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-5 shadow-xl flex-1 overflow-y-auto max-h-[500px] space-y-3">
-                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block font-mono border-b border-white/[0.03] pb-2">Active Tickets</span>
+                <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block font-mono border-b border-white/[0.03] pb-2">{t('support.tickets.activeTitle')}</span>
                 {isLoading ? (
-                    <p className="text-xs text-slate-500 py-6 text-center">Loading tickets...</p>
+                    <p className="text-xs text-slate-500 py-6 text-center">{t('support.tickets.loading')}</p>
                 ) : ticketsList.length === 0 ? (
-                    <p className="text-xs text-slate-600 py-8 text-center">No support tickets found.</p>
+                    <p className="text-xs text-slate-600 py-8 text-center">{t('support.tickets.empty')}</p>
                 ) : (
                     <div className="space-y-2">
                         {ticketsList.map((ticket) => (
@@ -56,7 +59,7 @@ export const TicketsSidebar: React.FC<TicketsSidebarProps> = ({
                                     </span>
                                 </div>
                                 <div className="flex justify-between text-[9px] text-slate-555 font-semibold mt-2.5">
-                                    <span className="uppercase">{ticket.category}</span>
+                                    <span className="uppercase">{t('support.faq.cat.' + ticket.category)}</span>
                                     <span className="font-mono">{new Date(ticket.createdAt).toLocaleDateString()}</span>
                                 </div>
                             </Link>

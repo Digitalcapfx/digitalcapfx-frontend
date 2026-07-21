@@ -9,6 +9,7 @@ import { accountService } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
 import { withdrawalService, Beneficiary, InitiateWithdrawalRequest, WithdrawalQuoteRequest } from '@/services/withdrawal.service'
 import { toast } from 'sonner'
+import { useLanguageStore } from '@/store/languageStore'
 
 // Import subcomponents
 import { SendMoneyForm } from './send/SendMoneyForm'
@@ -73,6 +74,7 @@ const toSmallestUnit = (amountStr: string, network: string): string => {
 };
 
 export const SendMoneySheet: React.FC = () => {
+    const { t } = useLanguageStore();
     const queryClient = useQueryClient();
     const { isSendOpen, closeSend, sendDefaultWalletId } = useTransactionStore();
 
@@ -848,8 +850,8 @@ export const SendMoneySheet: React.FC = () => {
         <Sheet
             isOpen={isSendOpen}
             onClose={closeSend}
-            title="Send Money"
-            description="Send fiat or stablecoins anywhere in the world"
+            title={t('send.sheet.title')}
+            description={t('send.sheet.desc')}
         >
             {renderStep()}
         </Sheet>

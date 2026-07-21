@@ -10,6 +10,7 @@ import { Select, SelectOption } from '@/components/ui/Select'
 import { getCountries, isValidPhoneNumber } from 'react-phone-number-input'
 import { PhoneInput } from '@/components/ui/PhoneInput'
 import en from 'react-phone-number-input/locale/en.json'
+import { useLanguageStore } from '@/store/languageStore'
 
 const enLabels = en as Record<string, string>;
 const COUNTRY_OPTIONS: SelectOption[] = getCountries()
@@ -32,6 +33,7 @@ const getCountryNameByCode = (code: string): string => {
 };
 
 export const ProfileTab: React.FC = () => {
+    const { t } = useLanguageStore();
     const queryClient = useQueryClient();
 
     const profileQuery = useQuery({
@@ -68,15 +70,15 @@ export const ProfileTab: React.FC = () => {
         }) => profileService.updateProfile(payload),
         onSuccess: (data) => {
             if (data?.success) {
-                toast.success('Profile details updated successfully!');
+                toast.success(t('settings.profile.toast.success'));
                 queryClient.invalidateQueries({ queryKey: ['profile'] });
             } else {
-                toast.error(data?.error?.message || 'Failed to save changes.');
+                toast.error(data?.error?.message || t('settings.profile.toast.failed'));
             }
         },
         onError: (err: any) => {
             const rawError = err.response?.data?.error;
-            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to save profile changes.');
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || t('settings.profile.toast.error'));
             toast.error(msg);
         }
     });
@@ -86,7 +88,7 @@ export const ProfileTab: React.FC = () => {
         setPhoneError('');
 
         if (phoneNumber && !isValidPhoneNumber(phoneNumber)) {
-            setPhoneError('Please enter a valid phone number');
+            setPhoneError(t('settings.profile.phoneError'));
             return;
         }
 
@@ -103,7 +105,7 @@ export const ProfileTab: React.FC = () => {
         return (
             <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-8 flex flex-col items-center justify-center min-h-[300px]">
                 <RefreshCw className="h-8 w-8 text-primary-400 animate-spin" />
-                <span className="text-xs font-bold text-slate-500 mt-3 select-none">Loading your profile details...</span>
+                <span className="text-xs font-bold text-slate-500 mt-3 select-none">{t('settings.profile.loading')}</span>
             </div>
         );
     }
@@ -111,14 +113,14 @@ export const ProfileTab: React.FC = () => {
     return (
         <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 md:p-8 shadow-xl">
             <h3 className="font-satoshi font-black text-lg text-white mb-6 select-none border-b border-white/[0.03] pb-3 text-left">
-                My Profile
+                {t('settings.profile.title')}
             </h3>
             
             <form onSubmit={handleSubmit} className="space-y-5 text-left">
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">First name</label>
+                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('settings.profile.firstName')}</label>
                         <input 
                             type="text"
                             required
@@ -128,7 +130,7 @@ export const ProfileTab: React.FC = () => {
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Last Name</label>
+                        <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('settings.profile.lastName')}</label>
                         <input 
                             type="text"
                             required
@@ -142,14 +144,14 @@ export const ProfileTab: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <DatePicker 
                         required
-                        label="Date of Birth"
+                        label={t('settings.profile.dob')}
                         value={dob}
                         onChange={setDob}
                     />
                     <Select
                         required
-                        label="Nationality*"
-                        placeholder="Select country..."
+                        label={t('settings.profile.nationality')}
+                        placeholder={t('settings.profile.selectCountry')}
                         value={getCountryCodeByName(nationality)}
                         onChange={(val) => setNationality(getCountryNameByCode(val))}
                         options={COUNTRY_OPTIONS}
@@ -158,8 +160,8 @@ export const ProfileTab: React.FC = () => {
 
                 <PhoneInput
                     required
-                    label="Phone number*"
-                    placeholder="Enter phone number"
+                    label={t('settings.profile.phoneNumber')}
+                    placeholder={t('settings.profile.phonePlaceholder')}
                     value={phoneNumber}
                     onChange={setPhoneNumber}
                     error={phoneError}
@@ -171,7 +173,7 @@ export const ProfileTab: React.FC = () => {
                         disabled={updateProfileMutation.isPending}
                         className="bg-primary-500 hover:bg-primary-450 text-white font-bold text-xs px-5 py-3.5 rounded-xl shadow-lg transition duration-200 cursor-pointer active:scale-95 disabled:opacity-50"
                     >
-                        {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                        {updateProfileMutation.isPending ? t('settings.profile.btn.saving') : t('settings.profile.btn.save')}
                     </button>
                 </div>
 

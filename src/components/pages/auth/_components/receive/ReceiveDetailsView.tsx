@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Check, Copy, Share2, Info } from 'lucide-react'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Wallet } from '../ReceiveMoneySheet'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface DetailRowProps {
     label: string;
@@ -22,13 +23,13 @@ const DetailRow: React.FC<DetailRowProps> = ({ label, value }) => {
     return (
         <div className="flex items-center justify-between bg-black/25 border border-white/5 rounded-xl px-4 py-3 select-text select-none">
             <div className="text-left space-y-0.5 min-w-0 flex-1 pr-3">
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block font-sans">{label}</span>
+                <span className="text-[9px] text-slate-555 font-bold uppercase tracking-wider block font-sans">{label}</span>
                 <span className="font-mono text-xs text-white block break-all select-all leading-normal">{value}</span>
             </div>
             <button
                 type="button"
                 onClick={handleCopy}
-                className="text-slate-500 hover:text-white transition duration-200 cursor-pointer shrink-0"
+                className="text-slate-555 hover:text-white transition duration-200 cursor-pointer shrink-0"
             >
                 {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
             </button>
@@ -49,6 +50,8 @@ export const ReceiveDetailsView: React.FC<ReceiveDetailsViewProps> = ({
     address,
     handleShare,
 }) => {
+    const { t } = useLanguageStore();
+
     return (
         <div className="space-y-6 animate-in fade-in duration-200 flex flex-col h-full">
             {/* QR Code Container */}
@@ -64,31 +67,34 @@ export const ReceiveDetailsView: React.FC<ReceiveDetailsViewProps> = ({
                         className="w-full h-full rounded-lg"
                     />
                 </div>
-                <span className="text-[10px] text-slate-550 font-bold tracking-wider block">
-                    YOUR {activeWallet.code} {isCrypto ? 'ADDRESS' : 'BANK DETAILS'}
+                <span className="text-[10px] text-slate-555 font-bold tracking-wider block">
+                    {t('receive.details.yourCodeDetails', {
+                        code: activeWallet.code,
+                        type: isCrypto ? t('receive.details.address') : t('receive.details.bankDetails')
+                    })}
                 </span>
             </div>
 
             {/* Dynamically List Banking / Local details */}
             <div className="space-y-3.5 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin select-none">
                 {isCrypto ? (
-                    <DetailRow label="SCW Wallet Address" value={activeWallet.walletAddress || '0xSCW1234567890abcdef...'} />
+                    <DetailRow label={t('receive.details.scwAddress')} value={activeWallet.walletAddress || '0xSCW1234567890abcdef...'} />
                 ) : (
                     <>
                         {activeWallet.accountNumber && (
-                            <DetailRow label={`${activeWallet.code} Account Number`} value={activeWallet.accountNumber} />
+                            <DetailRow label={t('receive.details.accountNumberLabel', { code: activeWallet.code })} value={activeWallet.accountNumber} />
                         )}
                         {activeWallet.accountNumberUk && (
-                            <DetailRow label="UK Account Number" value={activeWallet.accountNumberUk} />
+                            <DetailRow label={t('receive.details.ukAccount')} value={activeWallet.accountNumberUk} />
                         )}
                         {activeWallet.sortCode && (
-                            <DetailRow label="Sort Code" value={activeWallet.sortCode} />
+                            <DetailRow label={t('receive.details.sortCode')} value={activeWallet.sortCode} />
                         )}
                         {activeWallet.iban && (
-                            <DetailRow label="IBAN" value={activeWallet.iban} />
+                            <DetailRow label={t('receive.details.iban')} value={activeWallet.iban} />
                         )}
                         {activeWallet.bic && (
-                            <DetailRow label="BIC / SWIFT Code" value={activeWallet.bic} />
+                            <DetailRow label={t('receive.details.bic')} value={activeWallet.bic} />
                         )}
                     </>
                 )}
@@ -98,13 +104,13 @@ export const ReceiveDetailsView: React.FC<ReceiveDetailsViewProps> = ({
                 <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4 flex items-start space-x-3 text-left animate-in slide-in-from-bottom duration-300">
                     <Info className="h-5 w-5 text-primary-400 shrink-0 mt-0.5" />
                     <div className="space-y-2">
-                        <span className="text-xs font-bold text-white block">How to Receive Instant USD (iUSD)</span>
+                        <span className="text-xs font-bold text-white block">{t('receive.details.info.title')}</span>
                         <ul className="text-[10px] text-slate-400 leading-normal space-y-1.5 list-disc list-inside font-sans">
                             <li>
-                                <span className="font-bold text-white">Internal Transfers:</span> Other DigitalFX users can instantly send you <span className="font-semibold text-white">iUSD</span> using your registered phone number.
+                                <span className="font-bold text-white">{t('receive.details.info.internal.label')}</span> {t('receive.details.info.internal.desc')}
                             </li>
                             <li>
-                                <span className="font-bold text-white">External Deposits:</span> To deposit from a personal crypto wallet, send <span className="font-bold text-white">USDC</span> on the <span className="font-bold text-white">Polygon (POL)</span> network to the address above.
+                                <span className="font-bold text-white">{t('receive.details.info.external.label')}</span> {t('receive.details.info.external.desc')}
                             </li>
                         </ul>
                     </div>
@@ -116,7 +122,7 @@ export const ReceiveDetailsView: React.FC<ReceiveDetailsViewProps> = ({
                 className="w-full bg-primary-500 hover:bg-primary-450 text-white py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg transition duration-200 cursor-pointer flex items-center justify-center space-x-2 active:scale-[0.98] mt-auto select-none"
             >
                 <Share2 className="h-4.5 w-4.5" />
-                <span>Share Details</span>
+                <span>{t('receive.details.btn.share')}</span>
             </button>
         </div>
     );

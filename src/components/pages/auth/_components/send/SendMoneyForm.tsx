@@ -9,6 +9,7 @@ import { PhoneInput } from '@/components/ui/PhoneInput'
 import { Wallet } from '../SendMoneySheet'
 import { Beneficiary } from '@/services/withdrawal.service'
 import { Button } from '@/components/ui/Button'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface SendMoneyFormProps {
     walletsList: Wallet[];
@@ -83,12 +84,14 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
     onSubmit,
     isFormValid,
 }) => {
+    const { t } = useLanguageStore();
+
     return (
         <form onSubmit={onSubmit} className="space-y-6 flex flex-col justify-between h-full text-left">
             <div className="space-y-5">
                 {/* Selector for FROM Wallet */}
                 <div className="space-y-2">
-                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block select-none">Source Wallet</span>
+                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block select-none">{t('send.form.sourceWallet')}</span>
                     <div className="relative">
                         <div
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -129,7 +132,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                             <CurrencyIcon code={w.code} size="md" />
                                             <div className="text-left">
                                                 <span className="font-bold text-white text-xs block leading-tight">{w.name}</span>
-                                                <span className="text-[9px] text-slate-550 font-bold uppercase">{w.code} • {w.balance}</span>
+                                                <span className="text-[9px] text-slate-555 font-bold uppercase">{w.code} • {w.balance}</span>
                                             </div>
                                         </div>
                                         {selectedWalletId === w.id && <Check className="h-4 w-4 text-primary-400" />}
@@ -142,7 +145,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
 
                 {/* Amount Entry Card */}
                 <div className="bg-[#0C1224] border border-white/10 rounded-2xl p-5 text-center relative select-none">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Enter Amount</span>
+                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block mb-1">{t('send.form.enterAmount')}</span>
                     <div className="flex items-center justify-center space-x-1 py-1">
                         <NumberInput
                             value={amount}
@@ -162,11 +165,11 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                     <div className="space-y-4 animate-in fade-in duration-200">
                         {activeWallet.provider === 'waas' ? (
                             <div className="space-y-1.5 animate-in fade-in duration-200">
-                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Recipient {activeWallet.code} Address*</span>
+                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('send.form.recipientAddress', { code: activeWallet.code })}</span>
                                 <input
                                     type="text"
                                     required
-                                    placeholder={`Enter valid ${activeWallet.code} address`}
+                                    placeholder={t('send.form.addressPlaceholder', { code: activeWallet.code })}
                                     value={cryptoAddress}
                                     onChange={(e) => setCryptoAddress(e.target.value)}
                                     className="bg-[#0C1224] border border-white/10 rounded-xl px-4 py-3.5 text-xs text-white focus:outline-none w-full font-mono focus:border-primary-500/50"
@@ -175,7 +178,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                         ) : (
                             <>
                                 <div className="space-y-1.5">
-                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Transfer Method</span>
+                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('send.form.transferMethod')}</span>
                                     <div className="flex bg-black/30 border border-white/15 p-1 rounded-xl">
                                         <button
                                             type="button"
@@ -190,7 +193,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                                     : "text-slate-400 hover:text-white"
                                             )}
                                         >
-                                            Send to Phone
+                                            {t('send.form.sendToPhone')}
                                         </button>
                                         <button
                                             type="button"
@@ -205,7 +208,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                                     : "text-slate-400 hover:text-white"
                                             )}
                                         >
-                                            Withdraw to MM
+                                            {t('send.form.withdrawToMomo')}
                                         </button>
                                     </div>
                                 </div>
@@ -213,8 +216,8 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                 {cryptoSendMode === 'phone' && (
                                     <PhoneInput
                                         required
-                                        label="Recipient Phone number*"
-                                        placeholder="Enter recipient phone"
+                                        label={t('send.form.recipientPhone')}
+                                        placeholder={t('send.form.phonePlaceholder')}
                                         value={cryptoAddress}
                                         onChange={setCryptoAddress}
                                     />
@@ -223,13 +226,13 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                     <div className="space-y-4">
                                         <PhoneInput
                                             required
-                                            label="Withdraw Phone number*"
-                                            placeholder="Enter phone"
+                                            label={t('send.form.withdrawPhone')}
+                                            placeholder={t('send.form.withdrawPhonePlaceholder')}
                                             value={cryptoAddress}
                                             onChange={setCryptoAddress}
                                         />
                                         <div className="space-y-1.5">
-                                            <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Operator*</span>
+                                            <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('send.form.operator')}</span>
                                             <select
                                                 value={operator}
                                                 onChange={(e) => {
@@ -243,7 +246,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                                 }}
                                                 className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans select-none"
                                             >
-                                                <option value="DigitalCap">DigitalCap Transfer</option>
+                                                <option value="DigitalCap">{t('send.form.operatorDigitalCap')}</option>
                                                 <option value="MTN">MTN Mobile Money</option>
                                                 <option value="Orange">Orange Money</option>
                                                 <option value="Moov">Moov Money</option>
@@ -274,7 +277,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                     }}
                                     className="rounded border-white/10 bg-black/40 text-primary-500 focus:ring-0"
                                 />
-                                <span>Internal DigitalCap Transfer</span>
+                                <span>{t('send.form.internalTransfer')}</span>
                             </label>
                         </div>
 
@@ -289,7 +292,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                         : "text-slate-400 hover:text-white"
                                 )}
                             >
-                                New Beneficiary
+                                {t('send.form.newBeneficiary')}
                             </button>
                             <button
                                 type="button"
@@ -301,7 +304,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                         : "text-slate-400 hover:text-white"
                                 )}
                             >
-                                Saved
+                                {t('send.form.saved')}
                             </button>
                         </div>
 
@@ -310,32 +313,32 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                 {isMobileMoney ? (
                                     <PhoneInput
                                         required
-                                        label="Mobile Phone Number*"
-                                        placeholder="Enter phone"
+                                        label={t('send.form.momoPhone')}
+                                        placeholder={t('send.form.withdrawPhonePlaceholder')}
                                         value={accountNumber}
                                         onChange={setAccountNumber}
                                     />
                                 ) : (
                                     <div className="space-y-1.5">
-                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Bank Account Number*</span>
+                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('send.form.bankAccount')}</span>
                                         <input
                                             type="text"
                                             required
                                             value={accountNumber}
                                             onChange={(e) => setAccountNumber(e.target.value)}
-                                            placeholder="Enter Account Number"
+                                            placeholder={t('send.form.bankAccountPlaceholder')}
                                             className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-primary-500/50 w-full font-mono"
                                         />
                                     </div>
                                 )}
                                 <div className="space-y-1.5">
-                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Recipient Full Name*</span>
+                                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('send.form.recipientFullName')}</span>
                                     <input
                                         type="text"
                                         required
                                         value={accountName}
                                         onChange={(e) => setAccountName(e.target.value)}
-                                        placeholder="Enter recipient's name"
+                                        placeholder={t('send.form.recipientNamePlaceholder')}
                                         className="bg-black/30 border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white placeholder-slate-655 focus:outline-none focus:border-primary-500/50 w-full font-sans"
                                     />
                                 </div>
@@ -343,7 +346,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                 {isMobileMoney ? (
                                     /* Mobile Money Network Selector */
                                     <div className="space-y-1.5">
-                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">Mobile Money Operator*</span>
+                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('send.form.momoOperator')}</span>
                                         <select
                                             value={operator}
                                             onChange={(e) => {
@@ -357,7 +360,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                             }}
                                             className="bg-[#0C1224] border border-white/10 rounded-xl px-4.5 py-3.5 text-xs text-white focus:outline-none w-full font-sans cursor-pointer"
                                         >
-                                            <option value="DigitalCap">DigitalCap Transfer</option>
+                                            <option value="DigitalCap">{t('send.form.operatorDigitalCap')}</option>
                                             <option value="Orange">Orange Money</option>
                                             <option value="MTN">MTN MoMo</option>
                                             <option value="Moov">Moov Money</option>
@@ -368,7 +371,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                     /* Standard bank wire inputs */
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-1.5">
-                                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Bank Name</span>
+                                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('send.form.bankName')}</span>
                                             <input
                                                 type="text"
                                                 value={bankName}
@@ -378,7 +381,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Country</span>
+                                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('send.form.country')}</span>
                                             <input
                                                 type="text"
                                                 value={country}
@@ -393,10 +396,10 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                         ) : (
                             /* Interactive Beneficiaries tiles list */
                             <div className="space-y-2.5 animate-in fade-in duration-200">
-                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Select Beneficiary</span>
+                                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('send.form.selectBeneficiary')}</span>
                                 {beneficiariesList.length === 0 ? (
                                     <div className="p-6 text-center border border-dashed border-white/10 rounded-2xl text-xs text-slate-500 select-none">
-                                        No saved beneficiaries found for this currency wallet.
+                                        {t('send.form.noBeneficiaries')}
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-2.5 max-h-[220px] overflow-y-auto scrollbar-none pr-1">
@@ -453,7 +456,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                     disabled={!isFormValid}
                     className="w-full rounded-2xl h-[52px] font-bold text-sm shadow-xl"
                 >
-                    Continue
+                    {t('send.form.btn.continue')}
                 </Button>
             </div>
         </form>

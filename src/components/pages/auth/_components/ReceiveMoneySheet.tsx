@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
 import { toast } from 'sonner'
+import { useLanguageStore } from '@/store/languageStore'
 
 // Import subcomponents
 import { ReceiveDetailsView } from './receive/ReceiveDetailsView'
@@ -47,6 +48,7 @@ const formatBalance = (amount: string | number, currency: string) => {
 };
 
 export const ReceiveMoneySheet: React.FC = () => {
+    const { t } = useLanguageStore();
     const queryClient = useQueryClient();
     const { isReceiveOpen, closeReceive, receiveDefaultWalletId } = useTransactionStore();
 
@@ -205,8 +207,8 @@ export const ReceiveMoneySheet: React.FC = () => {
 
     // Build the dynamic address/copy label
     const address = isCrypto
-        ? (activeWallet.walletAddress || 'Address not available')
-        : `Bank: ${activeWallet.name}\nAccount: ${activeWallet.accountNumber || ''}\nIBAN: ${activeWallet.iban || ''}`;
+        ? (activeWallet.walletAddress || t('receive.addressNotAvailable'))
+        : `${t('receive.details.bank')}: ${activeWallet.name}\n${t('receive.details.account')}: ${activeWallet.accountNumber || ''}\n${t('receive.details.iban')}: ${activeWallet.iban || ''}`;
 
     const handleShare = async () => {
         if (navigator.share) {
@@ -215,14 +217,14 @@ export const ReceiveMoneySheet: React.FC = () => {
                     title: `DigitalFX Deposit Details (${activeWallet.code})`,
                     text: address,
                 });
-                toast.success('Shared successfully');
+                toast.success(t('receive.toast.shared'));
             } catch (err) {
                 console.error('Error sharing:', err);
             }
         } else {
             // Fallback copy details
             navigator.clipboard.writeText(address);
-            toast.success('Deposit details copied to clipboard!');
+            toast.success(t('receive.toast.copied'));
         }
     };
 
@@ -236,16 +238,16 @@ export const ReceiveMoneySheet: React.FC = () => {
         onSuccess: (res) => {
             if (res?.success) {
                 setDepositSuccess(true);
-                toast.success('Deposit request initiated.');
+                toast.success(t('receive.toast.depositInitiated'));
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 queryClient.invalidateQueries({ queryKey: ['cryptoBalances'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
             } else {
-                toast.error(res?.error?.message || 'Deposit initiation failed.');
+                toast.error(res?.error?.message || t('receive.toast.failed'));
             }
         },
         onError: (err: any) => {
-            toast.error(err.response?.data?.error?.message || 'Deposit failed. Please try again.');
+            toast.error(err.response?.data?.error?.message || t('receive.toast.failedRetry'));
         }
     });
 
@@ -253,11 +255,11 @@ export const ReceiveMoneySheet: React.FC = () => {
         e.preventDefault();
         const amt = parseFloat(depositAmount);
         if (isNaN(amt) || amt <= 0) {
-            toast.error('Please enter a valid deposit amount.');
+            toast.error(t('receive.toast.invalidAmount'));
             return;
         }
         if (!phone) {
-            toast.error('Please enter your mobile money phone number.');
+            toast.error(t('receive.toast.invalidPhone'));
             return;
         }
 
@@ -275,14 +277,14 @@ export const ReceiveMoneySheet: React.FC = () => {
         <Sheet
             isOpen={isReceiveOpen}
             onClose={closeReceive}
-            title="Receive Money"
-            description="Display bank details or load funds directly using Mobile Money"
+            title={t('receive.sheet.title')}
+            description={t('receive.sheet.desc')}
         >
             <div className="space-y-6 flex flex-col justify-between h-full text-center">
                 <div className="space-y-5">
                     {/* Wallet selector dropdown */}
                     <div className="space-y-2">
-                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block text-left select-none">Select Wallet</span>
+                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block text-left select-none">{t('receive.form.selectWallet')}</span>
                         <div className="relative" ref={dropdownRef}>
                             <div
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -344,7 +346,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                                         : "text-slate-400 hover:text-white"
                                 )}
                             >
-                                Transfer Details
+                                {t('receive.tab.details')}
                             </button>
                             <button
                                 type="button"
@@ -356,7 +358,7 @@ export const ReceiveMoneySheet: React.FC = () => {
                                         : "text-slate-400 hover:text-white"
                                 )}
                             >
-                                Mobile Money Deposit
+                                {t('receive.tab.momo')}
                             </button>
                         </div>
                     )}

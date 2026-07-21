@@ -8,8 +8,10 @@ import { toast } from 'sonner'
 import ToggleSwitch from './ToggleSwitch'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 export const SecurityTab: React.FC = () => {
+    const { t } = useLanguageStore();
     const queryClient = useQueryClient();
 
     // Query 1: 2FA & Biometrics Status
@@ -45,12 +47,12 @@ export const SecurityTab: React.FC = () => {
                 setSetupData(res.data);
                 setIsSetupModalOpen(true);
             } else {
-                toast.error('Failed to initialize 2FA setup parameters.');
+                toast.error(t('settings.security.toast.setupFailed'));
             }
         },
         onError: (err: any) => {
             console.error('2FA setup error:', err);
-            const msg = err.response?.data?.error?.message || '2FA is already enabled or cannot be set up.';
+            const msg = err.response?.data?.error?.message || t('settings.security.toast.setupError');
             toast.error(msg);
         }
     });
@@ -58,7 +60,7 @@ export const SecurityTab: React.FC = () => {
     const confirm2FAMutation = useMutation({
         mutationFn: (code: string) => securityService.confirm2FA(code),
         onSuccess: (res) => {
-            toast.success('Two-factor authentication activated successfully!');
+            toast.success(t('settings.security.toast.activeSuccess'));
             setIsSetupModalOpen(false);
             setOtpCode('');
             setSetupData(null);
@@ -66,7 +68,7 @@ export const SecurityTab: React.FC = () => {
         },
         onError: (err: any) => {
             console.error('Confirm 2FA error:', err);
-            const msg = err.response?.data?.error?.message || 'Invalid confirmation code.';
+            const msg = err.response?.data?.error?.message || t('settings.security.toast.invalidCode');
             toast.error(msg);
         }
     });
@@ -74,14 +76,14 @@ export const SecurityTab: React.FC = () => {
     const disable2FAMutation = useMutation({
         mutationFn: (code: string) => securityService.disable2FA(code),
         onSuccess: (res) => {
-            toast.success('Two-factor authentication disabled.');
+            toast.success(t('settings.security.toast.disabledSuccess'));
             setIsDisableModalOpen(false);
             setOtpCode('');
             queryClient.invalidateQueries({ queryKey: ['securityStatus'] });
         },
         onError: (err: any) => {
             console.error('Disable 2FA error:', err);
-            const msg = err.response?.data?.error?.message || 'Invalid deactivation code.';
+            const msg = err.response?.data?.error?.message || t('settings.security.toast.invalidDeactCode');
             toast.error(msg);
         }
     });
@@ -91,12 +93,12 @@ export const SecurityTab: React.FC = () => {
         mutationFn: (payload: { currentPin: string; newPin: string }) =>
             securityService.changePin(payload.currentPin, payload.newPin),
         onSuccess: () => {
-            toast.success('Security PIN updated successfully!');
+            toast.success(t('settings.security.toast.pinSuccess'));
             setPinForm({ currentPin: '', newPin: '', confirmPin: '' });
         },
         onError: (err: any) => {
             console.error('Change PIN error:', err);
-            const msg = err.response?.data?.error?.message || 'Failed to update PIN. Verify current details.';
+            const msg = err.response?.data?.error?.message || t('settings.security.toast.pinError');
             toast.error(msg);
         }
     });
@@ -105,19 +107,19 @@ export const SecurityTab: React.FC = () => {
     const revokeDeviceMutation = useMutation({
         mutationFn: (id: string) => securityService.revokeDevice(id),
         onSuccess: () => {
-            toast.success('Session revoked successfully.');
+            toast.success(t('settings.security.toast.revokeSuccess'));
             queryClient.invalidateQueries({ queryKey: ['activeDevices'] });
         },
-        onError: () => toast.error('Failed to revoke device session.')
+        onError: () => toast.error(t('settings.security.toast.revokeFailed'))
     });
 
     const revokeAllOthersMutation = useMutation({
         mutationFn: () => securityService.revokeAllOtherDevices(),
         onSuccess: () => {
-            toast.success('All other active device sessions revoked.');
+            toast.success(t('settings.security.toast.revokeAllSuccess'));
             queryClient.invalidateQueries({ queryKey: ['activeDevices'] });
         },
-        onError: () => toast.error('Failed to revoke other device sessions.')
+        onError: () => toast.error(t('settings.security.toast.revokeAllFailed'))
     });
 
     // Handlers
@@ -135,17 +137,17 @@ export const SecurityTab: React.FC = () => {
         const { currentPin, newPin, confirmPin } = pinForm;
 
         if (!currentPin || !newPin || !confirmPin) {
-            toast.error('All PIN fields are required.');
+            toast.error(t('settings.security.toast.pinRequired'));
             return;
         }
 
         if (newPin.length !== 6 || currentPin.length !== 6) {
-            toast.error('PINs must be exactly 6 digits.');
+            toast.error(t('settings.security.toast.pinDigits'));
             return;
         }
 
         if (newPin !== confirmPin) {
-            toast.error('New PIN confirmation does not match.');
+            toast.error(t('settings.security.toast.pinMismatch'));
             return;
         }
 
@@ -163,15 +165,15 @@ export const SecurityTab: React.FC = () => {
             {/* 1. Two Factor Toggle card */}
             <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6.5 shadow-xl space-y-5">
                 <h3 className="font-satoshi font-black text-sm text-white select-none border-b border-white/[0.03] pb-3 text-left">
-                    Authentication
+                    {t('settings.security.authTitle')}
                 </h3>
                 
                 <div className="space-y-4">
                     <div className="flex items-center justify-between py-1 border-b border-white/[0.02] last:border-b-0 pb-3">
                         <div className="text-left space-y-0.5 max-w-[80%]">
-                            <span className="font-bold text-white text-xs block">Two-Factor Authentication</span>
+                            <span className="font-bold text-white text-xs block">{t('settings.security.twoFactor')}</span>
                             <span className="text-[10px] text-slate-500 font-semibold block leading-relaxed select-none">
-                                Authenticator app confirmation required on every portal login
+                                {t('settings.security.twoFactorDesc')}
                             </span>
                         </div>
                         {securityQuery.isLoading ? (
@@ -186,12 +188,12 @@ export const SecurityTab: React.FC = () => {
             {/* 2. Change PIN form */}
             <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6.5 shadow-xl space-y-5">
                 <h3 className="font-satoshi font-black text-sm text-white select-none border-b border-white/[0.03] pb-3 text-left">
-                    Security PIN
+                    {t('settings.security.pinTitle')}
                 </h3>
                 <form onSubmit={handlePinUpdateSubmit} className="space-y-4 text-left">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Current PIN</label>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">{t('settings.security.currentPin')}</label>
                             <input 
                                 type="password"
                                 maxLength={6}
@@ -203,7 +205,7 @@ export const SecurityTab: React.FC = () => {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">New PIN</label>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">{t('settings.security.newPin')}</label>
                             <input 
                                 type="password"
                                 maxLength={6}
@@ -215,7 +217,7 @@ export const SecurityTab: React.FC = () => {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Confirm New PIN</label>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">{t('settings.security.confirmNewPin')}</label>
                             <input 
                                 type="password"
                                 maxLength={6}
@@ -234,7 +236,7 @@ export const SecurityTab: React.FC = () => {
                             disabled={changePinMutation.isPending}
                             className="rounded-xl h-[44px] text-xs font-bold px-6"
                         >
-                            {changePinMutation.isPending ? 'Updating PIN...' : 'Update PIN'}
+                            {changePinMutation.isPending ? t('settings.security.updatingPin') : t('settings.security.updatePin')}
                         </Button>
                     </div>
                 </form>
@@ -243,14 +245,14 @@ export const SecurityTab: React.FC = () => {
             {/* 3. Active Sessions list */}
             <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6.5 shadow-xl space-y-5">
                 <div className="flex justify-between items-center select-none border-b border-white/[0.03] pb-3">
-                    <h3 className="font-satoshi font-bold text-sm text-white">Active Sessions</h3>
+                    <h3 className="font-satoshi font-bold text-sm text-white">{t('settings.security.activeSessions')}</h3>
                     {sessionsList.filter(s => !s.isCurrent).length > 0 && (
                         <button 
                             onClick={() => revokeAllOthersMutation.mutate()}
                             disabled={revokeAllOthersMutation.isPending}
                             className="text-[10px] font-extrabold text-rose-400 hover:text-rose-350 cursor-pointer transition select-none uppercase tracking-wider bg-transparent border-none disabled:opacity-50"
                         >
-                            {revokeAllOthersMutation.isPending ? 'Revoking...' : 'Revoke all others'}
+                            {revokeAllOthersMutation.isPending ? t('settings.security.revoking') : t('settings.security.revokeOthers')}
                         </button>
                     )}
                 </div>
@@ -259,10 +261,10 @@ export const SecurityTab: React.FC = () => {
                     {devicesQuery.isLoading ? (
                         <div className="py-6 flex items-center justify-center space-x-2 text-xs text-slate-500">
                             <RefreshCw className="h-4 w-4 animate-spin text-primary-400" />
-                            <span>Loading active sessions...</span>
+                            <span>{t('settings.security.loadingSessions')}</span>
                         </div>
                     ) : sessionsList.length === 0 ? (
-                        <p className="text-xs text-slate-600 py-2">No active sessions found.</p>
+                        <p className="text-xs text-slate-600 py-2">{t('settings.security.noSessions')}</p>
                     ) : (
                         sessionsList.map((session) => {
                             const isCurrent = session.isCurrent;
@@ -281,7 +283,7 @@ export const SecurityTab: React.FC = () => {
                                                 </span>
                                                 {isCurrent && (
                                                     <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 select-none">
-                                                        Current
+                                                        {t('settings.security.current')}
                                                     </span>
                                                 )}
                                             </div>
@@ -301,7 +303,7 @@ export const SecurityTab: React.FC = () => {
                                                 disabled={revokeDeviceMutation.isPending}
                                                 className="text-[10px] font-bold text-rose-400 hover:text-rose-350 cursor-pointer transition select-none uppercase tracking-wider bg-transparent border-none disabled:opacity-50"
                                             >
-                                                Revoke
+                                                {t('settings.security.revoke')}
                                             </button>
                                         )}
                                     </div>
@@ -326,10 +328,10 @@ export const SecurityTab: React.FC = () => {
                         <div className="space-y-1">
                             <h4 className="font-satoshi font-black text-base text-white flex items-center space-x-2">
                                 <Shield className="h-5 w-5 text-primary-400" />
-                                <span>Set Up 2FA</span>
+                                <span>{t('settings.security.setupTitle')}</span>
                             </h4>
                             <p className="text-[11px] text-slate-400 leading-normal">
-                                Scan the QR code using Google Authenticator, Duo, or Authy.
+                                {t('settings.security.setupDesc')}
                             </p>
                         </div>
 
@@ -344,7 +346,7 @@ export const SecurityTab: React.FC = () => {
 
                         {/* Secret text key for copy */}
                         <div className="space-y-1 bg-black/20 border border-white/5 rounded-xl p-3">
-                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block font-mono">Manual Secret Key</span>
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block font-mono">{t('settings.security.secretKey')}</span>
                             <span className="text-[11px] font-bold text-white block select-all font-mono tracking-widest">{setupData.secret}</span>
                         </div>
 
@@ -357,7 +359,7 @@ export const SecurityTab: React.FC = () => {
                             className="space-y-4"
                         >
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Verification code</label>
+                                <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('settings.security.verificationCode')}</label>
                                 <input 
                                     type="text"
                                     maxLength={6}
@@ -365,6 +367,7 @@ export const SecurityTab: React.FC = () => {
                                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
                                     placeholder="000000"
                                     className="bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-center text-sm font-bold text-white placeholder-slate-700 tracking-[0.4em] focus:outline-none focus:border-primary-500/50 w-full font-mono"
+                                    required
                                 />
                             </div>
 
@@ -375,7 +378,7 @@ export const SecurityTab: React.FC = () => {
                                     onClick={() => setIsSetupModalOpen(false)}
                                     className="w-1/2 rounded-xl h-11 text-xs"
                                 >
-                                    Cancel
+                                    {t('settings.security.cancel')}
                                 </Button>
                                 <Button
                                     type="submit"
@@ -383,7 +386,7 @@ export const SecurityTab: React.FC = () => {
                                     disabled={otpCode.length !== 6 || confirm2FAMutation.isPending}
                                     className="w-1/2 rounded-xl h-11 text-xs"
                                 >
-                                    {confirm2FAMutation.isPending ? 'Activating...' : 'Confirm & Enable'}
+                                    {confirm2FAMutation.isPending ? t('settings.security.activating') : t('settings.security.confirmEnable')}
                                 </Button>
                             </div>
                         </form>
@@ -405,10 +408,10 @@ export const SecurityTab: React.FC = () => {
                         <div className="space-y-1">
                             <h4 className="font-satoshi font-black text-base text-rose-400 flex items-center space-x-2">
                                 <AlertCircle className="h-5 w-5 stroke-[2.5]" />
-                                <span>Disable 2FA</span>
+                                <span>{t('settings.security.disableTitle')}</span>
                             </h4>
                             <p className="text-[11px] text-slate-400 leading-normal">
-                                Enter the 6-digit confirmation code from your authenticator app to deactivate Two-Factor Authentication.
+                                {t('settings.security.disableDesc')}
                             </p>
                         </div>
 
@@ -420,7 +423,7 @@ export const SecurityTab: React.FC = () => {
                             className="space-y-4"
                         >
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Verification code</label>
+                                <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('settings.security.verificationCode')}</label>
                                 <input 
                                     type="text"
                                     maxLength={6}
@@ -428,6 +431,7 @@ export const SecurityTab: React.FC = () => {
                                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
                                     placeholder="000000"
                                     className="bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-center text-sm font-bold text-white placeholder-slate-700 tracking-[0.4em] focus:outline-none focus:border-primary-500/50 w-full font-mono"
+                                    required
                                 />
                             </div>
 
@@ -438,7 +442,7 @@ export const SecurityTab: React.FC = () => {
                                     onClick={() => setIsDisableModalOpen(false)}
                                     className="w-1/2 rounded-xl h-11 text-xs"
                                 >
-                                    Cancel
+                                    {t('settings.security.cancel')}
                                 </Button>
                                 <Button
                                     type="submit"
@@ -446,7 +450,7 @@ export const SecurityTab: React.FC = () => {
                                     disabled={otpCode.length !== 6 || disable2FAMutation.isPending}
                                     className="w-1/2 rounded-xl h-11 text-xs"
                                 >
-                                    {disable2FAMutation.isPending ? 'Disabling...' : 'Confirm & Disable'}
+                                    {disable2FAMutation.isPending ? t('settings.security.disabling') : t('settings.security.confirmDisable')}
                                 </Button>
                             </div>
                         </form>

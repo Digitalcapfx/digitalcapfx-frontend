@@ -7,6 +7,7 @@ import { accountService } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
 import { toast } from 'sonner'
 import { formatCurrencyByLocale } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 // Import subcomponents
 import { PhoneSendForm } from './phone-send/PhoneSendForm'
@@ -19,6 +20,7 @@ interface PhoneSendProps {
 }
 
 const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
+    const { t } = useLanguageStore();
     const queryClient = useQueryClient();
     const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Form, 2: Confirm, 3: Success
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -66,7 +68,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
         let hasError = false;
 
         if (!phoneNumber) {
-            setPhoneError('Please enter a phone number');
+            setPhoneError(t('phone.send.toast.phoneRequired'));
             hasError = true;
         } else {
             setPhoneError('');
@@ -74,7 +76,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
 
         const val = parseFloat(amount);
         if (isNaN(val) || val <= 0) {
-            setAmountError('Please enter a valid amount');
+            setAmountError(t('phone.send.toast.amountRequired'));
             hasError = true;
         } else {
             setAmountError('');
@@ -95,12 +97,12 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
                 queryClient.invalidateQueries({ queryKey: ['cryptoBalances'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
             } else {
-                toast.error(data?.error?.message || 'Send stablecoin failed.');
+                toast.error(data?.error?.message || t('phone.send.toast.sendFailed'));
             }
         },
         onError: (err: any) => {
             const rawError = err.response?.data?.error;
-            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to send.');
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || t('phone.send.toast.failedToSend'));
             toast.error(msg);
         }
     });
@@ -245,37 +247,37 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
         container.innerHTML = `
             <div class="header">
                 <div class="logo">DigitalFX</div>
-                <div class="title">Transaction Receipt</div>
+                <div class="title">${t('phone.send.receipt.title')}</div>
             </div>
             
             <div class="amount-box">
-                <span class="amount-label">Amount Transferred</span>
+                <span class="amount-label">${t('phone.send.receipt.amountLabel')}</span>
                 <div class="amount-val">${formatCurrencyByLocale(amount || '0', 'iUSD')}</div>
             </div>
             
             <table class="details-table">
                 <tr class="details-row">
-                    <td class="label">Transaction ID</td>
+                    <td class="label">${t('phone.send.success.txId')}</td>
                     <td class="value mono">${txRef}</td>
                 </tr>
                 <tr class="details-row">
-                    <td class="label">Date</td>
+                    <td class="label">${t('phone.send.receipt.date')}</td>
                     <td class="value">${dateStr}</td>
                 </tr>
                 <tr class="details-row">
-                    <td class="label">Source Wallet</td>
+                    <td class="label">${t('phone.send.receipt.source')}</td>
                     <td class="value">Instant USD (iUSD)</td>
                 </tr>
                 <tr class="details-row">
-                    <td class="label">Recipient</td>
+                    <td class="label">${t('phone.send.success.recipient')}</td>
                     <td class="value">${phoneNumber}</td>
                 </tr>
                 <tr class="details-row">
-                    <td class="label">Reference</td>
+                    <td class="label">${t('phone.send.confirm.reference')}</td>
                     <td class="value">${note || 'Invoice payment'}</td>
                 </tr>
                 <tr class="details-row">
-                    <td class="label">Status</td>
+                    <td class="label">${t('phone.send.success.status')}</td>
                     <td class="value">
                         <span class="status ${(txStatus || '').toLowerCase() === 'completed' || (txStatus || '').toLowerCase() === 'success' ? 'completed' : 'pending'}">
                             ${txStatus}
@@ -285,8 +287,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
             </table>
             
             <div class="footer">
-                Thank you for using DigitalFX.<br>
-                This is an automated receipt generated by DigitalFX for tracking purposes.
+                ${t('phone.send.receipt.footer').replace(/\n/g, '<br>')}
             </div>
         `;
         document.body.appendChild(container);
@@ -352,13 +353,13 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
                             <Phone className="h-5 w-5" />
                         </div>
                         <div>
-                            <h3 className="font-satoshi font-bold text-base text-white">Phone Send</h3>
-                            <span className="text-[10px] font-semibold text-slate-555">Instant • Stablecoin-powered</span>
+                            <h3 className="font-satoshi font-bold text-base text-white">{t('phone.send.title')}</h3>
+                            <span className="text-[10px] font-semibold text-slate-555">{t('phone.send.subtitle')}</span>
                         </div>
                     </div>
                     {step < 3 && (
                         <div className="text-right">
-                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Balance</span>
+                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('phone.send.balanceLabel')}</span>
                             <span className="text-sm font-extrabold text-white font-mono mt-0.5 block">${balanceUsdc} <span className="text-[10px] text-slate-555">iUSD</span></span>
                         </div>
                     )}
@@ -369,7 +370,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
 
             {step === 1 && (
                 <div className="text-center select-none pt-2 text-[10px] text-slate-555 font-semibold font-sans">
-                    Send to any DigitalCapFx customer — just a phone number, no bank details needed.
+                    {t('phone.send.disclaimer')}
                 </div>
             )}
         </>

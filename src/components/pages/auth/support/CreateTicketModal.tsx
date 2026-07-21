@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useLanguageStore } from '@/store/languageStore';
 
 interface CreateTicketModalProps {
     isOpen: boolean;
@@ -17,6 +18,8 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
     onSubmit,
     isPending
 }) => {
+    const { t } = useLanguageStore();
+
     const [form, setForm] = useState({
         subject: '',
         category: 'general',
@@ -44,50 +47,50 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                 <div className="space-y-1">
                     <h4 className="font-satoshi font-black text-base text-white flex items-center space-x-2">
                         <MessageSquare className="h-5 w-5 text-primary-400" />
-                        <span>Create Ticket</span>
+                        <span>{t('support.create.title')}</span>
                     </h4>
                     <p className="text-[11px] text-slate-400 leading-normal">
-                        Briefly describe the issue. Our support team will respond shortly.
+                        {t('support.create.subtitle')}
                     </p>
                 </div>
 
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Subject*</label>
+                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('support.create.subjectLabel')}</label>
                         <input
                             type="text"
                             required
                             value={form.subject}
                             onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                            placeholder="e.g. Card transaction error"
+                            placeholder={t('support.create.subjectPlaceholder')}
                             className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-700 focus:outline-none focus:border-primary-500/50 w-full"
                         />
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Category</label>
+                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('support.create.categoryLabel')}</label>
                         <select
                             value={form.category}
                             onChange={(e) => setForm({ ...form, category: e.target.value })}
                             className="bg-[#0C1224] border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none w-full cursor-pointer"
                         >
-                            <option value="general">General</option>
-                            <option value="account">Account</option>
-                            <option value="payment">Payment</option>
-                            <option value="kyc">KYC compliance</option>
-                            <option value="technical">Technical</option>
-                            <option value="card">Cards</option>
+                            <option value="general">{t('support.faq.cat.general')}</option>
+                            <option value="account">{t('support.faq.cat.account')}</option>
+                            <option value="payment">{t('support.faq.cat.payment')}</option>
+                            <option value="kyc">{t('support.create.categoryKyc')}</option>
+                            <option value="technical">{t('support.faq.cat.technical')}</option>
+                            <option value="card">{t('support.create.categoryCards')}</option>
                         </select>
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Message Details*</label>
+                        <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('support.create.messageLabel')}</label>
                         <textarea
                             required
                             rows={4}
                             value={form.message}
                             onChange={(e) => setForm({ ...form, message: e.target.value })}
-                            placeholder="Provide detailed logs or message content..."
+                            placeholder={t('support.create.messagePlaceholder')}
                             className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-700 focus:outline-none focus:border-primary-500/50 w-full resize-none font-sans"
                         />
                     </div>
@@ -99,7 +102,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                             onClick={onClose}
                             className="w-1/2 rounded-xl h-11 text-xs"
                         >
-                            Cancel
+                            {t('support.create.btn.cancel')}
                         </Button>
                         <Button
                             type="submit"
@@ -107,7 +110,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                             disabled={isPending}
                             className="w-1/2 rounded-xl h-11 text-xs"
                         >
-                            {isPending ? 'Submitting...' : 'Submit Ticket'}
+                            {isPending ? t('support.create.btn.submitting') : t('support.create.btn.submit')}
                         </Button>
                     </div>
                 </form>
