@@ -11,7 +11,7 @@ import {
     RefreshCw,
     Settings,
     HelpCircle,
-    Bell,
+    // Bell,
     LogOut,
     ShieldAlert,
     ShieldAlert as ShieldWarning,
@@ -371,7 +371,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     {/* Notification & Avatar controls + Hamburger beside it on Mobile */}
                     <div className="flex items-center space-x-3 lg:space-x-4">
-                        <div className="relative select-none shrink-0 w-[95px]">
+                        <div className="relative select-none shrink-0 w-[100px]">
                             <Select
                                 options={[
                                     { value: 'en', label: '🇺🇸 EN' },
