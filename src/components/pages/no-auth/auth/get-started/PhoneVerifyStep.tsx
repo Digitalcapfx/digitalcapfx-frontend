@@ -11,6 +11,8 @@ import { authService } from '@/services/auth.service'
 import { toast } from 'sonner'
 import { isValidPhoneNumber } from 'react-phone-number-input'
 
+import Link from 'next/link'
+
 export const PhoneVerifyStep: React.FC = () => {
   const {
     phone,
@@ -107,7 +109,7 @@ export const PhoneVerifyStep: React.FC = () => {
       return;
     }
     if (!isValidPhoneNumber(phone)) {
-      setPhoneError('Please enter a valid international phone number');
+      setPhoneError('Please enter a valid phone number');
       return;
     }
 
@@ -117,13 +119,9 @@ export const PhoneVerifyStep: React.FC = () => {
   const handleVerifyCode = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-
-    if (otpCode.length !== 6) {
-      toast.error('Please enter a valid 6-digit verification code.');
-      return;
+    if (phone && otpCode.length === 6) {
+      verifyOtpMutation.mutate({ phone, code: otpCode });
     }
-
-    verifyOtpMutation.mutate({ phone, code: otpCode });
   };
 
   const handleResend = () => {
@@ -137,12 +135,22 @@ export const PhoneVerifyStep: React.FC = () => {
       <div>
         {!codeSent ? (
           <>
-            <h1 className="font-satoshi font-black text-2xl text-white tracking-tight">
+            <span className="text-[10px] font-bold text-cyan-400 tracking-[0.2em] uppercase font-mono block mb-1 select-none">
+              Step 1 of 5
+            </span>
+            <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
               Get Started with DigitalCap FX
             </h1>
-            <p className="text-slate-400 text-sm font-sans mt-2 leading-relaxed">
-              Verify your phone number first to secure your cross-border currency wallets.
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-1 select-none">
+              <span className="text-slate-350 text-sm font-sans">Already have an account?</span>
+              <Link 
+                href="/login" 
+                className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-500/50 font-bold text-xs transition-all duration-200 shadow-sm shadow-cyan-500/10"
+              >
+                <span>Sign in</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </>
         ) : (
           <>
@@ -191,7 +199,7 @@ export const PhoneVerifyStep: React.FC = () => {
             type="submit"
             variant="primary"
             disabled={!phone || sendOtpMutation.isPending}
-            className="w-full rounded-full h-[52px] font-semibold text-base shadow-lg"
+            className="w-full rounded-xl h-[52px] font-bold text-base bg-gradient-to-r from-primary-600 via-primary-500 to-cyan-500 hover:from-primary-500 hover:to-cyan-400 text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
             rightIcon={sendOtpMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
           >
             {sendOtpMutation.isPending ? 'Sending code...' : 'Continue'}
@@ -211,7 +219,7 @@ export const PhoneVerifyStep: React.FC = () => {
             type="submit"
             variant="primary"
             disabled={otpCode.length !== 6 || verifyOtpMutation.isPending}
-            className="w-full rounded-full h-[52px] font-semibold text-base shadow-lg"
+            className="w-full rounded-xl h-[52px] font-bold text-base bg-gradient-to-r from-primary-600 via-primary-500 to-cyan-500 hover:from-primary-500 hover:to-cyan-400 text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
           >
             {verifyOtpMutation.isPending ? 'Verifying...' : 'Verify & Continue'}
           </Button>

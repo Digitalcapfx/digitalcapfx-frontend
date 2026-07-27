@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
+import { FEATURE_FLAGS, filterCryptoItems } from '@/config/featureFlags'
 
 export interface Wallet {
     id: string;
@@ -74,6 +75,7 @@ const WalletsPage: React.FC = () => {
     const waasWalletsQuery = useQuery({
         queryKey: ['waasWallets'],
         queryFn: () => accountService.getWaaSWallets(),
+        enabled: FEATURE_FLAGS.ALLOW_CRYPTO,
     });
 
     const provisionMutation = useMutation({
@@ -131,54 +133,56 @@ const WalletsPage: React.FC = () => {
     }
 
     // Map WaaS wallets
-    const waasAddressesData = waasWalletsQuery.data?.data?.addresses || waasWalletsQuery.data?.data || [];
-    if (Array.isArray(waasAddressesData)) {
-        waasAddressesData.forEach((w: any) => {
-            const balancesArr = Array.isArray(w.balances) ? w.balances : [];
+    if (FEATURE_FLAGS.ALLOW_CRYPTO) {
+        const waasAddressesData = waasWalletsQuery.data?.data?.addresses || waasWalletsQuery.data?.data || [];
+        if (Array.isArray(waasAddressesData)) {
+            waasAddressesData.forEach((w: any) => {
+                const balancesArr = Array.isArray(w.balances) ? w.balances : [];
 
-            // 1. Map the native asset of the network
-            const nativeSymbol = w.network || 'POL';
-            const nativeBalObj = balancesArr.find((b: any) => b.symbol?.toUpperCase() === nativeSymbol.toUpperCase() || b.currency?.toUpperCase() === nativeSymbol.toUpperCase());
-            const nativeBalVal = nativeBalObj?.balance !== undefined ? parseFloat(nativeBalObj.balance.toString()) : 0;
-            const nativeFormattedBal = nativeBalObj?.formatted_balance ||
-                nativeBalObj?.formattedBalance ||
-                formatBalance(nativeBalVal, nativeSymbol);
-
-            cryptoWalletsList.push({
-                id: nativeSymbol.toLowerCase(),
-                name: `${w.network} Wallet`,
-                code: nativeSymbol,
-                type: 'stablecoin',
-                balance: nativeFormattedBal,
-                rawBalance: nativeBalVal,
-                walletAddress: w.address,
-                provider: 'waas',
-                network: w.network
-            });
-
-            // 2. Map other stablecoins/tokens in balances list (e.g., USDC, USDT)
-            balancesArr.forEach((b: any) => {
-                const sym = b.symbol || b.currency || '';
-                if (!sym || sym.toUpperCase() === nativeSymbol.toUpperCase()) return;
-
-                const balVal = b.balance !== undefined ? parseFloat(b.balance.toString()) : 0;
-                const formattedBal = b.formatted_balance ||
-                    b.formattedBalance ||
-                    formatBalance(balVal, sym);
+                // 1. Map the native asset of the network
+                const nativeSymbol = w.network || 'POL';
+                const nativeBalObj = balancesArr.find((b: any) => b.symbol?.toUpperCase() === nativeSymbol.toUpperCase() || b.currency?.toUpperCase() === nativeSymbol.toUpperCase());
+                const nativeBalVal = nativeBalObj?.balance !== undefined ? parseFloat(nativeBalObj.balance.toString()) : 0;
+                const nativeFormattedBal = nativeBalObj?.formatted_balance ||
+                    nativeBalObj?.formattedBalance ||
+                    formatBalance(nativeBalVal, nativeSymbol);
 
                 cryptoWalletsList.push({
-                    id: sym.toLowerCase(),
-                    name: `${sym} Wallet`,
-                    code: sym,
+                    id: nativeSymbol.toLowerCase(),
+                    name: `${w.network} Wallet`,
+                    code: nativeSymbol,
                     type: 'stablecoin',
-                    balance: formattedBal,
-                    rawBalance: balVal,
+                    balance: nativeFormattedBal,
+                    rawBalance: nativeBalVal,
                     walletAddress: w.address,
                     provider: 'waas',
                     network: w.network
                 });
+
+                // 2. Map other stablecoins/tokens in balances list (e.g., USDC, USDT)
+                balancesArr.forEach((b: any) => {
+                    const sym = b.symbol || b.currency || '';
+                    if (!sym || sym.toUpperCase() === nativeSymbol.toUpperCase()) return;
+
+                    const balVal = b.balance !== undefined ? parseFloat(b.balance.toString()) : 0;
+                    const formattedBal = b.formatted_balance ||
+                        b.formattedBalance ||
+                        formatBalance(balVal, sym);
+
+                    cryptoWalletsList.push({
+                        id: sym.toLowerCase(),
+                        name: `${sym} Wallet`,
+                        code: sym,
+                        type: 'stablecoin',
+                        balance: formattedBal,
+                        rawBalance: balVal,
+                        walletAddress: w.address,
+                        provider: 'waas',
+                        network: w.network
+                    });
+                });
             });
-        });
+        }
     }
 
     const handleCreateWallet = (e: React.FormEvent) => {
@@ -197,7 +201,7 @@ const WalletsPage: React.FC = () => {
     });
 
     // Filter crypto list by search
-    const filteredCrypto = cryptoWalletsList.filter((wallet) => {
+    const filteredCrypto = filterCryptoItems(cryptoWalletsList, (w: Wallet) => w.code).filter((wallet: Wallet) => {
         if (!searchQuery) return true;
         const query = searchQuery.toLowerCase();
         return (
@@ -212,11 +216,11 @@ const WalletsPage: React.FC = () => {
             instantUsdWallet.code.toLowerCase().includes(searchQuery.toLowerCase())
         ));
 
-    const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading || waasWalletsQuery.isLoading;
+    const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading || (FEATURE_FLAGS.ALLOW_CRYPTO && waasWalletsQuery.isLoading);
 
-    const availableNetworks = ['BTC', 'SOL', 'POL', 'TRX', 'ETH', 'BSC', 'LTC', 'XRP', 'BCH'].filter(
+    const availableNetworks = FEATURE_FLAGS.ALLOW_CRYPTO ? ['BTC', 'SOL', 'POL', 'TRX', 'ETH', 'BSC', 'LTC', 'XRP', 'BCH'].filter(
         net => !cryptoWalletsList.some(w => w.code.toUpperCase() === net.toUpperCase())
-    );
+    ) : [];
 
     return (
         <div className="space-y-8">
@@ -366,49 +370,51 @@ const WalletsPage: React.FC = () => {
                     </div>
 
                     {/* Crypto Wallets Section */}
-                    <div className="space-y-4">
-                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block text-left select-none">
-                            {t('section.crypto')}
-                        </span>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {filteredCrypto.length > 0 ? (
-                                filteredCrypto.map((wallet) => (
-                                    <div
-                                        key={wallet.id}
-                                        onClick={() => {
-                                            setBackPath('/wallets');
-                                            const query = wallet.provider === 'waas' && wallet.network
-                                                ? `?provider=waas&network=${wallet.network.toLowerCase()}`
-                                                : `?provider=${wallet.provider}`;
-                                            router.push(`/wallets/${wallet.id}${query}`);
-                                        }}
-                                        className="p-5 rounded-2xl bg-[#080E1E] border border-white/5 hover:border-white/10 hover:bg-[#0C142A] transition duration-200 flex items-center justify-between cursor-pointer select-none group"
-                                    >
-                                        <div className="flex items-center space-x-3.5 text-left">
-                                            <div className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
-                                                <CurrencyIcon code={wallet.code} size="sm" />
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                <span className="text-sm font-bold text-white group-hover:text-primary-400 transition-colors duration-200">
-                                                    {wallet.name}
-                                                </span>
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="text-[10px] font-bold text-slate-555 tracking-wide">{wallet.code}</span>
+                    {FEATURE_FLAGS.ALLOW_CRYPTO && (
+                        <div className="space-y-4">
+                            <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block text-left select-none">
+                                {t('section.crypto')}
+                            </span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {filteredCrypto.length > 0 ? (
+                                    filteredCrypto.map((wallet) => (
+                                        <div
+                                            key={wallet.id}
+                                            onClick={() => {
+                                                setBackPath('/wallets');
+                                                const query = wallet.provider === 'waas' && wallet.network
+                                                    ? `?provider=waas&network=${wallet.network.toLowerCase()}`
+                                                    : `?provider=${wallet.provider}`;
+                                                router.push(`/wallets/${wallet.id}${query}`);
+                                            }}
+                                            className="p-5 rounded-2xl bg-[#080E1E] border border-white/5 hover:border-white/10 hover:bg-[#0C142A] transition duration-200 flex items-center justify-between cursor-pointer select-none group"
+                                        >
+                                            <div className="flex items-center space-x-3.5 text-left">
+                                                <div className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+                                                    <CurrencyIcon code={wallet.code} size="sm" />
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <span className="text-sm font-bold text-white group-hover:text-primary-400 transition-colors duration-200">
+                                                        {wallet.name}
+                                                    </span>
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className="text-[10px] font-bold text-slate-555 tracking-wide">{wallet.code}</span>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            <div className="text-right">
+                                                <span className="text-base font-extrabold text-white font-satoshi">{wallet.balance}</span>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <span className="text-base font-extrabold text-white font-satoshi">{wallet.balance}</span>
-                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="col-span-2 text-center p-8 bg-[#080E1E]/50 border border-dashed border-white/5 rounded-2xl">
+                                        <span className="text-xs font-semibold text-slate-550">{t('wallets.empty.crypto')}</span>
                                     </div>
-                                ))
-                            ) : (
-                                <div className="col-span-2 text-center p-8 bg-[#080E1E]/50 border border-dashed border-white/5 rounded-2xl">
-                                    <span className="text-xs font-semibold text-slate-550">{t('wallets.empty.crypto')}</span>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
 

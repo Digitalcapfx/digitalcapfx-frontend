@@ -173,18 +173,18 @@ export const CredentialsStep: React.FC = () => {
       <div>
         <button
           onClick={() => setStep(accountType === 'business' ? 'business-details' : 'account-type')}
-          className="inline-flex items-center space-x-2 text-xs font-bold text-slate-500 hover:text-slate-350 transition-colors font-sans select-none mb-3"
+          className="inline-flex items-center space-x-2 text-xs font-bold text-slate-400 hover:text-cyan-300 transition-colors font-sans select-none mb-3 cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back</span>
         </button>
-        <span className="text-[10px] font-bold text-primary-400 tracking-[0.15em] uppercase font-mono block mb-1.5">
-          {accountType === 'business' ? 'Step 3 of 6' : 'Get Started Free'}
+        <span className="text-[10px] font-bold text-cyan-400 tracking-[0.15em] uppercase font-mono block mb-1.5">
+          {accountType === 'business' ? 'Step 4 of 5' : 'Step 3 of 3'}
         </span>
-        <h1 className="font-satoshi font-black text-2xl text-white tracking-tight font-bold">
+        <h1 className="font-satoshi font-black text-2xl text-white tracking-tight">
           {accountType === 'business' ? 'Business owner / director' : 'Create your account'}
         </h1>
-        <p className="text-[#6D778A] text-sm font-sans mt-1">
+        <p className="text-slate-400 text-sm font-sans mt-1">
           {accountType === 'business' ? 'Details of the primary account holder or authorised signatory.' : 'Join DigitalCap FX in under 2 minutes.'}
         </p>
       </div>
@@ -287,13 +287,13 @@ export const CredentialsStep: React.FC = () => {
               onChange={(val) => updateCredentials({ agree: val })}
             />
           </div>
-          <label className="text-xs font-semibold text-slate-400 cursor-pointer font-sans leading-relaxed">
+          <label className="text-xs font-semibold text-slate-350 cursor-pointer font-sans leading-relaxed">
             I agree to the{' '}
-            <Link href="/terms" className="text-primary-400 hover:underline">
+            <Link href="/terms" className="text-cyan-400 hover:text-cyan-300 font-bold hover:underline">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link href="/privacy" className="text-primary-400 hover:underline">
+            <Link href="/privacy" className="text-cyan-400 hover:text-cyan-300 font-bold hover:underline">
               Privacy Policy
             </Link>
           </label>
@@ -304,7 +304,7 @@ export const CredentialsStep: React.FC = () => {
             type="submit"
             variant="primary"
             disabled={registerMutation.isPending}
-            className="w-full rounded-full h-[52px] font-semibold text-base"
+            className="w-full rounded-xl h-[52px] font-bold text-base bg-gradient-to-r from-primary-600 via-primary-500 to-cyan-500 hover:from-primary-500 hover:to-cyan-400 text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
             rightIcon={<ArrowRight className="h-5 w-5" />}
           >
             {registerMutation.isPending ? 'Registering...' : 'Create account'}

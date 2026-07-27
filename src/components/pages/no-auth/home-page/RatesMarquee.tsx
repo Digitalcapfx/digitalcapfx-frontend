@@ -3,6 +3,8 @@
 import React from 'react'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 
+import { FEATURE_FLAGS, isCryptoCurrency } from '@/config/featureFlags'
+
 interface TickerItem {
     pair: string;
     price: string;
@@ -10,7 +12,7 @@ interface TickerItem {
     isPositive: boolean;
 }
 
-const TICKER_ITEMS: TickerItem[] = [
+const RAW_TICKER_ITEMS: TickerItem[] = [
     { pair: 'USD/XAF', price: '610.50', change: '+0.2%', isPositive: true },
     { pair: 'EUR/USD', price: '1.0850', change: '+0.3%', isPositive: true },
     { pair: 'GBP/USD', price: '1.2710', change: '-0.1%', isPositive: false },
@@ -22,8 +24,15 @@ const TICKER_ITEMS: TickerItem[] = [
 ];
 
 const RatesMarquee = () => {
+    const tickerItems = FEATURE_FLAGS.ALLOW_CRYPTO
+        ? RAW_TICKER_ITEMS
+        : RAW_TICKER_ITEMS.filter(item => {
+            const [from, to] = item.pair.split('/');
+            return !isCryptoCurrency(from) && !isCryptoCurrency(to);
+        });
+
     // Duplicate items to ensure smooth infinite loop
-    const doubleItems = [...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS];
+    const doubleItems = [...tickerItems, ...tickerItems, ...tickerItems];
 
     return (
         <div className="w-full bg-[#050816] border-y border-white/5 py-4 overflow-hidden relative select-none">

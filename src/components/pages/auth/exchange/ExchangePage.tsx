@@ -21,6 +21,7 @@ import { accountService } from '@/services/account.service'
 import { exchangeService, QuoteData } from '@/services/exchange.service'
 import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
+import { FEATURE_FLAGS } from '@/config/featureFlags'
 
 export interface Wallet {
     id: string;
@@ -120,6 +121,7 @@ export const ExchangePage: React.FC = () => {
     const waasWalletsQuery = useQuery({
         queryKey: ['waasWallets'],
         queryFn: () => accountService.getWaaSWallets(),
+        enabled: FEATURE_FLAGS.ALLOW_CRYPTO,
     });
 
     const liveRatesQuery = useQuery({
@@ -130,9 +132,11 @@ export const ExchangePage: React.FC = () => {
                 { from: 'GBP', to: 'USD' },
                 { from: 'GBP', to: 'EUR' },
                 { from: 'EUR', to: 'GBP' },
-                { from: 'USDT', to: 'USDC' },
-                { from: 'BTC', to: 'ETH' },
-                { from: 'ETH', to: 'USDT' }
+                ...(FEATURE_FLAGS.ALLOW_CRYPTO ? [
+                    { from: 'USDT', to: 'USDC' },
+                    { from: 'BTC', to: 'ETH' },
+                    { from: 'ETH', to: 'USDT' }
+                ] : [])
             ];
 
             const results = await Promise.all(
@@ -172,51 +176,51 @@ export const ExchangePage: React.FC = () => {
             });
     }
 
-    // Map WaaS wallets
-    const waasAddressesData = waasWalletsQuery.data?.data?.addresses || waasWalletsQuery.data?.data || [];
-    if (Array.isArray(waasAddressesData)) {
-        waasAddressesData.forEach((w: any) => {
-            const balancesArr = Array.isArray(w.balances) ? w.balances : [];
-            
-            // 1. Map the native asset of the network
-            const nativeSymbol = w.network || 'POL';
-            const nativeBalObj = balancesArr.find((b: any) => b.symbol?.toUpperCase() === nativeSymbol.toUpperCase() || b.currency?.toUpperCase() === nativeSymbol.toUpperCase());
-            const nativeBalVal = nativeBalObj?.balance !== undefined ? parseFloat(nativeBalObj.balance.toString()) : 0;
-            const nativeFormattedBal = nativeBalObj?.formatted_balance || 
-                                       nativeBalObj?.formattedBalance || 
-                                       formatBalance(nativeBalVal, nativeSymbol);
-
-            walletsList.push({
-                id: nativeSymbol.toLowerCase(),
-                name: `${w.network} Wallet`,
-                code: nativeSymbol,
-                type: 'stablecoin',
-                balance: nativeFormattedBal,
-                rawBalance: nativeBalVal,
-                provider: 'waas'
-            });
-
-            // 2. Map other stablecoins/tokens in balances list (e.g., USDC, USDT)
-            balancesArr.forEach((b: any) => {
-                const sym = b.symbol || b.currency || '';
-                if (!sym || sym.toUpperCase() === nativeSymbol.toUpperCase()) return;
-
-                const balVal = b.balance !== undefined ? parseFloat(b.balance.toString()) : 0;
-                const formattedBal = b.formatted_balance || 
-                                     b.formattedBalance || 
-                                     formatBalance(balVal, sym);
+    // Map WaaS wallets if ALLOW_CRYPTO is true
+    if (FEATURE_FLAGS.ALLOW_CRYPTO) {
+        const waasAddressesData = waasWalletsQuery.data?.data?.addresses || waasWalletsQuery.data?.data || [];
+        if (Array.isArray(waasAddressesData)) {
+            waasAddressesData.forEach((w: any) => {
+                const balancesArr = Array.isArray(w.balances) ? w.balances : [];
+                
+                const nativeSymbol = w.network || 'POL';
+                const nativeBalObj = balancesArr.find((b: any) => b.symbol?.toUpperCase() === nativeSymbol.toUpperCase() || b.currency?.toUpperCase() === nativeSymbol.toUpperCase());
+                const nativeBalVal = nativeBalObj?.balance !== undefined ? parseFloat(nativeBalObj.balance.toString()) : 0;
+                const nativeFormattedBal = nativeBalObj?.formatted_balance || 
+                                           nativeBalObj?.formattedBalance || 
+                                           formatBalance(nativeBalVal, nativeSymbol);
 
                 walletsList.push({
-                    id: sym.toLowerCase(),
-                    name: `${sym} Wallet`,
-                    code: sym,
+                    id: nativeSymbol.toLowerCase(),
+                    name: `${w.network} Wallet`,
+                    code: nativeSymbol,
                     type: 'stablecoin',
-                    balance: formattedBal,
-                    rawBalance: balVal,
+                    balance: nativeFormattedBal,
+                    rawBalance: nativeBalVal,
                     provider: 'waas'
                 });
+
+                balancesArr.forEach((b: any) => {
+                    const sym = b.symbol || b.currency || '';
+                    if (!sym || sym.toUpperCase() === nativeSymbol.toUpperCase()) return;
+
+                    const balVal = b.balance !== undefined ? parseFloat(b.balance.toString()) : 0;
+                    const formattedBal = b.formatted_balance || 
+                                         b.formattedBalance || 
+                                         formatBalance(balVal, sym);
+
+                    walletsList.push({
+                        id: sym.toLowerCase(),
+                        name: `${sym} Wallet`,
+                        code: sym,
+                        type: 'stablecoin',
+                        balance: formattedBal,
+                        rawBalance: balVal,
+                        provider: 'waas'
+                    });
+                });
             });
-        });
+        }
     }
 
     // Default configuration fallbacks

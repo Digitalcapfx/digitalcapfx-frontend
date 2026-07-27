@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
+import { FEATURE_FLAGS, filterCryptoItems } from '@/config/featureFlags'
 
 const getCardBg = (currency: string) => {
     switch (currency.toUpperCase()) {
@@ -256,67 +257,69 @@ const WalletCarousel: React.FC = () => {
             </div>
 
             {/* Crypto Wallets Section */}
-            <div className="space-y-3">
-                <div className="flex justify-between items-center select-none">
-                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block">
-                        {t('section.crypto')}
-                    </span>
-                    {availableNetworks.length > 0 && (
-                        <button
-                            onClick={() => setIsProvisionOpen(true)}
-                            className="text-[10px] font-bold text-primary-400 hover:text-primary-350 hover:underline cursor-pointer flex items-center space-x-1"
-                        >
-                            <Plus className="h-3.5 w-3.5" />
-                            <span>{t('action.provision')}</span>
-                        </button>
+            {FEATURE_FLAGS.ALLOW_CRYPTO && (
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center select-none">
+                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block">
+                            {t('section.crypto')}
+                        </span>
+                        {availableNetworks.length > 0 && (
+                            <button
+                                onClick={() => setIsProvisionOpen(true)}
+                                className="text-[10px] font-bold text-primary-400 hover:text-primary-350 hover:underline cursor-pointer flex items-center space-x-1"
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                                <span>{t('action.provision')}</span>
+                            </button>
+                        )}
+                    </div>
+
+                    {isCryptoLoading && cryptoWallets.length === 0 ? (
+                        <div className="flex gap-4 pb-2 overflow-x-auto scrollbar-none">
+                            {[1, 2].map((idx) => (
+                                <div key={idx} className="w-[200px] h-[130px] rounded-2xl bg-white/5 border border-white/5 animate-pulse shrink-0" />
+                            ))}
+                        </div>
+                    ) : cryptoWallets.length === 0 ? (
+                        <div className="p-8 text-center border border-dashed border-white/5 rounded-2xl text-xs text-slate-500 font-sans select-none">
+                            {t('carousel.crypto.empty')}
+                        </div>
+                    ) : (
+                        <div className="flex overflow-x-auto pb-2 scrollbar-none select-none gap-4">
+                            {cryptoWallets.map((card) => (
+                                <div
+                                    key={card.currency}
+                                    onClick={() => {
+                                        setBackPath('/dashboard');
+                                        const query = card.provider === 'waas' && card.network
+                                            ? `?provider=waas&network=${card.network.toLowerCase()}`
+                                            : `?provider=${card.provider}`;
+                                        router.push(`/wallets/${card.currency.toLowerCase()}${query}`);
+                                    }}
+                                    className={cn(
+                                        "w-[200px] h-[130px] rounded-2xl p-5 flex-1 border flex flex-col justify-between shrink-0 hover:scale-[1.02] transition duration-200 cursor-pointer shadow-lg group",
+                                        card.bg
+                                    )}
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center space-x-2">
+                                            <CurrencyIcon code={card.currency} size="sm" className="border-none shadow-none bg-white/10" />
+                                            <div>
+                                                <span className="text-sm font-bold tracking-wider text-white group-hover:text-white/95 block leading-none">{card.currency}</span>
+                                                <span className="text-[8px] font-bold opacity-60 text-white block mt-1 uppercase font-mono">On-Chain</span>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] opacity-60 font-mono text-white pt-1 whitespace-nowrap">**** {card.cardNum}</span>
+                                    </div>
+                                    <div className="text-xl font-extrabold font-satoshi text-white tracking-tight">
+                                        {card.amount}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </div>
-
-                {isCryptoLoading && cryptoWallets.length === 0 ? (
-                    <div className="flex gap-4 pb-2 overflow-x-auto scrollbar-none">
-                        {[1, 2].map((idx) => (
-                            <div key={idx} className="w-[200px] h-[130px] rounded-2xl bg-white/5 border border-white/5 animate-pulse shrink-0" />
-                        ))}
-                    </div>
-                ) : cryptoWallets.length === 0 ? (
-                    <div className="p-8 text-center border border-dashed border-white/5 rounded-2xl text-xs text-slate-500 font-sans select-none">
-                        {t('carousel.crypto.empty')}
-                    </div>
-                ) : (
-                    <div className="flex overflow-x-auto pb-2 scrollbar-none select-none gap-4">
-                        {cryptoWallets.map((card) => (
-                            <div
-                                key={card.currency}
-                                onClick={() => {
-                                    setBackPath('/dashboard');
-                                    const query = card.provider === 'waas' && card.network
-                                        ? `?provider=waas&network=${card.network.toLowerCase()}`
-                                        : `?provider=${card.provider}`;
-                                    router.push(`/wallets/${card.currency.toLowerCase()}${query}`);
-                                }}
-                                className={cn(
-                                    "w-[200px] h-[130px] rounded-2xl p-5 flex-1 border flex flex-col justify-between shrink-0 hover:scale-[1.02] transition duration-200 cursor-pointer shadow-lg group",
-                                    card.bg
-                                )}
-                            >
-                                <div className="flex justify-between items-start">
-                                    <div className="flex items-center space-x-2">
-                                        <CurrencyIcon code={card.currency} size="sm" className="border-none shadow-none bg-white/10" />
-                                        <div>
-                                            <span className="text-sm font-bold tracking-wider text-white group-hover:text-white/95 block leading-none">{card.currency}</span>
-                                            <span className="text-[8px] font-bold opacity-60 text-white block mt-1 uppercase font-mono">On-Chain</span>
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] opacity-60 font-mono text-white pt-1 whitespace-nowrap">**** {card.cardNum}</span>
-                                </div>
-                                <div className="text-xl font-extrabold font-satoshi text-white tracking-tight">
-                                    {card.amount}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+            )}
 
             {/* Provision Wallet Modal */}
             {isProvisionOpen && (

@@ -9,6 +9,7 @@ import ToggleSwitch from './ToggleSwitch'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
+import { QRCodeSVG } from 'qrcode.react'
 
 export const SecurityTab: React.FC = () => {
     const { t } = useLanguageStore();
@@ -337,11 +338,15 @@ export const SecurityTab: React.FC = () => {
 
                         {/* QR Code Container */}
                         <div className="flex justify-center bg-white/5 border border-white/10 rounded-2xl p-4.5">
-                            <img 
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(setupData.uri)}`}
-                                alt="TOTP QR Code"
-                                className="w-44 h-44 rounded-lg bg-white p-1"
-                            />
+                            {setupData?.uri ? (
+                                <QRCodeSVG 
+                                    value={setupData.uri}
+                                    size={176}
+                                    level="M"
+                                    includeMargin={true}
+                                    className="w-44 h-44 rounded-lg bg-white p-2"
+                                />
+                            ) : null}
                         </div>
 
                         {/* Secret text key for copy */}

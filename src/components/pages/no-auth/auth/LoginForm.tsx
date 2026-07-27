@@ -116,22 +116,26 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <div className="space-y-6">
             {/* Header info */}
             <div>
-                <span className="text-[10px] font-bold text-primary-400 tracking-[0.2em] uppercase font-mono block mb-2 select-none">
+                <span className="text-[10px] font-bold text-cyan-400 tracking-[0.2em] uppercase font-mono block mb-1 select-none">
                     Welcome Back
                 </span>
                 <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
                     Sign in to your account
                 </h1>
-                <p className="text-slate-400 text-sm mt-2 font-sans select-none">
-                    Don't have an account?{' '}
-                    <Link href="/get-started" className="text-primary-400 font-semibold hover:underline">
-                        Create one free
+                <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-1 select-none">
+                    <span className="text-slate-350 text-sm font-sans">Don't have an account?</span>
+                    <Link 
+                        href="/get-started" 
+                        className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-500/50 font-bold text-xs transition-all duration-200 shadow-sm shadow-cyan-500/10"
+                    >
+                        <span>Create one free</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
-                </p>
+                </div>
             </div>
 
             {errorMsg && (
-                <div className="p-4 bg-rose-500/10 border border-rose-500/25 rounded-2xl text-xs font-semibold text-rose-450 font-sans leading-relaxed select-none text-left">
+                <div className="p-4 bg-rose-500/10 border border-rose-500/25 rounded-2xl text-xs font-semibold text-rose-400 font-sans leading-relaxed select-none text-left">
                     {errorMsg}
                 </div>
             )}
@@ -152,7 +156,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 {/* PIN Field */}
                 <div className="space-y-1.5 relative">
                     <div className="absolute right-0 top-0 select-none z-10">
-                        <Link href="/forgot-password" className="text-[11px] font-semibold text-slate-500 hover:text-slate-355 hover:underline">
+                        <Link href="/forgot-password" className="text-xs font-bold text-cyan-400 hover:text-cyan-300 hover:underline transition-colors">
                             Forgot PIN?
                         </Link>
                     </div>
@@ -174,7 +178,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                         onChange={setRememberMe}
                     />
                     <label 
-                        className="text-xs font-semibold text-slate-400 cursor-pointer font-sans"
+                        className="text-xs font-semibold text-slate-350 cursor-pointer font-sans"
                     >
                         Remember me for 30 days
                     </label>
@@ -186,7 +190,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                         type="submit"
                         variant="primary"
                         disabled={loading}
-                        className="w-full rounded-xl h-[52px] font-bold text-base shadow-lg shadow-primary-500/10"
+                        className="w-full rounded-xl h-[52px] font-bold text-base bg-gradient-to-r from-primary-600 via-primary-500 to-cyan-500 hover:from-primary-500 hover:to-cyan-400 text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
                         rightIcon={<ArrowRight className="h-5 w-5" />}
                     >
                         {loading ? 'Signing in...' : 'Sign in'}
@@ -197,27 +201,30 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
             {/* Google Social Divider */}
             {onGoogleSubmit && (
-                <div className="space-y-4">
+                <div className="space-y-4 pt-1">
                     <div className="flex items-center justify-between select-none">
-                        <div className="h-[1px] bg-white/5 flex-1"></div>
-                        <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest px-3 font-mono">Or continue with</span>
-                        <div className="h-[1px] bg-white/5 flex-1"></div>
+                        <div className="h-[1px] bg-white/10 flex-1"></div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 font-mono">Or continue with</span>
+                        <div className="h-[1px] bg-white/10 flex-1"></div>
                     </div>
                     
                     <button
                         type="button"
                         onClick={onGoogleSubmit}
                         disabled={googleLoading}
-                        className="w-full h-12 rounded-xl bg-[#0C1224] hover:bg-[#111930] text-slate-300 hover:text-white font-bold text-xs border border-white/5 flex items-center justify-center space-x-2.5 transition duration-200 cursor-pointer select-none active:scale-[0.98] disabled:opacity-50"
+                        className="w-full h-12 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-white font-bold text-xs flex items-center justify-center space-x-3 transition-all duration-200 cursor-pointer select-none active:scale-[0.98] disabled:opacity-50 shadow-md shadow-black/20 group"
                     >
                         {googleLoading ? (
-                            <RefreshCw className="h-4 w-4 animate-spin text-primary-400" />
+                            <RefreshCw className="h-4 w-4 animate-spin text-cyan-400" />
                         ) : (
                             <>
-                                <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                                    <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.472 0-6.29-2.818-6.29-6.29 0-3.472 2.818-6.29 6.29-6.29 1.506 0 2.88.533 3.96 1.417l3.056-3.056C18.995 2.19 15.82 1 12.24 1 6.033 1 1 6.033 1 12.24s5.033 11.24 11.24 11.24c5.897 0 10.74-4.246 10.74-10.74 0-.482-.043-.956-.12-1.422H12.24z"/>
+                                <svg className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                                 </svg>
-                                <span>Continue with Google</span>
+                                <span className="tracking-wide">Continue with Google</span>
                             </>
                         )}
                     </button>
@@ -225,8 +232,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
             )}
 
             {/* Encryption badge footer */}
-            <div className="flex items-center justify-center space-x-2 text-[10px] text-slate-500 font-bold tracking-wide select-none pt-4 font-sans">
-                <Lock className="h-3 w-3 stroke-[2.5]" />
+            <div className="flex items-center justify-center space-x-2 text-[10px] text-slate-400 font-bold tracking-wide select-none pt-2 font-sans">
+                <Lock className="h-3 w-3 stroke-[2.5] text-cyan-400" />
                 <span>Secured with 256-bit AES encryption • FCA authorised</span>
             </div>
         </div>

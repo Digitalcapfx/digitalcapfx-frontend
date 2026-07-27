@@ -164,7 +164,7 @@ const ForgotPassword = () => {
                     <div>
                         <Link
                             href="/login"
-                            className="inline-flex items-center space-x-2 text-xs font-bold text-slate-500 hover:text-slate-350 transition-colors font-sans select-none"
+                            className="inline-flex items-center space-x-2 text-xs font-bold text-slate-400 hover:text-cyan-300 transition-colors font-sans select-none"
                         >
                             <ArrowLeft className="h-4 w-4" />
                             <span>Back to sign in</span>
@@ -172,8 +172,8 @@ const ForgotPassword = () => {
                     </div>
 
                     <div className="relative w-fit">
-                        <div className="absolute inset-0 rounded-2xl bg-primary-500/20 blur-[20px]"></div>
-                        <div className="relative w-12 h-12 rounded-2xl bg-primary-500/10 border border-primary-500/25 flex items-center justify-center text-primary-400">
+                        <div className="absolute inset-0 rounded-2xl bg-cyan-500/20 blur-[20px]"></div>
+                        <div className="relative w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400">
                             {usePhone ? <Phone className="h-5 w-5" /> : <Mail className="h-5 w-5" />}
                         </div>
                     </div>
@@ -182,13 +182,13 @@ const ForgotPassword = () => {
                         <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
                             Forgot your PIN?
                         </h1>
-                        <p className="text-[#6D778A] text-sm font-sans leading-relaxed">
+                        <p className="text-slate-400 text-sm font-sans leading-relaxed">
                             Enter the email address or phone number linked to your account and we'll send you a verification code.
                         </p>
                     </div>
 
                     {errorMsg && (
-                        <div className="p-4 bg-rose-500/10 border border-rose-500/25 rounded-2xl text-xs font-semibold text-rose-455 font-sans leading-relaxed select-none">
+                        <div className="p-4 bg-rose-500/10 border border-rose-500/25 rounded-2xl text-xs font-semibold text-rose-400 font-sans leading-relaxed select-none">
                             {errorMsg}
                         </div>
                     )}
@@ -238,7 +238,7 @@ const ForgotPassword = () => {
                             type="submit"
                             variant="primary"
                             disabled={forgotPinMutation.isPending}
-                            className="w-full rounded-full h-[52px] font-semibold text-base"
+                            className="w-full rounded-xl h-[52px] font-bold text-base bg-gradient-to-r from-primary-600 via-primary-500 to-cyan-500 hover:from-primary-500 hover:to-cyan-400 text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
                             rightIcon={<ArrowRight className="h-5 w-5" />}
                         >
                             {forgotPinMutation.isPending ? 'Sending...' : 'Send reset code'}
@@ -246,9 +246,9 @@ const ForgotPassword = () => {
                     </form>
 
                     <div className="text-center pt-2 select-none">
-                        <span className="text-xs font-medium text-slate-500 font-sans">
+                        <span className="text-xs font-medium text-slate-400 font-sans">
                             Remembered it?{' '}
-                            <Link href="/login" className="text-primary-400 font-semibold hover:underline">
+                            <Link href="/login" className="text-cyan-400 font-bold hover:text-cyan-300 hover:underline">
                                 Sign in instead
                             </Link>
                         </span>
@@ -341,7 +341,7 @@ const ForgotPassword = () => {
                             type="submit"
                             variant="primary"
                             disabled={resetPinMutation.isPending}
-                            className="w-full rounded-full h-[52px] font-semibold text-base"
+                            className="w-full rounded-xl h-[52px] font-bold text-base bg-gradient-to-r from-primary-600 via-primary-500 to-cyan-500 hover:from-primary-500 hover:to-cyan-400 text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
                             rightIcon={<ArrowRight className="h-5 w-5" />}
                         >
                             {resetPinMutation.isPending ? 'Resetting PIN...' : 'Reset PIN'}

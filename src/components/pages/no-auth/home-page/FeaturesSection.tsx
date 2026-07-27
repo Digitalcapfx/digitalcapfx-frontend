@@ -3,6 +3,8 @@
 import React from 'react'
 import { Globe, Bitcoin, Zap, Shield, CreditCard, TrendingUp } from 'lucide-react'
 
+import { FEATURE_FLAGS } from '@/config/featureFlags'
+
 interface Feature {
     title: string;
     description: string;
@@ -19,13 +21,13 @@ const FEATURES: Feature[] = [
         iconColor: 'text-primary-500',
         iconBg: 'bg-primary-500/10',
     },
-    {
+    ...(FEATURE_FLAGS.ALLOW_CRYPTO ? [{
         title: 'Crypto Built-In',
         description: 'BTC, ETH, SOL, USDT, USDC and more. Your crypto wallet, fully integrated.',
         icon: Bitcoin,
         iconColor: 'text-[#F59E0B]',
         iconBg: 'bg-[#F59E0B]/10',
-    },
+    }] : []),
     {
         title: 'Instant Transfers',
         description: 'Send and receive money in seconds. No borders, no waiting, no hidden fees.',
@@ -35,7 +37,7 @@ const FEATURES: Feature[] = [
     },
     {
         title: 'Bank-Grade Security',
-        description: '256-bit encryption, biometric auth, and cold storage for digital assets.',
+        description: '256-bit encryption, biometric auth, and secure vault storage for assets.',
         icon: Shield,
         iconColor: 'text-[#22C55E]',
         iconBg: 'bg-[#22C55E]/10',
@@ -49,7 +51,7 @@ const FEATURES: Feature[] = [
     },
     {
         title: 'Real-Time Exchange',
-        description: 'Swap between fiat, stablecoins, and crypto at live market rates.',
+        description: 'Swap between fiat and digital balances at live market rates.',
         icon: TrendingUp,
         iconColor: 'text-[#FB7185]',
         iconBg: 'bg-[#FB7185]/10',

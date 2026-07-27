@@ -156,8 +156,12 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
             </div>
 
             {/* Right Column (Child forms) */}
-            <div className="col-span-12 lg:col-span-8 flex flex-col justify-center items-center p-6 sm:p-12 min-h-screen">
-                <div className="w-full max-w-[440px] space-y-8 py-10">
+            <div className="col-span-12 lg:col-span-8 flex flex-col justify-center items-center p-4 sm:p-8 md:p-12 min-h-screen relative overflow-hidden bg-[#040714]">
+                {/* Background Glow Orbs */}
+                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
+                <div className="absolute bottom-10 right-10 w-[350px] h-[350px] bg-primary-600/10 rounded-full blur-[100px] pointer-events-none" />
+
+                <div className="w-full max-w-[480px] bg-[#0A1124]/80 backdrop-blur-2xl border border-white/10 p-7 sm:p-10 rounded-3xl shadow-2xl shadow-cyan-950/40 relative z-10 my-auto">
                     {children}
                 </div>
             </div>

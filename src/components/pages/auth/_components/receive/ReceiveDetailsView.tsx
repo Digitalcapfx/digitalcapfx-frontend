@@ -5,6 +5,7 @@ import { Check, Copy, Share2, Info } from 'lucide-react'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Wallet } from '../ReceiveMoneySheet'
 import { useLanguageStore } from '@/store/languageStore'
+import { QRCodeSVG } from 'qrcode.react'
 
 interface DetailRowProps {
     label: string;
@@ -52,22 +53,28 @@ export const ReceiveDetailsView: React.FC<ReceiveDetailsViewProps> = ({
 }) => {
     const { t } = useLanguageStore();
 
+    // Determine clean QR payload value for instant mobile scanner compatibility
+    const qrValue = isCrypto
+        ? (activeWallet.walletAddress || address)
+        : (activeWallet.accountNumber || activeWallet.iban || activeWallet.walletAddress || address);
+
     return (
         <div className="space-y-6 animate-in fade-in duration-200 flex flex-col h-full">
             {/* QR Code Container */}
             <div className="flex flex-col items-center justify-center p-6 bg-white/[0.01] border border-white/5 rounded-3xl text-center space-y-4 select-none">
-                <div className="w-40 h-40 bg-white p-3 rounded-2xl shadow-lg relative flex items-center justify-center">
-                    <div className="absolute w-10 h-10 rounded-full bg-[#080D1C] flex items-center justify-center border-4 border-white shadow-md">
-                        <CurrencyIcon code={activeWallet.code} size="sm" className="border-none shadow-none" />
-                    </div>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(address)}`}
-                        alt="Wallet/Account QR Code"
-                        className="w-full h-full rounded-lg"
+                <div className="w-44 h-44 bg-white p-3 rounded-2xl shadow-lg relative flex items-center justify-center">
+                    <QRCodeSVG
+                        value={qrValue}
+                        size={152}
+                        level="H"
+                        includeMargin={true}
+                        className="w-full h-full"
                     />
+                    <div className="absolute w-8 h-8 rounded-full bg-[#080D1C] flex items-center justify-center border-2 border-white shadow-md pointer-events-none">
+                        <CurrencyIcon code={activeWallet.code} size="sm" className="border-none shadow-none scale-75" />
+                    </div>
                 </div>
-                <span className="text-[10px] text-slate-555 font-bold tracking-wider block">
+                <span className="text-[10px] text-slate-400 font-bold tracking-wider block">
                     {t('receive.details.yourCodeDetails', {
                         code: activeWallet.code,
                         type: isCrypto ? t('receive.details.address') : t('receive.details.bankDetails')

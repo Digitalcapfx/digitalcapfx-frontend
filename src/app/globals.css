@@ -103,6 +103,7 @@
   --color-primary-700: var(--primary-700);
   --color-primary-600: var(--primary-500);
   --color-primary-500: var(--primary-600);
+  --color-primary-400: var(--cyan-400);
   --color-cyan-500: var(--cyan-500);
   --color-cyan-400: var(--cyan-400);
   --color-cyan-300: var(--cyan-300);
@@ -116,9 +117,14 @@
   --color-slate-100: var(--slate-100);
   --color-slate-200: var(--slate-200);
   --color-slate-300: var(--slate-300);
+  --color-slate-350: #a1b0cb;
+  --color-[#6D778A]: #8292b4;
   --color-slate-400: var(--slate-400);
+  --color-slate-450: #7b8ea8;
   --color-slate-500: var(--slate-500);
+  --color-slate-550: #57657a;
   --color-slate-600: var(--slate-600);
+  --color-slate-650: #3b485d;
   --color-slate-700: var(--slate-700);
   --color-slate-800: var(--slate-800);
   --color-slate-900: var(--slate-900);

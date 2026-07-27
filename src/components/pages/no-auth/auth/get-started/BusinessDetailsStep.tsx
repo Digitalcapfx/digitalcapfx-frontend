@@ -58,13 +58,13 @@ export const BusinessDetailsStep: React.FC = () => {
       <div>
         <button 
           onClick={() => setStep('account-type')}
-          className="inline-flex items-center space-x-2 text-xs font-bold text-slate-500 hover:text-slate-350 transition-colors font-sans select-none mb-3"
+          className="inline-flex items-center space-x-2 text-xs font-bold text-slate-400 hover:text-cyan-300 transition-colors font-sans select-none mb-3 cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back</span>
         </button>
-        <span className="text-[10px] font-bold text-primary-400 tracking-[0.15em] uppercase font-mono block mb-1.5">
-          Step 2 of 6
+        <span className="text-[10px] font-bold text-cyan-400 tracking-[0.15em] uppercase font-mono block mb-1.5">
+          Step 3 of 5
         </span>
         <h1 className="font-satoshi font-black text-2xl text-white tracking-tight">
           Business details
@@ -131,7 +131,7 @@ export const BusinessDetailsStep: React.FC = () => {
           <Button
             type="submit"
             variant="primary"
-            className="w-full rounded-full h-[52px] font-semibold text-base"
+            className="w-full rounded-xl h-[52px] font-bold text-base bg-gradient-to-r from-primary-600 via-primary-500 to-cyan-500 hover:from-primary-500 hover:to-cyan-400 text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
             rightIcon={<ArrowRight className="h-5 w-5" />}
           >
             Continue
