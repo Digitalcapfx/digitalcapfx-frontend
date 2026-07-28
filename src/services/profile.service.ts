@@ -16,7 +16,7 @@ export interface ProfileResponseData {
   email: string;
   phoneNumber: string;
   isEmailVerified: boolean;
-  kycStatus: 'idle' | 'pending' | 'approved' | 'rejected';
+  kycStatus: 'pending' | 'submitted' | 'under_review' | 'processing' | 'approved' | 'rejected' | 'idle' | string;
   accountType?: 'individual' | 'business';
   companyLegalName?: string;
   dateOfBirth?: string;
