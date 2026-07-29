@@ -7,10 +7,36 @@ export interface DocumentUploadRequest {
 
 export type KycStatus = 'pending' | 'submitted' | 'under_review' | 'processing' | 'approved' | 'rejected' | 'idle';
 
+export type KycStage =
+  | 'not_started'
+  | 'draft'
+  | 'submitted'
+  | 'identity_started'
+  | 'in_review'
+  | 'approved'
+  | 'resubmit'
+  | 'rejected';
+
+export interface KycIntakeStatus {
+  status: 'not_started' | 'draft' | 'submitted' | string;
+  submitted_at?: string;
+}
+
+export interface KycIdentityStatus {
+  status: 'not_started' | 'in_progress' | 'in_review' | 'approved' | 'rejected' | 'resubmit' | string;
+  applicant_id?: string;
+  review_answer?: 'GREEN' | 'RED' | string;
+  reject_labels?: string[];
+  moderation_comment?: string;
+}
+
 export interface KycStatusResponseData {
   status?: KycStatus;
   kycStatus?: KycStatus;
   kyc_status?: KycStatus;
+  stage?: KycStage;
+  intake?: KycIntakeStatus;
+  identity?: KycIdentityStatus;
   rejectionReason?: string;
   rejection_reason?: string;
 }
@@ -22,13 +48,14 @@ export interface IntakeCounterparty {
 }
 
 export interface KYCIntakePayload {
+  date_of_birth?: string;
+  nationality?: string;
+  bvn?: string;
   address_line1?: string;
   address_line2?: string;
   city?: string;
   state?: string;
   postal_code?: string;
-  nationality?: string;
-  date_of_birth?: string;
   occupation?: string;
   source_of_funds?: string;
   purpose_of_account?: string;
@@ -43,8 +70,10 @@ export interface IntakeFieldSpec {
   key: string;
   label: string;
   help?: string;
-  type: string;
+  type: 'text' | 'date' | 'select' | 'country' | 'boolean' | 'repeatable' | 'counterparties' | string;
   required?: boolean;
+  group?: 'identity' | 'address' | 'contact' | 'financial' | string;
+  order?: number;
   options?: string[];
 }
 
@@ -52,17 +81,23 @@ export interface DocumentSpec {
   key: string;
   label: string;
   help?: string;
+  appliesTo?: string;
   applies_to?: string;
   required?: boolean;
   scope?: string;
+  maxAgeMonths?: number;
   max_age_months?: number;
 }
 
 export interface IntakeRequirementsResponse {
-  account_type?: string;
+  accountType?: 'business' | 'individual' | string;
+  account_type?: 'business' | 'individual' | string;
+  intakeStatus?: 'not_started' | 'draft' | 'submitted' | string;
+  intake_status?: 'not_started' | 'draft' | 'submitted' | string;
   completed?: boolean;
-  documents?: DocumentSpec[];
+  values?: Record<string, any>;
   fields?: IntakeFieldSpec[];
+  documents?: DocumentSpec[];
   notes?: string[];
 }
 
@@ -72,13 +107,18 @@ export class KycService extends BaseService {
     return response.data;
   }
 
-  async getKycStatus() {
+  async getKycStatus(): Promise<{ success: boolean; data: KycStatusResponseData }> {
     const response = await this.api.get('/kyc/status');
     return response.data;
   }
 
-  async getKycRequirements(): Promise<any> {
+  async getKycRequirements(): Promise<{ success: boolean; data: IntakeRequirementsResponse }> {
     const response = await this.api.get('/kyc/requirements');
+    return response.data;
+  }
+
+  async saveIntakeDraft(values: Record<string, any>) {
+    const response = await this.api.put('/kyc/intake/draft', { values });
     return response.data;
   }
 
@@ -104,3 +144,4 @@ export class KycService extends BaseService {
 }
 
 export const kycService = new KycService();
+

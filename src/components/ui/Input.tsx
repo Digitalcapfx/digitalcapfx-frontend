@@ -22,6 +22,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label className="text-xs font-semibold text-slate-400 block tracking-wide">
             {label}
+            {props.required && <span className="text-rose-400 font-bold ml-1">*</span>}
           </label>
         )}
         <div className="relative flex items-center">

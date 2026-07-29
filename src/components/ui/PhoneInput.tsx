@@ -243,6 +243,7 @@ export const PhoneInput = React.forwardRef<any, PhoneInputProps>(
                 {label && (
                     <label className="text-xs font-semibold text-slate-400 block tracking-wide select-none">
                         {label}
+                        {required && <span className="text-rose-400 font-bold ml-1">*</span>}
                     </label>
                 )}
                 

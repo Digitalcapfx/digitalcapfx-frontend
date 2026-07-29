@@ -246,15 +246,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (normalizedKycStatus === 'approved') {
         kycBadge = isBusiness ? '✓ KYB Verified' : '✓ KYC Verified';
         badgeColor = 'text-emerald-400 border-emerald-500/10 bg-emerald-500/5';
-    } else if (['submitted', 'under_review', 'processing'].includes(normalizedKycStatus)) {
+    } else if (['under_review', 'processing'].includes(normalizedKycStatus)) {
         kycBadge = '⚠ KYC Under Review';
         badgeColor = 'text-orange-400 border-orange-500/10 bg-orange-500/5';
     } else if (normalizedKycStatus === 'rejected') {
         kycBadge = '✕ KYC Rejected';
         badgeColor = 'text-rose-455 border-rose-500/10 bg-rose-500/5';
-    } else { // 'pending', 'idle', or initial default state
-        kycBadge = '✕ KYC Unverified';
-        badgeColor = 'text-rose-400 border-rose-500/10 bg-rose-500/5';
+    } else { // 'submitted', 'pending', 'draft', 'idle', or initial state
+        kycBadge = '⚠ KYC Incomplete';
+        badgeColor = 'text-amber-400 border-amber-500/10 bg-amber-500/5';
     }
 
     return (
@@ -420,26 +420,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {profile && normalizedKycStatus !== 'approved' && (
                     <div className={cn(
                         "px-8 py-3.5 border-b flex items-center justify-between text-xs font-semibold select-none animate-in slide-in-from-top duration-300",
-                        ['submitted', 'under_review', 'processing'].includes(normalizedKycStatus)
+                        ['under_review', 'processing'].includes(normalizedKycStatus)
                             ? "bg-amber-500/5 border-amber-500/10 text-amber-400"
-                            : "bg-rose-500/5 border-rose-500/10 text-rose-455"
+                            : normalizedKycStatus === 'rejected'
+                            ? "bg-rose-500/5 border-rose-500/10 text-rose-455"
+                            : "bg-amber-500/5 border-amber-500/10 text-amber-400"
                     )}>
                         <div className="flex items-center space-x-3.5">
                             <ShieldWarning className="h-5 w-5 shrink-0" />
                             <p>
-                                {['submitted', 'under_review', 'processing'].includes(normalizedKycStatus)
+                                {['under_review', 'processing'].includes(normalizedKycStatus)
                                     ? 'Identity verification is currently under compliance review. Transfers, exchanges, and top-ups will remain locked until verified.'
                                     : normalizedKycStatus === 'rejected'
                                     ? 'Identity verification was rejected. Please review rejection feedback and resubmit your compliance documentation.'
-                                    : 'Identity Verification Required. Please submit compliance documentation to activate treasury actions, stablecoin sends, and exchanges.'}
+                                    : 'Identity Verification Incomplete. Please complete your compliance details and liveness check to activate transfer features.'}
                             </p>
                         </div>
-                        {!['submitted', 'under_review', 'processing'].includes(normalizedKycStatus) && (
+                        {!['under_review', 'processing'].includes(normalizedKycStatus) && (
                             <Link
                                 href="/settings/verification"
-                                className="px-4.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500 text-white transition font-bold shrink-0 text-[10.5px] uppercase tracking-wider"
+                                className="px-4.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 hover:text-black text-amber-300 transition font-bold shrink-0 text-[10.5px] uppercase tracking-wider"
                             >
-                                Verify Now
+                                {['submitted', 'draft', 'pending', 'idle'].includes(normalizedKycStatus) ? 'Complete Verification' : 'Verify Now'}
                             </Link>
                         )}
                     </div>

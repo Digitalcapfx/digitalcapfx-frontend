@@ -26,6 +26,26 @@ const MONTHS = [
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: currentYear - 1920 + 1 }, (_, i) => currentYear - i);
 
+const parseDate = (val: string | Date | null | undefined): Date | null => {
+  if (!val) return null;
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+  const str = String(val).trim();
+  if (!str) return null;
+
+  // Match YYYY-MM-DD or YYYY/MM/DD or ISO string starting with YYYY-MM-DD
+  const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (isoMatch) {
+    const y = parseInt(isoMatch[1], 10);
+    const m = parseInt(isoMatch[2], 10) - 1;
+    const d = parseInt(isoMatch[3], 10);
+    const dateObj = new Date(y, m, d);
+    return isNaN(dateObj.getTime()) ? null : dateObj;
+  }
+
+  const dateObj = new Date(str);
+  return isNaN(dateObj.getTime()) ? null : dateObj;
+};
+
 export const DatePicker: React.FC<DatePickerProps> = ({
   value,
   onChange,
@@ -40,21 +60,19 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Parse initial state date
-  const parsedDate = value ? new Date(value) : null;
-  const initialYear = parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate.getFullYear() : currentYear;
-  const initialMonth = parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate.getMonth() : new Date().getMonth();
+  const parsedDate = parseDate(value);
+  const initialYear = parsedDate ? parsedDate.getFullYear() : currentYear;
+  const initialMonth = parsedDate ? parsedDate.getMonth() : new Date().getMonth();
 
   const [currentViewYear, setCurrentViewYear] = useState(initialYear);
   const [currentViewMonth, setCurrentViewMonth] = useState(initialMonth);
 
   // Update view when value changes externally
   useEffect(() => {
-    if (value) {
-      const d = new Date(value);
-      if (!isNaN(d.getTime())) {
-        setCurrentViewYear(d.getFullYear());
-        setCurrentViewMonth(d.getMonth());
-      }
+    const d = parseDate(value);
+    if (d) {
+      setCurrentViewYear(d.getFullYear());
+      setCurrentViewMonth(d.getMonth());
     }
   }, [value]);
 
@@ -69,11 +87,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Format date for trigger button e.g., "December 3, 1990"
+  // Format date for trigger button e.g., "July 3, 1990"
   const getFormattedValue = () => {
-    if (!value) return "";
-    const dateObj = new Date(value);
-    if (isNaN(dateObj.getTime())) return "";
+    const dateObj = parseDate(value);
+    if (!dateObj) return "";
     return dateObj.toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",
@@ -185,8 +202,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   const isSelected = (day: number) => {
-    if (!value) return false;
-    const d = new Date(value);
+    const d = parseDate(value);
+    if (!d) return false;
     return d.getDate() === day &&
       d.getMonth() === currentViewMonth &&
       d.getFullYear() === currentViewYear;
@@ -223,6 +240,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       {label && (
         <label className="text-xs font-semibold text-slate-400 block tracking-wide select-none">
           {label}
+          {required && <span className="text-rose-400 font-bold ml-1">*</span>}
         </label>
       )}
 
