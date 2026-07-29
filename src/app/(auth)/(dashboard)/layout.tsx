@@ -21,7 +21,8 @@ import {
     Menu,
     X,
     Users,
-    Smartphone
+    Smartphone,
+    Lock
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SendMoneySheet from '@/components/pages/auth/_components/SendMoneySheet'
@@ -75,6 +76,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         queryFn: () => profileService.getProfile(),
         refetchOnWindowFocus: false,
     });
+
+    const profile = profileQuery.data?.data;
+    const normalizedKycStatus = (profile?.kycStatus || '').toLowerCase();
+    const isVerified = normalizedKycStatus === 'approved';
+
+    // Route Protection Effect: lock non-verification pages if not verified
+    useEffect(() => {
+        if (profile && !isVerified) {
+            const isAllowedPath = pathname.startsWith('/settings');
+            if (!isAllowedPath) {
+                toast.error('Identity verification required. Complete your compliance verification to unlock all portal features.', {
+                    id: 'kyc-protection-toast'
+                });
+                router.replace('/settings');
+            }
+        }
+    }, [profile, isVerified, pathname, router]);
 
     // Countdown for Resend OTP code
     useEffect(() => {
@@ -132,6 +150,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const handleSignOut = () => {
         authService.logout().finally(() => {
+            queryClient.clear();
             localStorage.removeItem('account_type');
             router.push('/login');
         });
@@ -146,8 +165,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
         );
     }
-
-    const profile = profileQuery.data?.data;
 
     // Block page view if email is unverified
     if (profile && !profile.isEmailVerified) {
@@ -241,7 +258,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // KYC Status sidebar formatting
     let kycBadge = '✕ KYC Unverified';
     let badgeColor = 'text-rose-400 border-rose-500/10 bg-rose-500/5';
-    const normalizedKycStatus = (profile?.kycStatus || '').toLowerCase();
 
     if (normalizedKycStatus === 'approved') {
         kycBadge = isBusiness ? '✓ KYB Verified' : '✓ KYC Verified';
@@ -265,7 +281,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="space-y-8">
                     {/* Brand Logo */}
                     <div className="flex flex-col items-start">
-                        <Link href="/dashboard">
+                        <Link href={isVerified ? "/dashboard" : "/settings"}>
                             <Image
                                 src="/DFXLogo.svg"
                                 alt="DigitalCap Logo"
@@ -287,16 +303,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             return (
                                 <Link
                                     key={link.label}
-                                    href={link.href}
+                                    href={isVerified ? link.href : '/settings'}
+                                    onClick={(e) => {
+                                        if (!isVerified) {
+                                            e.preventDefault();
+                                            toast.error(`Verification Required: Access to ${link.label} is locked until your identity verification is approved.`, {
+                                                id: `nav-lock-${link.href}`
+                                            });
+                                            router.push('/settings');
+                                        }
+                                    }}
                                     className={cn(
-                                        "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition duration-200 focus:outline-none",
+                                        "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition duration-200 focus:outline-none",
                                         active
                                             ? "bg-primary-500/10 border border-primary-500/20 text-primary-400"
+                                            : !isVerified
+                                            ? "text-slate-500 hover:text-slate-400 hover:bg-white/[0.01]"
                                             : "text-slate-400 hover:text-white hover:bg-white/[0.02]"
                                     )}
                                 >
-                                    <IconComponent className="h-5 w-5" />
-                                    <span>{link.label}</span>
+                                    <div className="flex items-center space-x-3">
+                                        <IconComponent className="h-5 w-5" />
+                                        <span>{link.label}</span>
+                                    </div>
+                                    {!isVerified && (
+                                        <Lock className="h-3.5 w-3.5 text-amber-400/70 shrink-0" />
+                                    )}
                                 </Link>
                             )
                         })}
@@ -438,7 +470,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </div>
                         {!['under_review', 'processing'].includes(normalizedKycStatus) && (
                             <Link
-                                href="/settings/verification"
+                                href="/settings"
                                 className="px-4.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 hover:text-black text-amber-300 transition font-bold shrink-0 text-[10.5px] uppercase tracking-wider"
                             >
                                 {['submitted', 'draft', 'pending', 'idle'].includes(normalizedKycStatus) ? 'Complete Verification' : 'Verify Now'}
@@ -449,15 +481,44 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                 {/* Inner Pages Content */}
                 <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 flex-grow overflow-y-auto">
-                    {children}
+                    {!isVerified && !pathname.startsWith('/settings') ? (
+                        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 space-y-6 bg-[#080E1E] border border-white/5 rounded-3xl animate-in fade-in duration-300">
+                            <div className="relative">
+                                <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-[25px]"></div>
+                                <div className="relative w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+                                    <Lock className="h-8 w-8" />
+                                </div>
+                            </div>
+
+                            <div className="max-w-md space-y-2">
+                                <h3 className="text-xl font-bold text-white font-satoshi">Identity Verification Required</h3>
+                                <p className="text-xs text-slate-400 leading-relaxed">
+                                    All portal features (Wallets, Exchanges, Cards, and Transfers) remain locked until your compliance verification is completed and approved.
+                                </p>
+                            </div>
+
+                            <Link
+                                href="/settings"
+                                className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-xl transition cursor-pointer"
+                            >
+                                Complete Verification Now
+                            </Link>
+                        </div>
+                    ) : (
+                        children
+                    )}
                 </div>
 
-                {/* Global Action Sheets */}
-                <SendMoneySheet />
-                <ReceiveMoneySheet />
-                <FundCardSheet />
-                <NewCardSheet />
-                <PhoneSendSheet />
+                {/* Global Action Sheets (Only enabled when verified) */}
+                {isVerified && (
+                    <>
+                        <SendMoneySheet />
+                        <ReceiveMoneySheet />
+                        <FundCardSheet />
+                        <NewCardSheet />
+                        <PhoneSendSheet />
+                    </>
+                )}
 
             </div>
 
@@ -476,7 +537,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             {/* Brand Logo & Close Button */}
                             <div className="flex items-center justify-between w-full">
                                 <div className="flex flex-col items-start">
-                                    <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                                    <Link href={isVerified ? "/dashboard" : "/settings"} onClick={() => setMobileMenuOpen(false)}>
                                         <Image
                                             src="/DFXLogo.svg"
                                             alt="DigitalCap Logo"
@@ -505,17 +566,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     return (
                                         <Link
                                             key={link.label}
-                                            href={link.href}
-                                            onClick={() => setMobileMenuOpen(false)}
+                                            href={isVerified ? link.href : '/settings'}
+                                            onClick={(e) => {
+                                                if (!isVerified) {
+                                                    e.preventDefault();
+                                                    toast.error(`Verification Required: Access to ${link.label} is locked until your identity verification is approved.`, {
+                                                        id: `mobile-nav-lock-${link.href}`
+                                                    });
+                                                    router.push('/settings');
+                                                }
+                                                setMobileMenuOpen(false);
+                                            }}
                                             className={cn(
-                                                "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition duration-200 focus:outline-none",
+                                                "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition duration-200 focus:outline-none",
                                                 active
                                                     ? "bg-primary-500/10 border border-primary-500/20 text-primary-400"
+                                                    : !isVerified
+                                                    ? "text-slate-500 hover:text-slate-400 hover:bg-white/[0.01]"
                                                     : "text-slate-400 hover:text-white hover:bg-white/[0.02]"
                                             )}
                                         >
-                                            <IconComponent className="h-5 w-5" />
-                                            <span>{link.label}</span>
+                                            <div className="flex items-center space-x-3">
+                                                <IconComponent className="h-5 w-5" />
+                                                <span>{link.label}</span>
+                                            </div>
+                                            {!isVerified && (
+                                                <Lock className="h-3.5 w-3.5 text-amber-400/70 shrink-0" />
+                                            )}
                                         </Link>
                                     )
                                 })}

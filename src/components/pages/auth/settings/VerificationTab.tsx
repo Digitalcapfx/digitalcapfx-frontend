@@ -111,15 +111,6 @@ export const VerificationTab: React.FC = () => {
   const totalSteps = hasDocuments ? 3 : 2;
   const livenessStepNumber = hasDocuments ? 3 : 2;
 
-  // Set default mainStep based on initial stage & document requirement
-  useEffect(() => {
-    if (stage === 'submitted' || stage === 'identity_started' || stage === 'resubmit') {
-      setMainStep(livenessStepNumber);
-    } else if (stage === 'draft' || stage === 'not_started') {
-      setMainStep(1);
-    }
-  }, [stage, livenessStepNumber]);
-
   // Keep mainStep clamped within total steps bounds
   useEffect(() => {
     if (mainStep > livenessStepNumber) {
@@ -186,94 +177,90 @@ export const VerificationTab: React.FC = () => {
   const serializedValues = useMemo(() => JSON.stringify(valuesFromReq || {}), [valuesFromReq]);
   const serializedFields = useMemo(() => JSON.stringify(fieldsList || []), [fieldsList]);
 
+  // Reset form and uploaded doc state when active user changes
+  const activeUserId = profileQuery.data?.data?.id || profileQuery.data?.data?.email;
+  useEffect(() => {
+    if (activeUserId) {
+      setIntakeForm({});
+      setUploadedDocUrls({});
+    }
+  }, [activeUserId]);
+
   // Prefill intake form dynamically from backend requirements values, fields spec, and profile data
   useEffect(() => {
-    setIntakeForm((prev) => {
-      let updated = { ...prev };
-      let hasChanges = false;
+    let updated: Record<string, any> = {};
 
-      // 1. Map values and fields by evaluating exact, camelCase, and snake_case keys
-      fieldsList.forEach((field) => {
-        const camelKey = field.key.replace(/([-_][a-z])/g, (g) => g.toUpperCase().replace('-', '').replace('_', ''));
-        const snakeKey = field.key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+    // 1. Map values and fields by evaluating exact, camelCase, and snake_case keys
+    fieldsList.forEach((field) => {
+      const camelKey = field.key.replace(/([-_][a-z])/g, (g) => g.toUpperCase().replace('-', '').replace('_', ''));
+      const snakeKey = field.key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 
-        const existingVal = getValueForKey(valuesFromReq, field.key) ?? getValueForKey(prev, field.key);
+      const existingVal = getValueForKey(valuesFromReq, field.key);
 
-        let finalVal = existingVal;
-        if (finalVal !== undefined && finalVal !== null) {
-          if (typeof finalVal === 'string' && finalVal.includes('T') && (field.type === 'date' || field.key.toLowerCase().includes('date'))) {
+      let finalVal = existingVal;
+      if (finalVal !== undefined && finalVal !== null) {
+        if (typeof finalVal === 'string' && finalVal.includes('T') && (field.type === 'date' || field.key.toLowerCase().includes('date'))) {
+          finalVal = finalVal.split('T')[0];
+        }
+      } else {
+        if (field.type === 'boolean') {
+          finalVal = false;
+        } else if (field.type === 'repeatable' || field.type === 'counterparties' || field.key.toLowerCase().includes('counterpart')) {
+          finalVal = [{ country: '', purpose: '', relationship: '' }];
+        } else if (field.type === 'select' && field.options && field.options.length > 0) {
+          const firstOpt = typeof field.options[0] === 'string' ? field.options[0] : (field.options[0] as any)?.value;
+          finalVal = firstOpt || '';
+        } else {
+          finalVal = '';
+        }
+      }
+
+      [field.key, camelKey, snakeKey].forEach((k) => {
+        updated[k] = finalVal;
+      });
+    });
+
+    // 2. Merge any leftover saved values from backend (/kyc/requirements)
+    if (valuesFromReq && typeof valuesFromReq === 'object') {
+      Object.entries(valuesFromReq).forEach(([key, val]) => {
+        if (val !== undefined && val !== null) {
+          let finalVal = val;
+          if (typeof finalVal === 'string' && finalVal.includes('T') && key.toLowerCase().includes('date')) {
             finalVal = finalVal.split('T')[0];
           }
-        } else {
-          if (field.type === 'boolean') {
-            finalVal = false;
-          } else if (field.type === 'repeatable' || field.type === 'counterparties' || field.key.toLowerCase().includes('counterpart')) {
-            finalVal = [{ country: '', purpose: '', relationship: '' }];
-          } else if (field.type === 'select' && field.options && field.options.length > 0) {
-            const firstOpt = typeof field.options[0] === 'string' ? field.options[0] : (field.options[0] as any)?.value;
-            finalVal = firstOpt || '';
-          } else {
-            finalVal = '';
-          }
-        }
+          const camelKey = key.replace(/([-_][a-z])/g, (g) => g.toUpperCase().replace('-', '').replace('_', ''));
+          const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 
-        [field.key, camelKey, snakeKey].forEach((k) => {
-          if (JSON.stringify(updated[k]) !== JSON.stringify(finalVal)) {
+          [key, camelKey, snakeKey].forEach((k) => {
             updated[k] = finalVal;
-            hasChanges = true;
-          }
-        });
+          });
+        }
       });
+    }
 
-      // 2. Merge any leftover saved values from backend (/kyc/requirements)
-      if (valuesFromReq && typeof valuesFromReq === 'object') {
-        Object.entries(valuesFromReq).forEach(([key, val]) => {
-          if (val !== undefined && val !== null) {
-            let finalVal = val;
-            if (typeof finalVal === 'string' && finalVal.includes('T') && key.toLowerCase().includes('date')) {
-              finalVal = finalVal.split('T')[0];
-            }
-            const camelKey = key.replace(/([-_][a-z])/g, (g) => g.toUpperCase().replace('-', '').replace('_', ''));
-            const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-
-            [key, camelKey, snakeKey].forEach((k) => {
-              if (JSON.stringify(updated[k]) !== JSON.stringify(finalVal)) {
-                updated[k] = finalVal;
-                hasChanges = true;
-              }
-            });
-          }
-        });
+    // 3. Fallback prefill from user profile for common basic fields
+    if (profileQuery.data?.success && profileQuery.data.data) {
+      const p = profileQuery.data.data;
+      if (!getValueForKey(updated, 'contact_email') && p.email) {
+        updated.contact_email = p.email;
+        updated.contactEmail = p.email;
       }
-
-      // 3. Fallback prefill from user profile for common basic fields
-      if (profileQuery.data?.success && profileQuery.data.data) {
-        const p = profileQuery.data.data;
-        if (!getValueForKey(updated, 'contact_email') && p.email) {
-          updated.contact_email = p.email;
-          updated.contactEmail = p.email;
-          hasChanges = true;
-        }
-        if (!getValueForKey(updated, 'contact_phone') && p.phoneNumber) {
-          updated.contact_phone = p.phoneNumber;
-          updated.contactPhone = p.phoneNumber;
-          hasChanges = true;
-        }
-        if (!getValueForKey(updated, 'nationality') && p.nationality) {
-          updated.nationality = p.nationality;
-          hasChanges = true;
-        }
-        if (!getValueForKey(updated, 'date_of_birth') && p.dateOfBirth) {
-          let dob = p.dateOfBirth;
-          if (typeof dob === 'string' && dob.includes('T')) dob = dob.split('T')[0];
-          updated.date_of_birth = dob;
-          updated.dateOfBirth = dob;
-          hasChanges = true;
-        }
+      if (!getValueForKey(updated, 'contact_phone') && p.phoneNumber) {
+        updated.contact_phone = p.phoneNumber;
+        updated.contactPhone = p.phoneNumber;
       }
+      if (!getValueForKey(updated, 'nationality') && p.nationality) {
+        updated.nationality = p.nationality;
+      }
+      if (!getValueForKey(updated, 'date_of_birth') && p.dateOfBirth) {
+        let dob = p.dateOfBirth;
+        if (typeof dob === 'string' && dob.includes('T')) dob = dob.split('T')[0];
+        updated.date_of_birth = dob;
+        updated.dateOfBirth = dob;
+      }
+    }
 
-      return hasChanges ? updated : prev;
-    });
+    setIntakeForm(updated);
   }, [serializedValues, serializedFields, profileQuery.data]);
 
   // Draft save mutation (PUT /kyc/intake/draft)

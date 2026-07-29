@@ -368,11 +368,11 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
 
             {renderStep()}
 
-            {step === 1 && (
+            {/* {step === 1 && (
                 <div className="text-center select-none pt-2 text-[10px] text-slate-555 font-semibold font-sans">
                     {t('phone.send.disclaimer')}
                 </div>
-            )}
+            )} */}
         </>
     );
 
