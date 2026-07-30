@@ -90,6 +90,12 @@ export const ReceiveMoneySheet: React.FC = () => {
         enabled: isReceiveOpen,
     });
 
+    const cryptoWalletQuery = useQuery({
+        queryKey: ['cryptoWallet'],
+        queryFn: () => accountService.getCryptoWallet(),
+        enabled: isReceiveOpen,
+    });
+
     const waasWalletsQuery = useQuery({
         queryKey: ['waasWallets'],
         queryFn: () => accountService.getWaaSWallets(),
@@ -102,6 +108,9 @@ export const ReceiveMoneySheet: React.FC = () => {
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
         const d = cryptoQuery.data.data;
         const symbol = d.symbol || 'iUSD';
+        const caasWalletData = cryptoWalletQuery.data?.data;
+        const caasAddress = caasWalletData?.abstraction_address || caasWalletData?.abstractionAddress || caasWalletData?.walletAddress || d.walletAddress;
+
         walletsList.push({
             id: symbol.toLowerCase(),
             name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
@@ -109,7 +118,7 @@ export const ReceiveMoneySheet: React.FC = () => {
             type: 'stablecoin',
             balance: d.balanceFormatted || formatCurrencyByLocale(d.balanceUsdc, symbol),
             rawBalance: parseFloat(d.balanceUsdc || '0'),
-            walletAddress: d.walletAddress,
+            walletAddress: caasAddress,
             provider: 'caas'
         });
     }

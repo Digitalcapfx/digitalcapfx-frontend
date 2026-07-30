@@ -52,6 +52,12 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
                 </div>
             )}
 
+            {/* Network Badge */}
+            <div className="flex items-center justify-between text-[10px] bg-cyan-500/10 border border-cyan-500/25 rounded-xl px-3.5 py-2 text-cyan-300 font-mono select-none">
+                <span className="font-bold uppercase tracking-wider">Settlement Network</span>
+                <span className="font-extrabold text-cyan-400">USDC on Polygon (POL)</span>
+            </div>
+
             {/* Recipient Type Segment Toggle */}
             <div className="space-y-1.5">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Recipient Rail</span>

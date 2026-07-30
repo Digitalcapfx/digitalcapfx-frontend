@@ -8,6 +8,9 @@ import { useLanguageStore } from '@/store/languageStore'
 import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'sonner'
 
+import { useQuery } from '@tanstack/react-query'
+import { accountService } from '@/services/account.service'
+
 interface DetailRowProps {
     label: string;
     value: string;
@@ -55,7 +58,24 @@ export const ReceiveDetailsView: React.FC<ReceiveDetailsViewProps> = ({
 }) => {
     const { t } = useLanguageStore();
 
-    const actualAddress = (activeWallet.walletAddress || address || '').trim();
+    const cryptoWalletQuery = useQuery({
+        queryKey: ['cryptoWallet'],
+        queryFn: () => accountService.getCryptoWallet(),
+        enabled: isCrypto,
+    });
+
+    const fetchedCaasAddress = cryptoWalletQuery.data?.data?.abstraction_address ||
+                               cryptoWalletQuery.data?.data?.abstractionAddress ||
+                               cryptoWalletQuery.data?.data?.walletAddress || '';
+
+    const validWalletAddress = activeWallet.walletAddress && activeWallet.walletAddress !== t('receive.addressNotAvailable')
+        ? activeWallet.walletAddress
+        : '';
+    const validPassedAddress = address && address !== t('receive.addressNotAvailable')
+        ? address
+        : '';
+
+    const actualAddress = (validWalletAddress || fetchedCaasAddress || validPassedAddress).trim();
     const hasBankDetails = Boolean(
         activeWallet.accountNumber ||
         activeWallet.accountNumberUk ||
@@ -103,6 +123,13 @@ export const ReceiveDetailsView: React.FC<ReceiveDetailsViewProps> = ({
                                 type: isCrypto ? t('receive.details.address') : t('receive.details.bankDetails')
                             })}
                         </span>
+
+                        {isCrypto && (
+                            <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/25 rounded-full text-cyan-400 font-mono text-[10px] font-bold">
+                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                                <span>Network: USDC on Polygon (POL)</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Dynamically List Banking / Local details */}

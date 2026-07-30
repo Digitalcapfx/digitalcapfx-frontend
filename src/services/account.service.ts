@@ -34,9 +34,16 @@ export interface CryptoBalanceResponse {
 }
 
 export interface CaasWalletData {
-  caasWalletId: string;
-  abstractionAddress: string;
-  createdAt: string;
+  caasWalletId?: string;
+  caas_wallet_id?: string;
+  abstractionAddress?: string;
+  abstraction_address?: string;
+  walletAddress?: string;
+  id?: string;
+  is_active?: boolean;
+  user_id?: string;
+  createdAt?: string;
+  created_at?: string;
 }
 
 export interface CaasWalletResponse {

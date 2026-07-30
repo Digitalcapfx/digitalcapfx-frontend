@@ -179,6 +179,11 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                 {isCrypto ? (
                     /* Crypto Recipient Input */
                     <div className="space-y-4 animate-in fade-in duration-200">
+                        {/* Network notice */}
+                        <div className="flex items-center justify-between text-[10px] bg-cyan-500/10 border border-cyan-500/25 rounded-xl px-3.5 py-2 text-cyan-300 font-mono select-none">
+                            <span className="font-bold uppercase tracking-wider">Settlement Network</span>
+                            <span className="font-extrabold text-cyan-400">USDC on Polygon (POL)</span>
+                        </div>
                         {activeWallet.provider === 'waas' ? (
                             <div className="space-y-1.5 animate-in fade-in duration-200">
                                 <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('send.form.recipientAddress', { code: activeWallet.code })}</span>

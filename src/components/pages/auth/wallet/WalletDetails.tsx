@@ -20,6 +20,8 @@ import { Wallet } from './WalletsPage'
 import { useTransactionStore } from '@/store/transactionStore'
 import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
+import { useQuery } from '@tanstack/react-query'
+import { accountService } from '@/services/account.service'
 
 const formatBalance = (amount: string | number, currency: string) => {
     return formatCurrencyByLocale(amount, currency);
@@ -98,6 +100,15 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
     const openSend = useTransactionStore((state) => state.openSend);
     const openReceive = useTransactionStore((state) => state.openReceive);
 
+    const cryptoWalletQuery = useQuery({
+        queryKey: ['cryptoWallet'],
+        queryFn: () => accountService.getCryptoWallet(),
+        enabled: wallet.type === 'stablecoin',
+    });
+
+    const caasWalletData = cryptoWalletQuery.data?.data;
+    const fetchedCaasAddress = caasWalletData?.abstraction_address || caasWalletData?.abstractionAddress || caasWalletData?.walletAddress || '';
+
     const handleCopy = (text: string, field: string) => {
         navigator.clipboard.writeText(text);
         setCopiedField(field);
@@ -112,9 +123,9 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
         : t('details.info.notAvailable');
     const swiftValue = wallet.swiftCode || wallet.bic || t('details.info.notAvailable');
     const routingValue = wallet.routingNumber || t('details.info.notAvailable');
-    const cryptoAddressValue = wallet.walletAddress || '';
-    const cryptoAddressMasked = wallet.walletAddress
-        ? `${wallet.walletAddress.slice(0, 6)}...${wallet.walletAddress.slice(-5)}`
+    const cryptoAddressValue = wallet.walletAddress || fetchedCaasAddress || '';
+    const cryptoAddressMasked = cryptoAddressValue
+        ? `${cryptoAddressValue.slice(0, 6)}...${cryptoAddressValue.slice(-5)}`
         : t('details.info.notAvailable');
 
     // Map and filter transactions for this wallet
