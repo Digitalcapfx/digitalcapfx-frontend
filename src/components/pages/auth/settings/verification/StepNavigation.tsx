@@ -1,6 +1,7 @@
 import React from 'react'
 import { cn } from '@/lib/utils'
 import { KycStage } from '@/services/kyc.service'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface StepNavigationProps {
   mainStep: number;
@@ -21,16 +22,19 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
   completionPercentage,
   stage,
 }) => {
+  const { t } = useLanguageStore();
   const isSubmittedOrStarted = stage === 'submitted' || stage === 'identity_started';
 
   return (
     <div className="bg-[#0C1224] border border-[#131B30] p-4 rounded-3xl space-y-4 shadow-xl">
       <div className="flex items-center justify-between px-1">
         <span className="text-xs font-mono font-extrabold uppercase tracking-wider text-slate-400">
-          KYC Verification Journey ({totalSteps} Steps)
+          {t('settings.verification.nav.journey', { totalSteps })}
         </span>
         <span className="text-xs font-mono font-bold text-primary-400">
-          {isSubmittedOrStarted ? 'Fields Submitted ✓' : `${completionPercentage}% Required Fields Filled`}
+          {isSubmittedOrStarted
+            ? t('settings.verification.nav.fieldsSubmitted')
+            : t('settings.verification.nav.percentageFilled', { percentage: completionPercentage })}
         </span>
       </div>
 
@@ -55,8 +59,12 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
             1
           </div>
           <div className="space-y-0.5 overflow-hidden">
-            <span className="text-[9px] font-extrabold uppercase tracking-wider block text-slate-500 font-mono">Step 1 of {totalSteps}</span>
-            <span className="text-xs font-bold block truncate">Information & Profile Fields</span>
+            <span className="text-[9px] font-extrabold uppercase tracking-wider block text-slate-500 font-mono">
+              {t('settings.verification.nav.stepProgress', { current: 1, total: totalSteps })}
+            </span>
+            <span className="text-xs font-bold block truncate">
+              {t('settings.verification.nav.step1')}
+            </span>
           </div>
         </button>
 
@@ -81,8 +89,12 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
               2
             </div>
             <div className="space-y-0.5 overflow-hidden">
-              <span className="text-[9px] font-extrabold uppercase tracking-wider block text-slate-500 font-mono">Step 2 of {totalSteps}</span>
-              <span className="text-xs font-bold block truncate">Compliance Documents</span>
+              <span className="text-[9px] font-extrabold uppercase tracking-wider block text-slate-500 font-mono">
+                {t('settings.verification.nav.stepProgress', { current: 2, total: totalSteps })}
+              </span>
+              <span className="text-xs font-bold block truncate">
+                {t('settings.verification.nav.step2')}
+              </span>
             </div>
           </button>
         )}
@@ -107,8 +119,12 @@ export const StepNavigation: React.FC<StepNavigationProps> = ({
             {livenessStepNumber}
           </div>
           <div className="space-y-0.5 overflow-hidden">
-            <span className="text-[9px] font-extrabold uppercase tracking-wider block text-slate-500 font-mono">Step {livenessStepNumber} of {totalSteps}</span>
-            <span className="text-xs font-bold block truncate">Identity & Biometrics (Sumsub)</span>
+            <span className="text-[9px] font-extrabold uppercase tracking-wider block text-slate-500 font-mono">
+              {t('settings.verification.nav.stepProgress', { current: livenessStepNumber, total: totalSteps })}
+            </span>
+            <span className="text-xs font-bold block truncate">
+              {t('settings.verification.nav.step3')}
+            </span>
           </div>
         </button>
       </div>

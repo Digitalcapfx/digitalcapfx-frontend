@@ -413,7 +413,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 options={[
                                     { value: 'en', label: '🇺🇸 EN' },
                                     { value: 'fr', label: '🇫🇷 FR' },
-                                    { value: 'es', label: '🇪🇸 ES' }
+                                    { value: 'es', label: '🇪🇸 ES' },
+                                    { value: 'zh', label: '🇨🇳 ZH' }
                                 ]}
                                 value={language}
                                 onChange={(val) => setLanguage(val as Language)}
@@ -462,10 +463,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <ShieldWarning className="h-5 w-5 shrink-0" />
                             <p>
                                 {['under_review', 'processing'].includes(normalizedKycStatus)
-                                    ? 'Identity verification is currently under compliance review. Transfers, exchanges, and top-ups will remain locked until verified.'
+                                    ? t('settings.verification.banner.alertUnderReview')
                                     : normalizedKycStatus === 'rejected'
-                                    ? 'Identity verification was rejected. Please review rejection feedback and resubmit your compliance documentation.'
-                                    : 'Identity Verification Incomplete. Please complete your compliance details and liveness check to activate transfer features.'}
+                                    ? t('settings.verification.banner.alertRejected')
+                                    : t('settings.verification.banner.alertIncomplete')}
                             </p>
                         </div>
                         {!['under_review', 'processing'].includes(normalizedKycStatus) && (
@@ -473,7 +474,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 href="/settings"
                                 className="px-4.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 hover:text-black text-amber-300 transition font-bold shrink-0 text-[10.5px] uppercase tracking-wider"
                             >
-                                {['submitted', 'draft', 'pending', 'idle'].includes(normalizedKycStatus) ? 'Complete Verification' : 'Verify Now'}
+                                {['submitted', 'draft', 'pending', 'idle'].includes(normalizedKycStatus)
+                                    ? t('settings.verification.banner.btnComplete')
+                                    : t('settings.verification.banner.btnVerify')}
                             </Link>
                         )}
                     </div>

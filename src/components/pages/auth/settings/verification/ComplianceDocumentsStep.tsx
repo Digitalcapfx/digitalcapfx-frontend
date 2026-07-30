@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { FileUpload } from '@/components/ui/FileUpload'
 import { DocumentSpec } from '@/services/kyc.service'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface ComplianceDocumentsStepProps {
   uploadableDocuments: DocumentSpec[];
@@ -22,6 +23,8 @@ export const ComplianceDocumentsStep: React.FC<ComplianceDocumentsStepProps> = (
   onProceedToBiometrics,
   onBackToFields,
 }) => {
+  const { t } = useLanguageStore();
+
   return (
     <div className="space-y-6 w-full animate-in fade-in duration-300">
       <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 md:p-8 space-y-6 text-left shadow-xl">
@@ -29,10 +32,12 @@ export const ComplianceDocumentsStep: React.FC<ComplianceDocumentsStepProps> = (
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <UploadCloud className="h-5 w-5 text-cyan-400" />
-              <h4 className="text-base font-bold text-white">Step 2: Compliance Documents</h4>
+              <h4 className="text-base font-bold text-white">
+                {t('settings.verification.step2.title')}
+              </h4>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Upload required onboarding & compliance documents below. You can update documents anytime before liveness verification is completed.
+              {t('settings.verification.step2.desc')}
             </p>
           </div>
         </div>
@@ -52,12 +57,14 @@ export const ComplianceDocumentsStep: React.FC<ComplianceDocumentsStepProps> = (
                         "text-[9px] font-extrabold uppercase px-2 py-0.5 rounded font-mono",
                         doc.required ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-slate-500/10 text-slate-400 border border-slate-500/20"
                       )}>
-                        {doc.required ? 'Required' : 'Optional'}
+                        {doc.required ? t('settings.verification.step2.required') : t('settings.verification.step2.optional')}
                       </span>
                     </div>
                     {doc.help && <p className="text-[11px] text-slate-400 leading-relaxed">{doc.help}</p>}
                     {maxAge && (
-                      <span className="text-[10px] text-cyan-400 font-mono block">Max age: {maxAge} months</span>
+                      <span className="text-[10px] text-cyan-400 font-mono block">
+                        {t('settings.verification.step2.maxAge', { months: maxAge })}
+                      </span>
                     )}
                   </div>
 
@@ -76,7 +83,9 @@ export const ComplianceDocumentsStep: React.FC<ComplianceDocumentsStepProps> = (
           ) : (
             <div className="md:col-span-2 p-8 text-center bg-black/20 rounded-2xl border border-white/5 space-y-2">
               <FolderCheck className="h-8 w-8 text-slate-500 mx-auto" />
-              <p className="text-xs text-slate-400">No additional documents required for your account tier.</p>
+              <p className="text-xs text-slate-400">
+                {t('settings.verification.step2.noDocs')}
+              </p>
             </div>
           )}
         </div>
@@ -90,7 +99,7 @@ export const ComplianceDocumentsStep: React.FC<ComplianceDocumentsStepProps> = (
             className="rounded-xl text-xs font-bold px-5 h-11"
             leftIcon={<ArrowLeft className="h-4 w-4" />}
           >
-            Back to Fields
+            {t('settings.verification.step2.backToFields')}
           </Button>
 
           <Button
@@ -99,7 +108,7 @@ export const ComplianceDocumentsStep: React.FC<ComplianceDocumentsStepProps> = (
             className="rounded-xl text-xs font-bold px-6 h-11 bg-cyan-500 hover:bg-cyan-400 text-white"
             rightIcon={<ArrowRight className="h-4 w-4" />}
           >
-            Proceed to Biometric Verification
+            {t('settings.verification.step2.proceedToBiometrics')}
           </Button>
         </div>
       </div>

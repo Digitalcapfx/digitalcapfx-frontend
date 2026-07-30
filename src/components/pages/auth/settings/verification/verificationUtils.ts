@@ -61,7 +61,19 @@ export const GROUP_METADATA: Record<string, { label: string; description: string
   },
 };
 
-export const getGroupMeta = (gKey: string) => {
+export const getGroupMeta = (gKey: string, t?: (key: string) => string) => {
+  if (t) {
+    const keyLabel = `settings.verification.group.${gKey}.label`;
+    const keyDesc = `settings.verification.group.${gKey}.desc`;
+    const translatedLabel = t(keyLabel);
+    if (translatedLabel && translatedLabel !== keyLabel) {
+      return {
+        label: translatedLabel,
+        description: t(keyDesc),
+      };
+    }
+  }
+
   if (GROUP_METADATA[gKey]) return GROUP_METADATA[gKey];
   const humanLabel = gKey
     .split('_')

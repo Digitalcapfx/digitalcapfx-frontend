@@ -7,6 +7,7 @@ import { Select, SelectOption } from '@/components/ui/Select'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { PhoneInput } from '@/components/ui/PhoneInput'
 import { IntakeFieldSpec, IntakeCounterparty } from '@/services/kyc.service'
+import { useLanguageStore } from '@/store/languageStore'
 import {
   COUNTRY_OPTIONS,
   getCountryCodeByName,
@@ -46,9 +47,10 @@ export const IntakeFieldsStep: React.FC<IntakeFieldsStepProps> = ({
   onSaveAndProceed,
   hasDocuments,
 }) => {
+  const { t } = useLanguageStore();
   const currentGroupKey = groupKeys[activeGroupIndex] || groupKeys[0];
   const currentGroupFields = groupedFields[currentGroupKey] || [];
-  const currentGroupMeta = getGroupMeta(currentGroupKey);
+  const currentGroupMeta = getGroupMeta(currentGroupKey, t);
 
   const isImporter = Boolean(getValueForKey(intakeForm, 'is_importer'));
 
@@ -95,7 +97,7 @@ export const IntakeFieldsStep: React.FC<IntakeFieldsStepProps> = ({
       {/* Field Sub-Group Navigation Tabs */}
       <div className="flex items-center space-x-2 border-b border-white/[0.05] pb-3 overflow-x-auto">
         {groupKeys.map((gKey, idx) => {
-          const meta = getGroupMeta(gKey);
+          const meta = getGroupMeta(gKey, t);
           const isActive = activeGroupIndex === idx;
 
           return (
@@ -138,7 +140,7 @@ export const IntakeFieldsStep: React.FC<IntakeFieldsStepProps> = ({
             className="rounded-xl text-xs font-bold h-10 px-4 shrink-0"
             leftIcon={<Save className="h-3.5 w-3.5" />}
           >
-            Save Draft Progress
+            {isSavingDraft ? t('settings.verification.step1.savingDraft') : t('settings.verification.step1.saveDraft')}
           </Button>
         </div>
 
@@ -397,7 +399,7 @@ export const IntakeFieldsStep: React.FC<IntakeFieldsStepProps> = ({
                 className="rounded-xl text-xs font-bold px-6 h-11"
                 rightIcon={<ArrowRight className="h-4 w-4" />}
               >
-                Save & Next Section
+                {t('settings.verification.step1.saveAndProceed')}
               </Button>
             ) : (
               <Button
@@ -407,7 +409,11 @@ export const IntakeFieldsStep: React.FC<IntakeFieldsStepProps> = ({
                 className="rounded-xl text-xs font-bold px-6 h-11 bg-primary-500 hover:bg-primary-400 text-white"
                 rightIcon={<ArrowRight className="h-4 w-4" />}
               >
-                {hasDocuments ? 'Save & Proceed to Documents' : 'Save & Proceed to Biometrics'}
+                {isSubmitting
+                  ? t('settings.verification.step1.submitting')
+                  : hasDocuments
+                  ? t('settings.verification.step2.title')
+                  : t('settings.verification.step1.saveAndProceed')}
               </Button>
             )}
           </div>
