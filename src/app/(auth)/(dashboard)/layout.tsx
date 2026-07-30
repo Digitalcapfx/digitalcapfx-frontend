@@ -33,6 +33,7 @@ import PhoneSendSheet from '@/components/pages/auth/_components/PhoneSendSheet'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { profileService } from '@/services/profile.service'
 import { authService } from '@/services/auth.service'
+import { accountService } from '@/services/account.service'
 import { toast } from 'sonner'
 import { useLanguageStore, Language } from '@/store/languageStore'
 import { Select } from '@/components/ui/Select'
@@ -80,6 +81,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const profile = profileQuery.data?.data;
     const normalizedKycStatus = (profile?.kycStatus || '').toLowerCase();
     const isVerified = normalizedKycStatus === 'approved';
+
+    // Pre-provision / Pre-fetch USDC (CaaS) Smart Contract Wallet on layout load only when KYC verified
+    useQuery({
+        queryKey: ['cryptoWallet'],
+        queryFn: () => accountService.getCryptoWallet(),
+        enabled: !!profile && isVerified,
+        refetchOnWindowFocus: false,
+        retry: false,
+    });
 
     // Route Protection Effect: lock non-verification pages if not verified
     useEffect(() => {
