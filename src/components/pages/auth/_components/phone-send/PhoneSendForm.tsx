@@ -39,6 +39,9 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
     onSubmit,
 }) => {
     const { t } = useLanguageStore();
+    const [mode, setMode] = React.useState<'phone' | 'address'>(
+        phoneNumber.startsWith('0x') ? 'address' : 'phone'
+    );
 
     return (
         <form onSubmit={onSubmit} className="space-y-4">
@@ -49,16 +52,72 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
                 </div>
             )}
 
-            <PhoneInput
-                label={t('phone.send.form.recipientLabel')}
-                value={phoneNumber}
-                onChange={(val) => {
-                    setPhoneNumber(val);
-                    if (phoneError) setPhoneError('');
-                }}
-                placeholder={t('phone.send.form.phonePlaceholder')}
-                error={phoneError}
-            />
+            {/* Recipient Type Segment Toggle */}
+            <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">Recipient Rail</span>
+                <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/40 border border-white/10 rounded-xl text-xs font-bold">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setMode('phone');
+                            if (phoneNumber.startsWith('0x')) setPhoneNumber('');
+                        }}
+                        className={cn(
+                            "py-1.5 rounded-lg transition-all text-center cursor-pointer",
+                            mode === 'phone' ? "bg-primary-500/20 text-primary-400 border border-primary-500/30" : "text-slate-400 hover:text-white"
+                        )}
+                    >
+                        Phone Number
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setMode('address');
+                            if (!phoneNumber.startsWith('0x')) setPhoneNumber('');
+                        }}
+                        className={cn(
+                            "py-1.5 rounded-lg transition-all text-center cursor-pointer",
+                            mode === 'address' ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30" : "text-slate-400 hover:text-white"
+                        )}
+                    >
+                        Wallet Address (0x)
+                    </button>
+                </div>
+            </div>
+
+            {mode === 'phone' ? (
+                <PhoneInput
+                    label={t('phone.send.form.recipientLabel')}
+                    value={phoneNumber}
+                    onChange={(val) => {
+                        if (val.startsWith('0x')) {
+                            setMode('address');
+                        }
+                        setPhoneNumber(val);
+                        if (phoneError) setPhoneError('');
+                    }}
+                    placeholder={t('phone.send.form.phonePlaceholder')}
+                    error={phoneError}
+                />
+            ) : (
+                <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">SCW Wallet Address (0x)</span>
+                    <input
+                        type="text"
+                        value={phoneNumber}
+                        onChange={(e) => {
+                            setPhoneNumber(e.target.value);
+                            if (phoneError) setPhoneError('');
+                        }}
+                        placeholder="Enter raw 0x SCW wallet address"
+                        className={cn(
+                            "bg-black/30 border rounded-xl px-4 py-3 text-xs font-mono text-white placeholder-slate-655 focus:outline-none focus:border-cyan-500/50 w-full",
+                            phoneError ? "border-rose-500/50" : "border-white/10"
+                        )}
+                    />
+                    {phoneError && <span className="text-[10px] text-rose-500 font-bold block">{phoneError}</span>}
+                </div>
+            )}
 
             {/* Amount Entry beneath Phone Input */}
             <div className={cn(

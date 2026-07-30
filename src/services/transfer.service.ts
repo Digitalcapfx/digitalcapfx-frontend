@@ -1,7 +1,10 @@
 import { BaseService } from './base.service';
 
 export interface SendCryptoRequest {
-  receiverPhone: string;
+  receiverPhone?: string;
+  receiver_phone?: string;
+  recipientAddress?: string;
+  recipient_address?: string;
   amount: string;
   token?: 'USDC' | 'USDT';
 }
@@ -77,7 +80,23 @@ class TransferService extends BaseService {
   }
 
   async sendCrypto(payload: SendCryptoRequest): Promise<SendCryptoResponse> {
-    const response = await this.api.post('/crypto/send', payload);
+    const body: Record<string, any> = {
+      amount: String(payload.amount),
+      token: payload.token || 'USDC',
+    };
+
+    const phone = payload.receiverPhone || payload.receiver_phone;
+    const address = payload.recipientAddress || payload.recipient_address;
+
+    if (phone && phone.trim()) {
+      body.receiver_phone = phone.trim();
+      body.receiverPhone = phone.trim();
+    } else if (address && address.trim()) {
+      body.recipient_address = address.trim();
+      body.recipientAddress = address.trim();
+    }
+
+    const response = await this.api.post('/crypto/send', body);
     return response.data;
   }
 

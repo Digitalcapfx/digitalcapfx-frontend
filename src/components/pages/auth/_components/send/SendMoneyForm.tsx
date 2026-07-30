@@ -195,7 +195,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                             <>
                                 <div className="space-y-1.5">
                                     <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('send.form.transferMethod')}</span>
-                                    <div className="flex bg-black/30 border border-white/15 p-1 rounded-xl">
+                                    <div className="grid grid-cols-3 gap-1 bg-black/30 border border-white/15 p-1 rounded-xl">
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -203,7 +203,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                                 setCryptoAddress('');
                                             }}
                                             className={cn(
-                                                "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
+                                                "py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none text-center truncate px-1",
                                                 cryptoSendMode === 'phone'
                                                     ? "bg-primary-500 text-white shadow-md"
                                                     : "text-slate-400 hover:text-white"
@@ -214,11 +214,26 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => {
+                                                setCryptoSendMode('address');
+                                                setCryptoAddress('');
+                                            }}
+                                            className={cn(
+                                                "py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none text-center truncate px-1",
+                                                cryptoSendMode === 'address'
+                                                    ? "bg-cyan-500 text-white shadow-md"
+                                                    : "text-slate-400 hover:text-white"
+                                            )}
+                                        >
+                                            {t('send.form.sendToAddress')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
                                                 setCryptoSendMode('withdraw');
                                                 setCryptoAddress('');
                                             }}
                                             className={cn(
-                                                "flex-1 py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none",
+                                                "py-2 text-[10px] font-bold rounded-lg transition duration-200 cursor-pointer select-none text-center truncate px-1",
                                                 cryptoSendMode === 'withdraw'
                                                     ? "bg-primary-500 text-white shadow-md"
                                                     : "text-slate-400 hover:text-white"
@@ -235,8 +250,29 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                         label={t('send.form.recipientPhone')}
                                         placeholder={t('send.form.phonePlaceholder')}
                                         value={cryptoAddress}
-                                        onChange={setCryptoAddress}
+                                        onChange={(val) => {
+                                            if (val.trim().startsWith('0x')) {
+                                                setCryptoSendMode('address');
+                                            }
+                                            setCryptoAddress(val);
+                                        }}
                                     />
+                                )}
+
+                                {cryptoSendMode === 'address' && (
+                                    <div className="space-y-1.5 animate-in fade-in duration-200">
+                                        <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block font-mono">
+                                            {t('send.form.recipientAddress', { code: activeWallet.code })} (0x)
+                                        </span>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder={t('send.form.addressPlaceholder', { code: activeWallet.code })}
+                                            value={cryptoAddress}
+                                            onChange={(e) => setCryptoAddress(e.target.value)}
+                                            className="bg-[#0C1224] border border-white/10 rounded-xl px-4 py-3.5 text-xs text-white focus:outline-none w-full font-mono focus:border-cyan-500/50 placeholder:text-slate-655"
+                                        />
+                                    </div>
                                 )}
                                 {cryptoSendMode === 'withdraw' && (
                                     <div className="space-y-4">

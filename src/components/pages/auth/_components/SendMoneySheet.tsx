@@ -296,7 +296,7 @@ export const SendMoneySheet: React.FC = () => {
     const activeBeneficiary = beneficiariesList.find(b => b.id === selectedBeneficiaryId) || beneficiariesList[0];
 
     const displayRecipientName = isCrypto
-        ? (cryptoAddress ? `${cryptoAddress.slice(0, 8)}...${cryptoAddress.slice(-6)}` : 'Recipient Phone')
+        ? (cryptoAddress ? (cryptoAddress.trim().startsWith('0x') ? `${cryptoAddress.slice(0, 6)}...${cryptoAddress.slice(-4)}` : cryptoAddress) : 'Recipient')
         : (recipientType === 'saved' && activeBeneficiary ? activeBeneficiary.name : (accountName || 'New Recipient'));
 
     // Check if form is valid to proceed
@@ -369,7 +369,7 @@ export const SendMoneySheet: React.FC = () => {
     });
 
     const sendCryptoMutation = useMutation({
-        mutationFn: (payload: { receiverPhone: string; amount: string; token: 'USDC' | 'USDT' }) => transferService.sendCrypto(payload),
+        mutationFn: (payload: { receiverPhone?: string; recipientAddress?: string; amount: string; token: 'USDC' | 'USDT' }) => transferService.sendCrypto(payload),
         onSuccess: (data) => {
             if (data?.success && data?.data) {
                 setTxRef(data.data.reference || data.data.transactionHash || 'TXN-OK');
@@ -672,11 +672,20 @@ export const SendMoneySheet: React.FC = () => {
                     operator
                 });
             } else {
-                sendCryptoMutation.mutate({
-                    receiverPhone: cryptoAddress,
-                    amount: amount,
-                    token: activeWallet.code === 'USDT' ? 'USDT' : 'USDC',
-                });
+                const target = cryptoAddress.trim();
+                if (target.startsWith('0x')) {
+                    sendCryptoMutation.mutate({
+                        recipientAddress: target,
+                        amount: amount,
+                        token: activeWallet.code === 'USDT' ? 'USDT' : 'USDC',
+                    });
+                } else {
+                    sendCryptoMutation.mutate({
+                        receiverPhone: target,
+                        amount: amount,
+                        token: activeWallet.code === 'USDT' ? 'USDT' : 'USDC',
+                    });
+                }
             }
         } else if (isMobileMoney) {
             const phoneVal = recipientType === 'saved' ? activeBeneficiary?.accountNumber : accountNumber;
