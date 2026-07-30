@@ -16,7 +16,7 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
     { id: 'features', label: 'Features', href: '#features' },
     { id: 'how-it-works', label: 'How it works', href: '#how-it-works' },
-    { id: 'stats', label: 'Stats', href: '#stats' },
+    // { id: 'stats', label: 'Stats', href: '#stats' },
     { id: 'reviews', label: 'Reviews', href: '#reviews' },
 ];
 
@@ -25,22 +25,22 @@ const NavBar = () => {
     const [activeId, setActiveId] = useState('features');
 
     return (
-        <nav className=" flex items-center justify-between h-20 w-full backdrop-blur-md fixed top-0 z-50 border-b border-white/6">
+        <nav className="flex items-center justify-between h-20 w-full backdrop-blur-md fixed top-0 z-50 border-b border-white/6 px-4 md:px-8 bg-[#050816]/80">
 
-            {/* Logo */}
-            <div className="items-center">
-                <Link href="/" className="flex items-center">
-                    <Image
-                        src="/DFXLogo.svg"
-                        alt="DigitalCap FX Logo"
-                        width={150}
-                        height={24}
-                        priority
-                        className="h-6 w-auto"
-                    />
-                </Link>
-                <p className='text-[8px] font-bold mt-0.5'>Your bridge to the world of payments</p>
-            </div>
+            {/* Logo with tagline inside link */}
+            <Link href="/" className="flex flex-col justify-center group">
+                <Image
+                    src="/DFXLogo.svg"
+                    alt="DigitalCap FX Logo"
+                    width={150}
+                    height={24}
+                    priority
+                    className="h-6 w-auto"
+                />
+                <span className="text-[8px] font-bold text-slate-300 group-hover:text-white transition tracking-tight mt-0.5">
+                    Your bridge to the world of payments
+                </span>
+            </Link>
 
             {/* Nav Menu for Desktop */}
             <div className="hidden lg:flex items-center space-x-1 border border-white/5 px-1.5 py-1 rounded-full">

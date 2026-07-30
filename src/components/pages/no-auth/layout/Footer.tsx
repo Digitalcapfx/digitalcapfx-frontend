@@ -45,11 +45,11 @@ const FOOTER_SECTIONS = [
     {
         title: 'Company',
         links: [
-            { label: 'About Us', href: '#about-us' },
-            { label: 'Careers', href: '#careers' },
-            { label: 'Blog', href: '#blog' },
-            { label: 'Press Kit', href: '#press-kit' },
-            { label: 'Contact', href: '#contact' },
+            { label: 'About Us', href: '/about' },
+            { label: 'Careers', href: '/careers' },
+            { label: 'Blog', href: '/blog' },
+            { label: 'Press Kit', href: '/press-kit' },
+            { label: 'Contact', href: '/contact' },
         ],
     },
     {
@@ -83,25 +83,24 @@ const COMPLIANCE_ITEMS = [
 
 const Footer = () => {
     return (
-        <footer className="w-full bg-[#050816] text-slate-400 border-t border-white/5 mt-auto">
+        <footer className="w-full bg-[#050816] text-slate-400 mt-auto">
             {/* Top Grid Section */}
             <section className="mx-auto px-4 md:px-8 py-16 grid grid-cols-12 gap-8 lg:gap-12">
 
                 {/* Brand Column */}
                 <div className="col-span-12 lg:col-span-4 space-y-6">
-                    <div>
-
-                        <Link href="/" className="inline-block">
-                            <Image
-                                src="/DFXLogo.svg"
-                                alt="DigitalCap FX Logo"
-                                width={160}
-                                height={36}
-                                className="h-8 w-auto"
-                            />
-                        </Link>
-                        <p className='text-[10px] font-bold -mt-1'>Your bridge to the world of payments</p>
-                    </div>
+                    <Link href="/" className="inline-flex flex-col group">
+                        <Image
+                            src="/DFXLogo.svg"
+                            alt="DigitalCap FX Logo"
+                            width={160}
+                            height={32}
+                            className="h-7 w-auto"
+                        />
+                        <span className="text-[10px] font-bold text-slate-300 group-hover:text-white transition tracking-tight mt-0.5">
+                            Your bridge to the world of payments
+                        </span>
+                    </Link>
                     <p className="text-sm leading-relaxed text-slate-400 max-w-sm font-sans">
                         Banking without borders. Hold, send, exchange and spend across fiat, stablecoins — all in one account.
                     </p>

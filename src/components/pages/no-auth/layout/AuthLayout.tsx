@@ -17,7 +17,7 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
 
                 {/* Brand Logo */}
                 <div className="flex flex-col items-start">
-                    <Link href="/" className="inline-block">
+                    <Link href="/" className="inline-flex flex-col group">
                         <Image
                             src="/DFXLogo.svg"
                             alt="DigitalCap FX Logo"
@@ -26,10 +26,10 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
                             priority
                             className="h-8 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
                         />
+                        <span className="text-[10px] font-bold text-white/80 group-hover:text-white transition tracking-tight mt-1 font-sans select-none">
+                            Your bridge to the world of payments
+                        </span>
                     </Link>
-                    <p className="text-[10px] font-bold text-white/80 mt-1.5 font-sans tracking-wide select-none">
-                        Your bridge to the world of payments
-                    </p>
                 </div>
 
                 {/* Center Metrics Section */}
