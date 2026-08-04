@@ -65,8 +65,8 @@ const FOOTER_SECTIONS = [
     {
         title: 'Legal',
         links: [
-            { label: 'Privacy Policy', href: '#privacy-policy' },
-            { label: 'Terms of Service', href: '#terms-of-service' },
+            { label: 'Privacy Policy', href: '/privacy' },
+            { label: 'Terms of Service', href: '/terms' },
             { label: 'Cookie Policy', href: '#cookie-policy' },
             { label: 'Licenses', href: '#licenses' },
             { label: 'AML Policy', href: '#aml-policy' },
@@ -167,10 +167,10 @@ const Footer = () => {
                         © {new Date().getFullYear()} DigitalCapFx. All rights reserved.
                     </p>
                     <div className="flex items-center space-x-6">
-                        <Link href="#privacy" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
+                        <Link href="/privacy" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
                             Privacy
                         </Link>
-                        <Link href="#terms" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
+                        <Link href="/terms" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
                             Terms
                         </Link>
                         <Link href="#cookies" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
