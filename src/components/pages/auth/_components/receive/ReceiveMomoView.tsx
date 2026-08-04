@@ -45,6 +45,7 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
     const accountsQuery = useQuery({
         queryKey: ['momoAccounts'],
         queryFn: () => momoService.getMomoAccounts(),
+        staleTime: 1000 * 60 * 15,
     });
 
     const rawRes = accountsQuery.data;

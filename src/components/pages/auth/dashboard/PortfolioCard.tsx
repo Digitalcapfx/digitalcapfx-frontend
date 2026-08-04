@@ -43,7 +43,13 @@ const PortfolioCard: React.FC = () => {
     }
 
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
-        totalUsd += parseFloat(cryptoQuery.data.data.balanceUsdc || '0');
+        const rawData = cryptoQuery.data.data;
+        const cryptoList = Array.isArray(rawData) ? rawData : [rawData];
+        cryptoList.forEach((item: any) => {
+            const rawBal = item.balance_usdc || item.balanceUsdc || item.balance_formatted || (item.balance !== undefined ? String(item.balance) : '0');
+            const balNum = typeof item.balance === 'number' ? item.balance : parseFloat(rawBal || '0');
+            totalUsd += balNum;
+        });
     }
 
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {

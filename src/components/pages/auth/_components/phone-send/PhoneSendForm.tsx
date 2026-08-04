@@ -48,14 +48,14 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
             {isSheet && (
                 <div className="flex justify-between items-center select-none pb-2 mb-2 border-b border-white/5">
                     <span className="text-xs font-bold text-slate-400">{t('phone.send.form.stablecoinBalance')}</span>
-                    <span className="text-sm font-extrabold text-white font-mono">${balanceUsdc} <span className="text-[10px] text-slate-400">iUSD</span></span>
+                    <span className="text-sm font-extrabold text-white font-mono">${balanceUsdc} <span className="text-[10px] text-slate-400">USDC / USDT</span></span>
                 </div>
             )}
 
             {/* Network Badge */}
             <div className="flex items-center justify-between text-[10px] bg-cyan-500/10 border border-cyan-500/25 rounded-xl px-3.5 py-2 text-cyan-300 font-mono select-none">
                 <span className="font-bold uppercase tracking-wider">Settlement Network</span>
-                <span className="font-extrabold text-cyan-400">USDC on Polygon (POL)</span>
+                <span className="font-extrabold text-cyan-400">Polygon (POL)</span>
             </div>
 
             {/* Recipient Type Segment Toggle */}
@@ -141,7 +141,7 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
                         placeholder="0.00"
                         className="bg-transparent border-none focus:outline-none focus:ring-0 text-center text-white font-mono font-black text-2.5xl placeholder-slate-700 w-full max-w-[180px] leading-none"
                     />
-                    <span className="text-xl font-black text-slate-500 font-mono">iUSD</span>
+                    <span className="text-xl font-black text-slate-500 font-mono">USDC</span>
                 </div>
                 <span className="text-[9px] text-slate-555 block mt-1">{t('phone.send.form.available', { balance: balanceUsdc })}</span>
                 {amountError && <span className="text-[10px] text-rose-500 font-bold block mt-2">{amountError}</span>}

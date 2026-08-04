@@ -20,17 +20,20 @@ export interface AccountListResponse {
 }
 
 export interface CryptoBalanceData {
-  symbol: string;
-  name: string;
-  balance: number;
-  balanceUsdc: string;
-  balanceFormatted: string;
-  walletAddress: string;
+  symbol?: string;
+  name?: string;
+  balance?: number;
+  balance_usdc?: string;
+  balanceUsdc?: string;
+  balance_formatted?: string;
+  balanceFormatted?: string;
+  wallet_address?: string;
+  walletAddress?: string;
 }
 
 export interface CryptoBalanceResponse {
   success: boolean;
-  data: CryptoBalanceData;
+  data: CryptoBalanceData | CryptoBalanceData[];
 }
 
 export interface CaasWalletData {

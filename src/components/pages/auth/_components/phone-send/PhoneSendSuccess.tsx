@@ -40,7 +40,7 @@ export const PhoneSendSuccess: React.FC<PhoneSendSuccessProps> = ({
                         {t('phone.send.success.sentLabel')}
                     </span>
                     <h2 className="font-satoshi font-black text-2xl text-white tracking-tight">
-                        {formatCurrencyByLocale(amount, 'iUSD')}
+                        {formatCurrencyByLocale(amount, 'USDC')}
                     </h2>
                     <p className="text-slate-400 text-xs font-sans leading-relaxed">
                         {t('phone.send.success.sentTo', { recipient: phoneNumber })}

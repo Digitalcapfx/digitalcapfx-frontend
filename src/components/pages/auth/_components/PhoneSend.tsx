@@ -37,9 +37,13 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
         queryFn: () => accountService.getCryptoBalances(),
     });
 
-    const balanceUsdc = cryptoQuery.data?.success && cryptoQuery.data.data
-        ? parseFloat(cryptoQuery.data.data.balanceUsdc || '0').toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        : '0.00';
+    const rawCryptoData = cryptoQuery.data?.success && cryptoQuery.data.data ? cryptoQuery.data.data : null;
+    const cryptoList = Array.isArray(rawCryptoData) ? rawCryptoData : (rawCryptoData ? [rawCryptoData] : []);
+    const totalBalanceVal = cryptoList.reduce((acc: number, item: any) => {
+        const rawBal = item.balance_usdc || item.balanceUsdc || item.balance_formatted || (item.balance !== undefined ? String(item.balance) : '0');
+        return acc + (typeof item.balance === 'number' ? item.balance : parseFloat(rawBal || '0'));
+    }, 0);
+    const balanceUsdc = totalBalanceVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     const showPolling = step === 3 && !!txRef && txRef !== 'TXN-OK';
 
@@ -262,7 +266,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
             
             <div class="amount-box">
                 <span class="amount-label">${t('phone.send.receipt.amountLabel')}</span>
-                <div class="amount-val">${formatCurrencyByLocale(amount || '0', 'iUSD')}</div>
+                <div class="amount-val">${formatCurrencyByLocale(amount || '0', 'USDC')}</div>
             </div>
             
             <table class="details-table">
@@ -276,7 +280,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
                 </tr>
                 <tr class="details-row">
                     <td class="label">${t('phone.send.receipt.source')}</td>
-                    <td class="value">Instant USD (iUSD)</td>
+                    <td class="value">Stablecoin (USDC)</td>
                 </tr>
                 <tr class="details-row">
                     <td class="label">${t('phone.send.success.recipient')}</td>
@@ -370,7 +374,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
                     {step < 3 && (
                         <div className="text-right">
                             <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('phone.send.balanceLabel')}</span>
-                            <span className="text-sm font-extrabold text-white font-mono mt-0.5 block">${balanceUsdc} <span className="text-[10px] text-slate-555">iUSD</span></span>
+                            <span className="text-sm font-extrabold text-white font-mono mt-0.5 block">${balanceUsdc} <span className="text-[10px] text-slate-555">USDC</span></span>
                         </div>
                     )}
                 </div>

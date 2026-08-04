@@ -37,7 +37,7 @@ export const PhoneSendConfirm: React.FC<PhoneSendConfirmProps> = ({
             <div className="bg-gradient-to-br from-[#0F172A] to-[#0A0F1D] border border-white/5 rounded-2xl p-5 text-center shadow-xl select-none">
                 <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block">{t('phone.send.confirm.sendingLabel')}</span>
                 <span className="text-2.5xl font-black text-white block mt-1 font-satoshi">
-                    {formatCurrencyByLocale(amount, 'iUSD')}
+                    {formatCurrencyByLocale(amount, 'USDC')}
                 </span>
             </div>
 
@@ -50,7 +50,7 @@ export const PhoneSendConfirm: React.FC<PhoneSendConfirmProps> = ({
                 <div className="flex justify-between items-center py-0.5">
                     <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('phone.send.confirm.recipientGets')}</span>
                     <span className="font-bold text-emerald-400 font-mono">
-                        {formatCurrencyByLocale(amount, 'iUSD')}
+                        {formatCurrencyByLocale(amount, 'USDC')}
                     </span>
                 </div>
 

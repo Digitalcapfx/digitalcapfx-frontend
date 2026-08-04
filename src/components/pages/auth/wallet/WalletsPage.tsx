@@ -95,7 +95,7 @@ const WalletsPage: React.FC = () => {
         }
     });
 
-    let instantUsdWallet: Wallet | null = null;
+    const caasWalletsList: Wallet[] = [];
     const fiatWalletsList: Wallet[] = [];
     const cryptoWalletsList: Wallet[] = [];
 
@@ -115,21 +115,32 @@ const WalletsPage: React.FC = () => {
         });
     }
 
-    // Map stablecoin wallet (CaaS - Instant USD)
+    // Map stablecoin wallet(s) (CaaS - USDC/USDT)
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
-        const d = cryptoQuery.data.data;
-        const balNum = parseFloat(d.balanceUsdc || '0');
-        const symbol = d.symbol === 'IUSD' ? 'iUSD' : (d.symbol || 'iUSD');
-        instantUsdWallet = {
-            id: symbol.toLowerCase(),
-            name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
-            code: symbol,
-            type: 'stablecoin',
-            balance: d.balanceFormatted || formatBalance(d.balanceUsdc, symbol),
-            rawBalance: balNum,
-            walletAddress: d.walletAddress,
-            provider: 'caas'
-        };
+        const rawData = cryptoQuery.data.data;
+        const cryptoList = Array.isArray(rawData) ? rawData : [rawData];
+
+        cryptoList.forEach((d: any) => {
+            const rawBal = d.balance_usdc || d.balanceUsdc || d.balance_formatted || (d.balance !== undefined ? String(d.balance) : '0');
+            const balNum = typeof d.balance === 'number' ? d.balance : parseFloat(rawBal || '0');
+            const symbol = (d.symbol || 'USDC').toUpperCase();
+            const displaySymbol = symbol === 'IUSD' ? 'iUSD' : symbol;
+            const walletAddress = d.wallet_address || d.walletAddress || '';
+
+            const walletObj: Wallet = {
+                id: displaySymbol.toLowerCase(),
+                name: d.name || CURRENCY_NAMES[displaySymbol.toUpperCase()] || `${displaySymbol} Wallet`,
+                code: displaySymbol,
+                type: 'stablecoin',
+                balance: d.balance_formatted || d.balanceFormatted || formatBalance(rawBal, displaySymbol),
+                rawBalance: balNum,
+                walletAddress: walletAddress,
+                provider: 'caas'
+            };
+
+            caasWalletsList.push(walletObj);
+            cryptoWalletsList.push(walletObj);
+        });
     }
 
     // Map WaaS wallets
@@ -210,11 +221,11 @@ const WalletsPage: React.FC = () => {
         );
     });
 
-    const isMatchInstantUsd = !searchQuery ||
-        (instantUsdWallet && (
-            instantUsdWallet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            instantUsdWallet.code.toLowerCase().includes(searchQuery.toLowerCase())
-        ));
+    const filteredCaasWallets = caasWalletsList.filter((w) =>
+        !searchQuery ||
+        w.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        w.code.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const isLoading = fiatQuery.isLoading || cryptoQuery.isLoading || (FEATURE_FLAGS.ALLOW_CRYPTO && waasWalletsQuery.isLoading);
 
@@ -287,40 +298,42 @@ const WalletsPage: React.FC = () => {
                 </div>
             ) : (
                 <div className="space-y-8">
-                    {/* Instant USD Section */}
-                    {instantUsdWallet && isMatchInstantUsd && (
+                    {/* Stablecoins / CaaS Section */}
+                    {filteredCaasWallets.length > 0 && (
                         <div className="space-y-4">
                             <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest block text-left select-none">
                                 {t('section.instant')}
                             </span>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div
-                                    key={instantUsdWallet.id}
-                                    onClick={() => {
-                                        setBackPath('/wallets');
-                                        router.push(`/wallets/${instantUsdWallet!.id}?provider=caas`);
-                                    }}
-                                    className="p-5 rounded-2xl bg-[#080E1E] border border-white/5 hover:border-white/10 hover:bg-[#0C142A] transition duration-200 flex items-center justify-between cursor-pointer select-none group"
-                                >
-                                    <div className="flex items-center space-x-3.5 text-left">
-                                        <div className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
-                                            <CurrencyIcon code={instantUsdWallet.code} size="sm" />
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <span className="text-sm font-bold text-white group-hover:text-primary-400 transition-colors duration-200">
-                                                {instantUsdWallet.name}
-                                            </span>
-                                            <div className="flex items-center space-x-2">
-                                                <span className="text-[10px] font-bold text-slate-500 tracking-wide">{instantUsdWallet.code}</span>
-                                                <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-                                                <span className="text-[10px] font-bold text-slate-500 uppercase font-mono text-[9px]">CaaS</span>
+                                {filteredCaasWallets.map((wallet) => (
+                                    <div
+                                        key={wallet.id}
+                                        onClick={() => {
+                                            setBackPath('/wallets');
+                                            router.push(`/wallets/${wallet.id}?provider=caas`);
+                                        }}
+                                        className="p-5 rounded-2xl bg-[#080E1E] border border-white/5 hover:border-white/10 hover:bg-[#0C142A] transition duration-200 flex items-center justify-between cursor-pointer select-none group"
+                                    >
+                                        <div className="flex items-center space-x-3.5 text-left">
+                                            <div className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+                                                <CurrencyIcon code={wallet.code} size="sm" />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <span className="text-sm font-bold text-white group-hover:text-primary-400 transition-colors duration-200">
+                                                    {wallet.name}
+                                                </span>
+                                                <div className="flex items-center space-x-2">
+                                                    <span className="text-[10px] font-bold text-slate-500 tracking-wide">{wallet.code}</span>
+                                                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase font-mono text-[9px]">CaaS</span>
+                                                </div>
                                             </div>
                                         </div>
+                                        <div className="text-right">
+                                            <span className="text-base font-extrabold text-white font-satoshi">{wallet.balance}</span>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="text-base font-extrabold text-white font-satoshi">{instantUsdWallet.balance}</span>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
                     )}

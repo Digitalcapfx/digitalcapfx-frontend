@@ -12,6 +12,7 @@ import { transferService } from '@/services/transfer.service'
 import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
 import { FEATURE_FLAGS } from '@/config/featureFlags'
+import { momoService } from '@/services/momo.service'
 
 // Import subcomponents
 import { ReceiveDetailsView } from './receive/ReceiveDetailsView'
@@ -77,7 +78,13 @@ export const ReceiveMoneySheet: React.FC = () => {
         return () => document.removeEventListener('mousedown', handleOutsideClick);
     }, []);
 
-    // Fetch wallets/balances
+    // Fetch wallets/balances & pre-fetch MoMo accounts
+    const momoAccountsQuery = useQuery({
+        queryKey: ['momoAccounts'],
+        queryFn: () => momoService.getMomoAccounts(),
+        staleTime: 1000 * 60 * 15,
+    });
+
     const fiatQuery = useQuery({
         queryKey: ['accounts'],
         queryFn: () => accountService.getAccounts(),
@@ -104,22 +111,29 @@ export const ReceiveMoneySheet: React.FC = () => {
 
     const walletsList: Wallet[] = [];
 
-    // Map stablecoin wallet
+    // Map stablecoin wallet(s) (CaaS - USDC/USDT)
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
-        const d = cryptoQuery.data.data;
-        const symbol = d.symbol || 'iUSD';
+        const rawData = cryptoQuery.data.data;
+        const cryptoList = Array.isArray(rawData) ? rawData : [rawData];
         const caasWalletData = cryptoWalletQuery.data?.data;
-        const caasAddress = caasWalletData?.abstraction_address || caasWalletData?.abstractionAddress || caasWalletData?.walletAddress || d.walletAddress;
 
-        walletsList.push({
-            id: symbol.toLowerCase(),
-            name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
-            code: symbol,
-            type: 'stablecoin',
-            balance: d.balanceFormatted || formatCurrencyByLocale(d.balanceUsdc, symbol),
-            rawBalance: parseFloat(d.balanceUsdc || '0'),
-            walletAddress: caasAddress,
-            provider: 'caas'
+        cryptoList.forEach((d: any) => {
+            const rawBal = d.balance_usdc || d.balanceUsdc || d.balance_formatted || (d.balance !== undefined ? String(d.balance) : '0');
+            const balNum = typeof d.balance === 'number' ? d.balance : parseFloat(rawBal || '0');
+            const symbol = (d.symbol || 'USDC').toUpperCase();
+            const displaySymbol = symbol === 'IUSD' ? 'iUSD' : symbol;
+            const caasAddress = caasWalletData?.abstraction_address || caasWalletData?.abstractionAddress || caasWalletData?.walletAddress || d.wallet_address || d.walletAddress;
+
+            walletsList.push({
+                id: displaySymbol.toLowerCase(),
+                name: d.name || CURRENCY_NAMES[displaySymbol] || `${displaySymbol} Wallet`,
+                code: displaySymbol,
+                type: 'stablecoin',
+                balance: d.balance_formatted || d.balanceFormatted || formatCurrencyByLocale(rawBal, displaySymbol),
+                rawBalance: balNum,
+                walletAddress: caasAddress,
+                provider: 'caas'
+            });
         });
     }
 

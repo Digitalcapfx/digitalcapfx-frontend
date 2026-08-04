@@ -54,13 +54,20 @@ export const FundCardSheet: React.FC = () => {
 
     const walletsList: any[] = [];
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
-        const d = cryptoQuery.data.data;
-        const symbol = d.symbol || 'iUSD';
-        walletsList.push({
-            name: d.name || CURRENCY_NAMES[symbol.toUpperCase()] || 'Instant USD',
-            code: symbol,
-            balance: d.balanceFormatted || (d.balanceUsdc + ' ' + symbol),
-            rawBalance: parseFloat(d.balanceUsdc || '0'),
+        const rawData = cryptoQuery.data.data;
+        const cryptoList = Array.isArray(rawData) ? rawData : [rawData];
+        cryptoList.forEach((d: any) => {
+            const symbol = (d.symbol || 'USDC').toUpperCase();
+            const displaySymbol = symbol === 'IUSD' ? 'iUSD' : symbol;
+            const rawBal = d.balance_usdc || d.balanceUsdc || d.balance_formatted || (d.balance !== undefined ? String(d.balance) : '0');
+            const balNum = typeof d.balance === 'number' ? d.balance : parseFloat(rawBal || '0');
+
+            walletsList.push({
+                name: d.name || CURRENCY_NAMES[displaySymbol] || `${displaySymbol} Wallet`,
+                code: displaySymbol,
+                balance: d.balance_formatted || d.balanceFormatted || `${rawBal} ${displaySymbol}`,
+                rawBalance: balNum,
+            });
         });
     }
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
