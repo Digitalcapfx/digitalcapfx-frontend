@@ -386,17 +386,8 @@ export const ReceiveMoneySheet: React.FC = () => {
                         <ReceiveMomoView
                             activeWallet={activeWallet}
                             isCrypto={isCrypto}
-                            depositSuccess={depositSuccess}
-                            depositAmount={depositAmount}
-                            setDepositAmount={setDepositAmount}
-                            phone={phone}
-                            setPhone={setPhone}
-                            operator={operator}
-                            setOperator={setOperator}
                             fundingCurrency={fundingCurrency}
                             setFundingCurrency={setFundingCurrency}
-                            isPending={fundMutation.isPending}
-                            onSubmit={handleInitiateDeposit}
                         />
                     )}
                 </div>
