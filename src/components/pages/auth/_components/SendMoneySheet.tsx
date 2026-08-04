@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
 import { withdrawalService, Beneficiary, InitiateWithdrawalRequest, WithdrawalQuoteRequest } from '@/services/withdrawal.service'
+import { momoService } from '@/services/momo.service'
 import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
 import { FEATURE_FLAGS, filterCryptoItems } from '@/config/featureFlags'
@@ -96,9 +97,9 @@ export const SendMoneySheet: React.FC = () => {
     const [selectedBeneficiaryId, setSelectedBeneficiaryId] = useState<string | null>(null);
 
     // Mobile Money operator (XAF/XOF)
-    const [operator, setOperator] = useState('DigitalCap');
+    const [operator, setOperator] = useState('Wave');
     // Internal user transfer toggle
-    const [isInternal, setIsInternal] = useState(true);
+    const [isInternal, setIsInternal] = useState(false);
 
     // Crypto recipient inputs
     const [cryptoAddress, setCryptoAddress] = useState('');
@@ -436,12 +437,18 @@ export const SendMoneySheet: React.FC = () => {
     });
 
     const hub2TransferMutation = useMutation({
-        mutationFn: (payload: { amount: number; currency: string; phone: string; operator: string }) =>
-            withdrawalService.initiateWithdrawal(payload),
+        mutationFn: (payload: { amount: number; currency: 'XOF' | 'XAF'; phone: string; operator: string }) =>
+            momoService.requestWithdrawal({
+                amount: payload.amount,
+                currency: payload.currency,
+                provider: payload.operator.toLowerCase(),
+                recipient_phone: payload.phone,
+                recipient_name: accountName || undefined,
+            }),
         onSuccess: (data) => {
-            if (data?.success && data?.data) {
-                const txId = data.data.id || data.data.caasWithdrawalId || data.data.reference || 'TXN-MM-OK';
-                const status = data.data.status || 'Processing';
+            if (data?.success || data?.data) {
+                const txId = data?.data?.id || 'TXN-MM-OK';
+                const status = data?.data?.status || 'Pending Review';
                 setTxRef(txId);
                 setTxStatus(status);
                 setStep(3);
@@ -450,10 +457,13 @@ export const SendMoneySheet: React.FC = () => {
                 }
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
+                toast.success('Mobile Money cash-out requested successfully!');
+            } else {
+                toast.error(data?.error?.message || 'Mobile Money cash-out request failed.');
             }
         },
         onError: (err: any) => {
-            toast.error(err.response?.data?.error?.message || 'Mobile Money payout failed.');
+            toast.error(err.response?.data?.error?.message || 'Mobile Money cash-out request failed.');
         }
     });
 
@@ -667,7 +677,7 @@ export const SendMoneySheet: React.FC = () => {
             } else if (cryptoSendMode === 'withdraw') {
                 hub2TransferMutation.mutate({
                     amount: parseFloat(amount),
-                    currency: activeWallet.code,
+                    currency: activeWallet.code as 'XOF' | 'XAF',
                     phone: cryptoAddress,
                     operator
                 });
@@ -737,8 +747,8 @@ export const SendMoneySheet: React.FC = () => {
         setAccountNumber('');
         setAccountName('');
         setCryptoAddress('');
-        setOperator('DigitalCap');
-        setIsInternal(true);
+        setOperator('Wave');
+        setIsInternal(false);
         setQuoteDetails(null);
         setShowSaveBeneficiaryPrompt(false);
     };

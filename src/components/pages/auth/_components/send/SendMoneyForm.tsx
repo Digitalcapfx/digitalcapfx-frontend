@@ -87,19 +87,19 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
     const { t } = useLanguageStore();
 
     const operatorOptionsCrypto = [
-        { value: 'DigitalCap', label: t('send.form.operatorDigitalCap') },
-        { value: 'MTN', label: 'MTN Mobile Money' },
-        { value: 'Orange', label: 'Orange Money' },
-        { value: 'Moov', label: 'Moov Money' },
-        { value: 'Wave', label: 'Wave' }
-    ];
-
-    const operatorOptionsFiat = [
-        { value: 'DigitalCap', label: t('send.form.operatorDigitalCap') },
+        { value: 'Wave', label: 'Wave' },
         { value: 'Orange', label: 'Orange Money' },
         { value: 'MTN', label: 'MTN MoMo' },
         { value: 'Moov', label: 'Moov Money' },
-        { value: 'Wave', label: 'Wave' }
+        { value: 'KBINE', label: 'KBINE' }
+    ];
+
+    const operatorOptionsFiat = [
+        { value: 'Wave', label: 'Wave' },
+        { value: 'Orange', label: 'Orange Money' },
+        { value: 'MTN', label: 'MTN MoMo' },
+        { value: 'Moov', label: 'Moov Money' },
+        { value: 'KBINE', label: 'KBINE' }
     ];
 
     return (
@@ -293,12 +293,8 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                             options={operatorOptionsCrypto}
                                             value={operator}
                                             onChange={(val) => {
-                                                if (val === 'DigitalCap') {
-                                                    setCryptoSendMode('phone');
-                                                } else {
-                                                    setCryptoSendMode('withdraw');
-                                                    setOperator(val);
-                                                }
+                                                setCryptoSendMode('withdraw');
+                                                setOperator(val);
                                             }}
                                             searchable={false}
                                         />
@@ -400,11 +396,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                                         value={operator}
                                         onChange={(val) => {
                                             setOperator(val);
-                                            if (val === 'DigitalCap') {
-                                                setIsInternal(true);
-                                            } else {
-                                                setIsInternal(false);
-                                            }
+                                            setIsInternal(false);
                                         }}
                                         searchable={false}
                                     />

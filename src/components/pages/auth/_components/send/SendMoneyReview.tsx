@@ -45,7 +45,7 @@ export const SendMoneyReview: React.FC<SendMoneyReviewProps> = ({
 
     // Computes review variables
     const feeAmount = isCrypto || isMobileMoney || isInternal
-        ? (parseFloat(amount) * 0.001) // 0.1% internal P2P fee
+        ? 0 // Transaction fee not hardcoded (set to 0 / free for now)
         : (quoteDetails?.fee || 0);
 
     const totalSending = isCrypto || isMobileMoney || isInternal
@@ -122,11 +122,12 @@ export const SendMoneyReview: React.FC<SendMoneyReviewProps> = ({
                         </div>
                     )}
 
+                    {/* Transfer fee row commented out for now
                     {feeAmount > 0 ? (
                         <div className="flex justify-between items-center py-0.5">
                             <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('send.review.fee')}</span>
                             <span className="font-bold text-white font-mono">
-                                {formatCurrencyByLocale(feeAmount, activeWallet.code)} { (isCrypto || isMobileMoney || isInternal) && '(0.1%)' }
+                                {formatCurrencyByLocale(feeAmount, activeWallet.code)}
                             </span>
                         </div>
                     ) : (
@@ -135,6 +136,7 @@ export const SendMoneyReview: React.FC<SendMoneyReviewProps> = ({
                             <span className="font-bold text-emerald-400">{t('send.review.free')}</span>
                         </div>
                     )}
+                    */}
 
                     <div className="flex justify-between items-center py-0.5">
                         <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('send.review.settlement')}</span>
