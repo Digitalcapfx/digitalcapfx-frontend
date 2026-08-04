@@ -9,6 +9,8 @@ import { accountService } from '@/services/account.service'
 import { Wallet } from '@/components/pages/auth/wallet/WalletsPage'
 import { formatCurrencyByLocale } from '@/lib/utils'
 
+import { momoService } from '@/services/momo.service'
+
 interface WalletDetailsPageClientProps {
     id: string;
     provider?: string;
@@ -36,7 +38,12 @@ export default function WalletDetailsPageClient({ id, provider, network }: Walle
     const searchId = id.toUpperCase();
     const isWaaS = provider === 'waas';
     const isCrypto = searchId === 'USDC' || searchId === 'IUSD' || isWaaS;
+    const isMomoWallet = searchId === 'XAF' || searchId === 'XOF';
     const apiSymbol = searchId === 'IUSD' ? 'iUSD' : searchId;
+
+    const [momoTab, setMomoTab] = React.useState<'deposits' | 'withdrawals'>('deposits');
+    const [page, setPage] = React.useState<number>(1);
+    const perPage = 10;
 
     const queryNetwork = network ? network.toUpperCase() : searchId;
 
@@ -54,9 +61,23 @@ export default function WalletDetailsPageClient({ id, provider, network }: Walle
         queryFn: () => isWaaS
             ? accountService.getWaaSWalletTransactions(queryNetwork)
             : accountService.getWalletTransactions(searchId),
+        enabled: !isMomoWallet,
     });
 
-    const isLoading = detailQuery.isLoading || txQuery.isLoading;
+    // Fetch MoMo deposits and cash-out withdrawals for XAF & XOF wallets
+    const momoDepositsQuery = useQuery({
+        queryKey: ['momoDeposits', searchId, page],
+        queryFn: () => momoService.getMyDeposits(page, perPage),
+        enabled: isMomoWallet && momoTab === 'deposits',
+    });
+
+    const momoWithdrawalsQuery = useQuery({
+        queryKey: ['momoWithdrawals', searchId, page],
+        queryFn: () => momoService.getMyWithdrawals(page, perPage),
+        enabled: isMomoWallet && momoTab === 'withdrawals',
+    });
+
+    const isLoading = detailQuery.isLoading || (isMomoWallet ? (momoTab === 'deposits' ? momoDepositsQuery.isLoading : momoWithdrawalsQuery.isLoading) : txQuery.isLoading);
 
     let activeWallet: Wallet | null = null;
     if (detailQuery.data?.success && detailQuery.data.data) {
@@ -126,15 +147,59 @@ export default function WalletDetailsPageClient({ id, provider, network }: Walle
         );
     }
 
-    const transactionsList = txQuery.data?.success && Array.isArray(txQuery.data.data)
-        ? txQuery.data.data
-        : [];
+    let transactionsList: any[] = [];
+    let hasNextPage = false;
+
+    if (isMomoWallet) {
+        if (momoTab === 'deposits') {
+            const rawDeposits = momoDepositsQuery.data?.data;
+            const depositsArr = Array.isArray(rawDeposits) ? rawDeposits : [];
+            hasNextPage = depositsArr.length >= perPage;
+
+            transactionsList = depositsArr
+                .filter((d: any) => !d.currency || d.currency.toUpperCase() === searchId)
+                .map((d: any) => ({
+                    id: d.id,
+                    type: 'Mobile Money Deposit',
+                    description: `MoMo Deposit (${d.momoAccount?.displayName || d.momo_account?.display_name || d.provider || 'Wave/Orange'})`,
+                    amount: String(d.creditedAmount ?? d.credited_amount ?? d.amount ?? 0),
+                    createdAt: d.createdAt || d.created_at,
+                    status: d.status === 'confirmed' ? 'completed' : (d.status === 'rejected' ? 'failed' : d.status || 'pending'),
+                    isIncoming: true,
+                }));
+        } else {
+            const rawWithdrawals = momoWithdrawalsQuery.data?.data;
+            const withdrawalsArr = Array.isArray(rawWithdrawals) ? rawWithdrawals : [];
+            hasNextPage = withdrawalsArr.length >= perPage;
+
+            transactionsList = withdrawalsArr
+                .filter((w: any) => !w.currency || w.currency.toUpperCase() === searchId)
+                .map((w: any) => ({
+                    id: w.id,
+                    type: 'Mobile Money Payout',
+                    description: `MoMo Cash-out (${(w.provider || 'MoMo').toUpperCase()})`,
+                    amount: String(w.amount || 0),
+                    createdAt: w.createdAt || w.created_at,
+                    status: w.status === 'completed' ? 'completed' : (w.status === 'rejected' ? 'failed' : w.status || 'pending'),
+                    isIncoming: false,
+                }));
+        }
+    } else {
+        const rawTx = txQuery.data?.success && Array.isArray(txQuery.data.data) ? txQuery.data.data : [];
+        hasNextPage = rawTx.length >= perPage;
+        transactionsList = rawTx;
+    }
 
     return (
         <WalletDetails
             wallet={activeWallet}
             initialTransactions={transactionsList}
             onBack={onBack}
+            momoTab={momoTab}
+            setMomoTab={setMomoTab}
+            currentPage={page}
+            onPageChange={setPage}
+            hasNextPage={hasNextPage}
         />
     );
 }

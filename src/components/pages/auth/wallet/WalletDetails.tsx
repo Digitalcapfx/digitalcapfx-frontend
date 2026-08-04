@@ -2,16 +2,17 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-    ChevronLeft, 
-    MoreHorizontal, 
-    Send, 
-    ArrowDownLeft, 
-    RefreshCw, 
-    FileText, 
-    Eye, 
-    EyeOff, 
-    Copy, 
+import {
+    ChevronLeft,
+    ChevronRight,
+    MoreHorizontal,
+    Send,
+    ArrowDownLeft,
+    RefreshCw,
+    FileText,
+    Eye,
+    EyeOff,
+    Copy,
     Check,
     TrendingUp
 } from 'lucide-react'
@@ -49,15 +50,15 @@ const ActivityChart: React.FC = () => {
                             <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
                         </linearGradient>
                     </defs>
-                    <path 
-                        d="M 0,80 C 15,75 25,82 40,65 C 55,48 70,55 85,38 C 93,30 97,18 100,10 L 100,100 L 0,100 Z" 
+                    <path
+                        d="M 0,80 C 15,75 25,82 40,65 C 55,48 70,55 85,38 C 93,30 97,18 100,10 L 100,100 L 0,100 Z"
                         fill="url(#wave-grad)"
                     />
-                    <path 
-                        d="M 0,80 C 15,75 25,82 40,65 C 55,48 70,55 85,38 C 93,30 97,18 100,10" 
-                        fill="none" 
-                        stroke="#3B82F6" 
-                        strokeWidth="2.5" 
+                    <path
+                        d="M 0,80 C 15,75 25,82 40,65 C 55,48 70,55 85,38 C 93,30 97,18 100,10"
+                        fill="none"
+                        stroke="#3B82F6"
+                        strokeWidth="2.5"
                         strokeLinecap="round"
                     />
                 </svg>
@@ -80,6 +81,11 @@ interface WalletDetailsProps {
     wallet: Wallet;
     initialTransactions?: any[];
     onBack: () => void;
+    momoTab?: 'deposits' | 'withdrawals';
+    setMomoTab?: (tab: 'deposits' | 'withdrawals') => void;
+    currentPage?: number;
+    onPageChange?: (newPage: number) => void;
+    hasNextPage?: boolean;
 }
 
 // Transaction data models
@@ -92,7 +98,17 @@ interface Transaction {
     status: 'completed' | 'failed';
 }
 
-const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactions = [], onBack }) => {
+const WalletDetails: React.FC<WalletDetailsProps> = ({
+    wallet,
+    initialTransactions = [],
+    onBack,
+    momoTab = 'deposits',
+    setMomoTab,
+    currentPage = 1,
+    onPageChange,
+    hasNextPage = false
+}) => {
+    const isMomoWallet = wallet.code === 'XAF' || wallet.code === 'XOF';
     const { t } = useLanguageStore();
     const router = useRouter();
     const [revealDetails, setRevealDetails] = useState(false);
@@ -118,7 +134,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
     // Bank Account details strings
     const rawIban = wallet.iban || wallet.accountNumber || '';
     const ibanValue = rawIban || t('details.info.notAvailable');
-    const ibanMasked = rawIban 
+    const ibanMasked = rawIban
         ? `${rawIban.slice(0, 4)} **** **** **** **`
         : t('details.info.notAvailable');
     const swiftValue = wallet.swiftCode || wallet.bic || t('details.info.notAvailable');
@@ -131,30 +147,33 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
     // Map and filter transactions for this wallet
     const filteredTxs = Array.isArray(initialTransactions) && initialTransactions.length > 0
         ? initialTransactions.map((tx) => {
-            const isIncoming = tx.type.toLowerCase().includes('deposit') || 
-                               tx.type.toLowerCase().includes('receive') || 
-                               tx.type.toLowerCase().includes('fund') || 
-                               (tx.type.toLowerCase() === 'exchange' && parseFloat(tx.amount) > 0);
-            
-            const amtFormatted = (isIncoming ? '+' : '-') + formatBalance(Math.abs(parseFloat(tx.amount)), wallet.code);
-            
+            const isIncoming = tx.isIncoming !== undefined
+                ? tx.isIncoming
+                : (tx.type?.toLowerCase().includes('deposit') ||
+                    tx.type?.toLowerCase().includes('receive') ||
+                    tx.type?.toLowerCase().includes('fund') ||
+                    (tx.type?.toLowerCase() === 'exchange' && parseFloat(tx.amount || '0') > 0));
+
+            const amtFormatted = (isIncoming ? '+' : '-') + formatBalance(Math.abs(parseFloat(tx.amount || '0')), wallet.code);
+            const st = (tx.status || '').toLowerCase();
+
             return {
                 id: tx.id,
-                title: tx.description || `${tx.type} transaction`,
-                subtitle: `${tx.type} • ${new Date(tx.createdAt || tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+                title: tx.description || `${tx.type || 'Transaction'}`,
+                subtitle: `${tx.type || 'Transaction'} • ${new Date(tx.createdAt || tx.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
                 amount: amtFormatted,
                 isIncoming,
-                status: tx.status?.toLowerCase() === 'completed' ? 'completed' as const : 'failed' as const,
+                status: (st === 'completed' || st === 'confirmed') ? 'completed' : (st === 'pending' ? 'pending' : 'failed'),
             };
         })
-        .slice(0, 10)
+            .slice(0, 15)
         : [];
 
     const displayBalance = wallet.balance;
 
     return (
         <div className="space-y-6 text-left">
-            
+
             {/* Header controls bar */}
             <div className="flex items-center justify-between select-none">
                 <div className="flex items-center space-x-3.5">
@@ -175,10 +194,10 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
 
             {/* Layout Grid columns */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                
+
                 {/* Left side details (2/3 width) */}
                 <div className="lg:col-span-2 space-y-6">
-                    
+
                     {/* Large Wallet Balance details Card */}
                     <div className="bg-gradient-to-br from-[#0F172A] to-[#0A0F1D] border border-white/5 rounded-3xl p-8 flex flex-col justify-between min-h-[190px] shadow-2xl relative overflow-hidden select-none">
                         {/* Glow backings */}
@@ -211,7 +230,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
 
                     {/* Quick actions Hub */}
                     <div className="grid grid-cols-4 gap-3 select-none">
-                        <button 
+                        <button
                             onClick={() => openSend(wallet.id)}
                             className="bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01] transition duration-200 font-semibold cursor-pointer"
                         >
@@ -220,7 +239,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                             </div>
                             <span className="text-[11px]">{t('action.send')}</span>
                         </button>
-                        <button 
+                        <button
                             onClick={() => openReceive(wallet.id)}
                             className="bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01] transition duration-200 font-semibold cursor-pointer"
                         >
@@ -229,7 +248,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                             </div>
                             <span className="text-[11px]">{t('action.receive')}</span>
                         </button>
-                        <button 
+                        <button
                             onClick={() => router.push('/exchange')}
                             className="bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01] transition duration-200 font-semibold cursor-pointer"
                         >
@@ -249,10 +268,33 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                     {/* Transaction History list */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 text-left shadow-xl space-y-5">
                         <div className="flex justify-between items-center select-none">
-                            <h3 className="font-satoshi font-bold text-base text-white">{t('section.recent')}</h3>
-                            <button className="text-xs font-semibold text-primary-400 hover:text-primary-350 hover:underline">
-                                {t('details.action.viewall')}
-                            </button>
+                            <h3 className="font-satoshi font-bold text-base text-white">
+                                {isMomoWallet ? 'Mobile Money Activity' : t('section.recent')}
+                            </h3>
+                            {isMomoWallet && setMomoTab && (
+                                <div className="flex space-x-1 bg-black/40 border border-white/10 p-1 rounded-xl">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setMomoTab('deposits'); onPageChange?.(1); }}
+                                        className={cn(
+                                            "px-3 py-1 text-[11px] font-bold rounded-lg uppercase tracking-wider transition cursor-pointer select-none",
+                                            momoTab === 'deposits' ? "bg-white/10 text-white border border-white/15" : "text-slate-400 hover:text-white"
+                                        )}
+                                    >
+                                        Deposits
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setMomoTab('withdrawals'); onPageChange?.(1); }}
+                                        className={cn(
+                                            "px-3 py-1 text-[11px] font-bold rounded-lg uppercase tracking-wider transition cursor-pointer select-none",
+                                            momoTab === 'withdrawals' ? "bg-white/10 text-white border border-white/15" : "text-slate-400 hover:text-white"
+                                        )}
+                                    >
+                                        Cash-outs
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* List items */}
@@ -263,8 +305,8 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                                         <div className="flex items-center space-x-3.5 min-w-0">
                                             <div className={cn(
                                                 "w-9 h-9 rounded-full flex items-center justify-center shrink-0 border",
-                                                tx.isIncoming 
-                                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                                                tx.isIncoming
+                                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                                                     : "bg-rose-500/10 border-rose-500/20 text-rose-400"
                                             )}>
                                                 {tx.isIncoming ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <Send className="h-3.5 w-3.5" />}
@@ -289,7 +331,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                                             </div>
                                             <span className={cn(
                                                 "text-[9px] font-bold block mt-1 uppercase tracking-wider",
-                                                tx.status === 'completed' ? "text-emerald-500" : "text-rose-500"
+                                                tx.status === 'completed' ? "text-emerald-500" : (tx.status === 'pending' ? "text-amber-400" : "text-rose-500")
                                             )}>
                                                 {tx.status}
                                             </span>
@@ -302,13 +344,38 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                                 </div>
                             )}
                         </div>
+
+                        {/* Pagination Controls */}
+                        <div className="flex items-center justify-between pt-4 border-t border-white/5 text-xs font-mono select-none">
+                            <button
+                                type="button"
+                                disabled={(currentPage || 1) <= 1}
+                                onClick={() => onPageChange?.((currentPage || 1) - 1)}
+                                className="flex items-center space-x-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                                <span>Prev</span>
+                            </button>
+                            <span className="text-[11px] font-bold text-slate-400 font-sans">
+                                Page {currentPage || 1}
+                            </span>
+                            <button
+                                type="button"
+                                disabled={!hasNextPage}
+                                onClick={() => onPageChange?.((currentPage || 1) + 1)}
+                                className="flex items-center space-x-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+                            >
+                                <span>Next</span>
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
 
                 </div>
 
                 {/* Right side charts/info (1/3 width) */}
                 <div className="space-y-6">
-                    
+
                     {/* 30-Day Activity wave chart */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 shadow-xl">
                         <div className="flex justify-between items-center select-none mb-3">
@@ -337,13 +404,13 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                                             {revealDetails ? ibanValue : ibanMasked}
                                         </span>
                                         <div className="flex items-center space-x-2 shrink-0">
-                                            <button 
+                                            <button
                                                 onClick={() => setRevealDetails(!revealDetails)}
                                                 className="text-slate-500 hover:text-white transition duration-200 cursor-pointer"
                                             >
                                                 {revealDetails ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleCopy(ibanValue, 'iban')}
                                                 className="text-slate-500 hover:text-white transition duration-200 cursor-pointer"
                                             >
@@ -358,7 +425,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                                     <span className="text-[9px] font-bold text-slate-550 uppercase tracking-wider block select-none">{t('details.info.swift')}</span>
                                     <div className="flex items-center justify-between bg-black/25 border border-white/5 rounded-lg px-2.5 py-1.5 font-mono text-slate-300">
                                         <span>{swiftValue}</span>
-                                        <button 
+                                        <button
                                             onClick={() => handleCopy(swiftValue, 'swift')}
                                             className="text-slate-500 hover:text-white transition duration-200 cursor-pointer"
                                         >
@@ -372,7 +439,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                                     <span className="text-[9px] font-bold text-slate-550 uppercase tracking-wider block select-none">{t('details.info.routing')}</span>
                                     <div className="flex items-center justify-between bg-black/25 border border-white/5 rounded-lg px-2.5 py-1.5 font-mono text-slate-300">
                                         <span>{routingValue}</span>
-                                        <button 
+                                        <button
                                             onClick={() => handleCopy(routingValue, 'routing')}
                                             className="text-slate-500 hover:text-white transition duration-200 cursor-pointer"
                                         >
@@ -391,13 +458,13 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({ wallet, initialTransactio
                                             {revealDetails ? cryptoAddressValue : cryptoAddressMasked}
                                         </span>
                                         <div className="flex items-center space-x-2 shrink-0">
-                                            <button 
+                                            <button
                                                 onClick={() => setRevealDetails(!revealDetails)}
                                                 className="text-slate-500 hover:text-white transition duration-200 cursor-pointer"
                                             >
                                                 {revealDetails ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleCopy(cryptoAddressValue, 'crypto')}
                                                 className="text-slate-500 hover:text-white transition duration-200 cursor-pointer"
                                             >
