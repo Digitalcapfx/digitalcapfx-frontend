@@ -1,7 +1,7 @@
 import React from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { Mail, Shield } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 
 // Custom inline SVG icons for brands not present in this lucide-react version
 const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -89,18 +89,7 @@ const Footer = () => {
 
                 {/* Brand Column */}
                 <div className="col-span-12 lg:col-span-4 space-y-6">
-                    <Link href="/" className="inline-flex flex-col group">
-                        <Image
-                            src="/DFXLogo.svg"
-                            alt="DigitalCap FX Logo"
-                            width={160}
-                            height={32}
-                            className="h-7 w-auto"
-                        />
-                        <span className="text-[10px] font-bold text-slate-300 group-hover:text-white transition tracking-tight mt-0.5">
-                            Your bridge to the world of payments
-                        </span>
-                    </Link>
+                    <Logo href="/" size="md" />
                     <p className="text-sm leading-relaxed text-slate-400 max-w-sm font-sans">
                         Banking without borders. Hold, send, exchange and spend across fiat, stablecoins — all in one account.
                     </p>

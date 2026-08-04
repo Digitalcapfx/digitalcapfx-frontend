@@ -1,9 +1,9 @@
 'use client'
 
 import React from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { TrendingUp, TrendingDown, ArrowUpRight, Star } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 
 interface AuthLayoutProps {
     children: React.ReactNode;
@@ -16,21 +16,7 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
             <div className="hidden lg:flex lg:col-span-4 bg-gradient-to-b from-[#081C3A] to-[#050816] p-12 flex-col justify-between border-r border-white/5 min-h-screen sticky top-0 overflow-y-auto select-none">
 
                 {/* Brand Logo */}
-                <div className="flex flex-col items-start">
-                    <Link href="/" className="inline-flex flex-col group">
-                        <Image
-                            src="/DFXLogo.svg"
-                            alt="DigitalCap FX Logo"
-                            width={142}
-                            height={32}
-                            priority
-                            className="h-8 w-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
-                        />
-                        <span className="text-[10px] font-bold text-white/80 group-hover:text-white transition tracking-tight mt-1 font-sans select-none">
-                            Your bridge to the world of payments
-                        </span>
-                    </Link>
-                </div>
+                <Logo href="/" size="md" />
 
                 {/* Center Metrics Section */}
                 <div className="my-8 space-y-6">
