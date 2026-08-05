@@ -6,6 +6,7 @@ import { NumberInput } from '@/components/ui/NumberInput'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
+import { Select } from '@/components/ui/Select'
 
 interface PhoneSendFormProps {
     isSheet: boolean;
@@ -21,6 +22,9 @@ interface PhoneSendFormProps {
     note: string;
     setNote: (val: string) => void;
     onSubmit: (e: React.FormEvent) => void;
+    selectedToken?: string;
+    setSelectedToken?: (token: string) => void;
+    availableTokens?: string[];
 }
 
 export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
@@ -37,6 +41,9 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
     note,
     setNote,
     onSubmit,
+    selectedToken = 'USDC',
+    setSelectedToken,
+    availableTokens = ['USDC', 'USDT'],
 }) => {
     const { t } = useLanguageStore();
     const [mode, setMode] = React.useState<'phone' | 'address'>(
@@ -48,7 +55,7 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
             {isSheet && (
                 <div className="flex justify-between items-center select-none pb-2 mb-2 border-b border-white/5">
                     <span className="text-xs font-bold text-slate-400">{t('phone.send.form.stablecoinBalance')}</span>
-                    <span className="text-sm font-extrabold text-white font-mono">${balanceUsdc} <span className="text-[10px] text-slate-400">USDC / USDT</span></span>
+                    <span className="text-sm font-extrabold text-white font-mono">${balanceUsdc} <span className="text-[10px] text-slate-400">{selectedToken}</span></span>
                 </div>
             )}
 
@@ -127,11 +134,27 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
 
             {/* Amount Entry beneath Phone Input */}
             <div className={cn(
-                "bg-[#0C1224] border rounded-2xl p-4 text-center relative select-none transition-colors",
-                amountError ? "border-rose-500/50 bg-rose-500/[0.02]" : "border-white/10"
+                "bg-[#0C1224] border rounded-2xl p-4 relative select-none transition-colors",
+                amountError ? "border-rose-500/50 bg-rose-500/[0.02]" : "border-cyan-500/30 hover:border-cyan-500/45"
             )}>
-                <span className="text-[10px] font-bold text-slate-550 uppercase tracking-widest block mb-1">{t('phone.send.form.sendAmount')}</span>
-                <div className="flex items-center justify-center space-x-1 py-1">
+                <div className="flex items-center justify-between mb-1 min-h-[36px]">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">{t('phone.send.form.sendAmount')}</span>
+                    {availableTokens && availableTokens.length > 1 ? (
+                        <div className="w-28">
+                            <Select
+                                options={availableTokens.map((t) => ({ value: t, label: t }))}
+                                value={selectedToken}
+                                onChange={(val) => setSelectedToken?.(val)}
+                                searchable={false}
+                                className="!h-9 py-1 px-3 border-cyan-500/30 hover:border-cyan-400/60 bg-cyan-500/10 text-xs font-mono font-bold text-cyan-300 rounded-xl"
+                            />
+                        </div>
+                    ) : (
+                        <span className="text-xs font-black text-cyan-400 font-mono px-2.5 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">{selectedToken}</span>
+                    )}
+                </div>
+
+                <div className="flex items-center justify-center py-2">
                     <NumberInput
                         value={amount}
                         onChange={(val) => {
@@ -139,12 +162,14 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
                             if (amountError) setAmountError('');
                         }}
                         placeholder="0.00"
-                        className="bg-transparent border-none focus:outline-none focus:ring-0 text-center text-white font-mono font-black text-2.5xl placeholder-slate-700 w-full max-w-[180px] leading-none"
+                        className="bg-transparent border-none focus:outline-none focus:ring-0 text-center text-white font-mono font-black text-3xl placeholder-slate-700 w-full leading-none"
                     />
-                    <span className="text-xl font-black text-slate-500 font-mono">USDC</span>
                 </div>
-                <span className="text-[9px] text-slate-555 block mt-1">{t('phone.send.form.available', { balance: balanceUsdc })}</span>
-                {amountError && <span className="text-[10px] text-rose-500 font-bold block mt-2">{amountError}</span>}
+
+                <div className="text-center">
+                    <span className="text-[9px] text-slate-400 font-semibold block mt-1">{t('phone.send.form.available', { balance: balanceUsdc })}</span>
+                    {amountError && <span className="text-[10px] text-rose-500 font-bold block mt-1.5">{amountError}</span>}
+                </div>
             </div>
 
             {/* Optional reference */}

@@ -19,22 +19,45 @@ export interface AccountListResponse {
   data: AccountData[];
 }
 
-export interface CryptoBalanceData {
+export interface CryptoTokenData {
   symbol?: string;
   name?: string;
   balance?: number;
+  balance_raw?: string;
+  balanceRaw?: string;
   balance_usdc?: string;
   balanceUsdc?: string;
+  balance_usdt?: string;
   balance_formatted?: string;
   balanceFormatted?: string;
   wallet_address?: string;
   walletAddress?: string;
 }
 
+export interface CryptoBalanceData extends CryptoTokenData {
+  tokens?: CryptoTokenData[];
+}
+
 export interface CryptoBalanceResponse {
   success: boolean;
   data: CryptoBalanceData | CryptoBalanceData[];
 }
+
+export const extractCryptoTokenList = (data: any): CryptoTokenData[] => {
+  if (!data) return [];
+  if (data.tokens && Array.isArray(data.tokens)) {
+    const rootAddress = data.wallet_address || data.walletAddress || '';
+    return data.tokens.map((t: any) => ({
+      ...t,
+      wallet_address: t.wallet_address || t.walletAddress || rootAddress,
+      walletAddress: t.wallet_address || t.walletAddress || rootAddress,
+    }));
+  }
+  if (Array.isArray(data)) {
+    return data;
+  }
+  return [data];
+};
 
 export interface CaasWalletData {
   caasWalletId?: string;

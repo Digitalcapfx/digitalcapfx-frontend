@@ -6,7 +6,7 @@ import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { useNavigationStore } from '@/store/navigationStore'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { accountService } from '@/services/account.service'
+import { accountService, extractCryptoTokenList } from '@/services/account.service'
 import { Plus, X, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
@@ -103,14 +103,13 @@ const WalletCarousel: React.FC = () => {
     // Push CaaS stablecoin balances (USDC/USDT)
     const caasWalletsList: Array<{ currency: string; name: string; amount: string; cardNum: string; bg: string; provider: 'caas' }> = [];
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
-        const rawData = cryptoQuery.data.data;
-        const cryptoList = Array.isArray(rawData) ? rawData : [rawData];
+        const cryptoList = extractCryptoTokenList(cryptoQuery.data.data);
         cryptoList.forEach((d: any) => {
             const addr = d.wallet_address || d.walletAddress || '';
             const shortAddr = addr ? addr.slice(-4) : 'SCW';
             const symbol = (d.symbol || 'USDC').toUpperCase();
             const displaySymbol = symbol === 'IUSD' ? 'iUSD' : symbol;
-            const rawBal = d.balance_usdc || d.balanceUsdc || d.balance_formatted || (d.balance !== undefined ? String(d.balance) : '0');
+            const rawBal = d.balance_raw || d.balanceRaw || d.balance_usdc || d.balanceUsdc || (d.balance !== undefined ? String(d.balance) : '0');
 
             const item = {
                 currency: displaySymbol,

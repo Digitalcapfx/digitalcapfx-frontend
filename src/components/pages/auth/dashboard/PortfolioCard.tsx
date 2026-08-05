@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { Zap, Eye, EyeOff } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { accountService } from '@/services/account.service'
+import { accountService, extractCryptoTokenList } from '@/services/account.service'
 import { exchangeService } from '@/services/exchange.service'
 import { useLanguageStore } from '@/store/languageStore'
 
@@ -43,10 +43,9 @@ const PortfolioCard: React.FC = () => {
     }
 
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
-        const rawData = cryptoQuery.data.data;
-        const cryptoList = Array.isArray(rawData) ? rawData : [rawData];
+        const cryptoList = extractCryptoTokenList(cryptoQuery.data.data);
         cryptoList.forEach((item: any) => {
-            const rawBal = item.balance_usdc || item.balanceUsdc || item.balance_formatted || (item.balance !== undefined ? String(item.balance) : '0');
+            const rawBal = item.balance_raw || item.balanceRaw || item.balance_usdc || item.balanceUsdc || (item.balance !== undefined ? String(item.balance) : '0');
             const balNum = typeof item.balance === 'number' ? item.balance : parseFloat(rawBal || '0');
             totalUsd += balNum;
         });

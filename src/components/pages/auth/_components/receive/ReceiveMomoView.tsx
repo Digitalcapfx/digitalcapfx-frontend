@@ -50,18 +50,19 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
 
     const rawRes = accountsQuery.data;
     const accountsData: any[] = Array.isArray(rawRes?.data) ? rawRes.data : (Array.isArray(rawRes) ? rawRes : []);
-    
+
     const allAccounts = accountsData.filter((a: any) => {
         const active = a.isActive !== undefined ? a.isActive : (a.is_active !== undefined ? a.is_active : true);
         return active;
     });
 
-    // Filter accounts matching currency
-    const matchingAccounts = allAccounts.filter(
-        (a: any) => !a.currency || a.currency.toUpperCase() === targetCurrency.toUpperCase()
-    );
-
-    const activeAccountsList = matchingAccounts.length > 0 ? matchingAccounts : allAccounts;
+    // Filter accounts matching currency (XAF vs XOF)
+    const activeAccountsList = allAccounts.filter((a: any) => {
+        if (!a.currency) return false;
+        const accCur = String(a.currency).toUpperCase();
+        const target = targetCurrency.toUpperCase();
+        return accCur === target || accCur.includes(target);
+    });
 
     // Auto-select first matching account
     useEffect(() => {
@@ -298,7 +299,7 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
 
                 <div className="space-y-1.5">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Amount Paid ({targetCurrency}) *
+                        Amount Paid ({targetCurrency}) <span className="text-red-500">*</span>
                     </span>
                     <NumberInput
                         required
@@ -311,7 +312,7 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
 
                 <PhoneInput
                     required
-                    label="Your Mobile Money Phone Number *"
+                    label="Your Mobile Money Phone Number"
                     placeholder="+225 07 00 00 00 00"
                     value={senderPhone}
                     onChange={setSenderPhone}
@@ -319,7 +320,7 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
 
                 <Input
                     required
-                    label="Transaction Reference / Txn ID *"
+                    label="Transaction Reference / Txn ID"
                     placeholder="e.g. WAVE-TXN-123456"
                     value={reference}
                     onChange={(e) => setReference(e.target.value)}
@@ -327,7 +328,7 @@ export const ReceiveMomoView: React.FC<ReceiveMomoViewProps> = ({
 
                 <Input
                     required
-                    label="Sender Name on Account *"
+                    label="Sender Name on Account"
                     placeholder="e.g. Kofi Mensah"
                     value={senderName}
                     onChange={(e) => setSenderName(e.target.value)}

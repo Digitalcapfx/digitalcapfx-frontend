@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Phone } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { accountService } from '@/services/account.service'
+import { accountService, extractCryptoTokenList } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
 import { toast } from 'sonner'
 import { formatCurrencyByLocale } from '@/lib/utils'
@@ -37,13 +37,21 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
         queryFn: () => accountService.getCryptoBalances(),
     });
 
+    const [selectedToken, setSelectedToken] = useState<string>('USDC');
+
     const rawCryptoData = cryptoQuery.data?.success && cryptoQuery.data.data ? cryptoQuery.data.data : null;
-    const cryptoList = Array.isArray(rawCryptoData) ? rawCryptoData : (rawCryptoData ? [rawCryptoData] : []);
-    const totalBalanceVal = cryptoList.reduce((acc: number, item: any) => {
-        const rawBal = item.balance_usdc || item.balanceUsdc || item.balance_formatted || (item.balance !== undefined ? String(item.balance) : '0');
-        return acc + (typeof item.balance === 'number' ? item.balance : parseFloat(rawBal || '0'));
-    }, 0);
-    const balanceUsdc = totalBalanceVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const cryptoList = extractCryptoTokenList(rawCryptoData);
+
+    const availableTokens = cryptoList.length > 0
+        ? Array.from(new Set(cryptoList.map((t: any) => (t.symbol || 'USDC').toUpperCase())))
+        : ['USDC', 'USDT'];
+
+    const selectedTokenItem = cryptoList.find((t: any) => (t.symbol || '').toUpperCase() === selectedToken.toUpperCase()) || cryptoList[0];
+    const selectedRawBal = selectedTokenItem
+        ? (selectedTokenItem.balance_raw || selectedTokenItem.balanceRaw || selectedTokenItem.balance_usdc || selectedTokenItem.balanceUsdc || (selectedTokenItem.balance !== undefined ? String(selectedTokenItem.balance) : '0'))
+        : '0';
+    const selectedBalVal = selectedTokenItem && typeof selectedTokenItem.balance === 'number' ? selectedTokenItem.balance : parseFloat(selectedRawBal || '0');
+    const balanceUsdc = selectedBalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     const showPolling = step === 3 && !!txRef && txRef !== 'TXN-OK';
 
@@ -118,13 +126,13 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
             sendCryptoMutation.mutate({
                 recipientAddress: target,
                 amount: amount,
-                token: 'USDC',
+                token: selectedToken as any,
             });
         } else {
             sendCryptoMutation.mutate({
                 receiverPhone: target,
                 amount: amount,
-                token: 'USDC',
+                token: selectedToken as any,
             });
         }
     };
@@ -331,6 +339,9 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
                         note={note}
                         setNote={setNote}
                         onSubmit={handleFormSubmit}
+                        selectedToken={selectedToken}
+                        setSelectedToken={setSelectedToken}
+                        availableTokens={availableTokens}
                     />
                 );
             case 2:
@@ -374,7 +385,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
                     {step < 3 && (
                         <div className="text-right">
                             <span className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">{t('phone.send.balanceLabel')}</span>
-                            <span className="text-sm font-extrabold text-white font-mono mt-0.5 block">${balanceUsdc} <span className="text-[10px] text-slate-555">USDC</span></span>
+                            <span className="text-sm font-extrabold text-white font-mono mt-0.5 block">${balanceUsdc} <span className="text-[10px] text-slate-555">{selectedToken}</span></span>
                         </div>
                     )}
                 </div>

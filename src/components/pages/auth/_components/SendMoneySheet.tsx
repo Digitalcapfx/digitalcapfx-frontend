@@ -5,7 +5,7 @@ import { useTransactionStore } from '@/store/transactionStore'
 import { Sheet } from '@/components/ui/Sheet'
 import { formatCurrencyByLocale } from '@/lib/utils'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { accountService } from '@/services/account.service'
+import { accountService, extractCryptoTokenList } from '@/services/account.service'
 import { transferService } from '@/services/transfer.service'
 import { withdrawalService, Beneficiary, InitiateWithdrawalRequest, WithdrawalQuoteRequest } from '@/services/withdrawal.service'
 import { momoService } from '@/services/momo.service'
@@ -150,11 +150,10 @@ export const SendMoneySheet: React.FC = () => {
 
     // Map stablecoin wallet(s) (CaaS - USDC/USDT)
     if (cryptoQuery.data?.success && cryptoQuery.data.data) {
-        const rawData = cryptoQuery.data.data;
-        const cryptoList = Array.isArray(rawData) ? rawData : [rawData];
+        const cryptoList = extractCryptoTokenList(cryptoQuery.data.data);
 
         cryptoList.forEach((d: any) => {
-            const rawBal = d.balance_usdc || d.balanceUsdc || d.balance_formatted || (d.balance !== undefined ? String(d.balance) : '0');
+            const rawBal = d.balance_raw || d.balanceRaw || d.balance_usdc || d.balanceUsdc || (d.balance !== undefined ? String(d.balance) : '0');
             const balNum = typeof d.balance === 'number' ? d.balance : parseFloat(rawBal || '0');
             const symbol = (d.symbol || 'USDC').toUpperCase();
             const displaySymbol = symbol === 'IUSD' ? 'iUSD' : symbol;
