@@ -1,4 +1,5 @@
-import CardDetailsPageClient from "./CardDetailsPageClient";
+import { ComingSoon } from '@/components/pages/auth/_components/ComingSoon'
+// import CardDetailsPageClient from "./CardDetailsPageClient";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -6,5 +7,6 @@ interface PageProps {
 
 export default async function Page({ params }: PageProps) {
     const { id } = await params;
-    return <CardDetailsPageClient id={id} />
+    return <ComingSoon title="Cards" />
+    // return <CardDetailsPageClient id={id} />
 }
