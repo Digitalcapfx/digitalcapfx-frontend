@@ -29,9 +29,9 @@ export const ComingSoon: React.FC<ComingSoonProps> = ({ title }) => {
                 <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
                     {title} is coming soon
                 </h1>
-                <p className="text-slate-400 text-sm font-sans leading-relaxed">
+                {/* <p className="text-slate-400 text-sm font-sans leading-relaxed">
                     We're currently building the <strong className="text-white font-bold">{title}</strong> panel of your portal. Check back soon for cross-border conversions, multi-currency wallets, virtual cards, and billing settlements.
-                </p>
+                </p> */}
             </div>
 
             {/* Encryption badge indicator */}
