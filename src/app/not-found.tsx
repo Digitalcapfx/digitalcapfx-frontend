@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Home, LayoutDashboard, Wallet, RefreshCw, HelpCircle, Compass, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Home, Compass } from 'lucide-react'
 import NoAuthLayout from '@/components/pages/no-auth/layout/NoAuthLayout'
 
 export default function NotFound() {
