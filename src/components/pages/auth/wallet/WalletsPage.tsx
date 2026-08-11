@@ -16,6 +16,13 @@ import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { FEATURE_FLAGS, filterCryptoItems } from '@/config/featureFlags'
 
+export interface WalletActions {
+    can_send?: boolean;
+    can_receive?: boolean;
+    can_exchange?: boolean;
+    can_withdraw?: boolean;
+}
+
 export interface Wallet {
     id: string;
     name: string;
@@ -32,6 +39,8 @@ export interface Wallet {
     bankName?: string;
     provider?: 'caas' | 'waas';
     network?: string;
+    has_wallet?: boolean;
+    actions?: WalletActions;
 }
 
 const CURRENCY_NAMES: Record<string, string> = {

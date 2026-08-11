@@ -37,13 +37,14 @@ export default function WalletDetailsPageClient({ id, provider, network }: Walle
     const router = useRouter();
     const searchId = id.toUpperCase();
     const isWaaS = provider === 'waas';
-    const isCrypto = searchId === 'USDC' || searchId === 'IUSD' || isWaaS;
+    const STABLECOIN_SYMBOLS = ['USDC', 'USDT', 'IUSD', 'BUSD', 'DAI'];
+    const isCrypto = STABLECOIN_SYMBOLS.includes(searchId) || isWaaS;
     const isMomoWallet = searchId === 'XAF' || searchId === 'XOF';
     const apiSymbol = searchId === 'IUSD' ? 'iUSD' : searchId;
 
     const [momoTab, setMomoTab] = React.useState<'deposits' | 'withdrawals'>('deposits');
     const [page, setPage] = React.useState<number>(1);
-    const perPage = 10;
+    const perPage = 20;
 
     const queryNetwork = network ? network.toUpperCase() : searchId;
 
@@ -57,10 +58,10 @@ export default function WalletDetailsPageClient({ id, provider, network }: Walle
 
     // Fetch live transactions for specific fiat/stablecoin endpoint
     const txQuery = useQuery({
-        queryKey: ['walletTransactions', searchId, provider, queryNetwork],
+        queryKey: ['walletTransactions', searchId, provider, queryNetwork, page],
         queryFn: () => isWaaS
             ? accountService.getWaaSWalletTransactions(queryNetwork)
-            : accountService.getWalletTransactions(searchId),
+            : accountService.getWalletTransactions(searchId, page),
         enabled: !isMomoWallet,
     });
 
@@ -82,6 +83,8 @@ export default function WalletDetailsPageClient({ id, provider, network }: Walle
     let activeWallet: Wallet | null = null;
     if (detailQuery.data?.success && detailQuery.data.data) {
         const d = detailQuery.data.data;
+        const actions = d.actions || { can_send: true, can_receive: true, can_exchange: true, can_withdraw: true };
+
         if (isWaaS) {
             const balObj = searchId === queryNetwork
                 ? (d.wallet || d)
@@ -97,23 +100,40 @@ export default function WalletDetailsPageClient({ id, provider, network }: Walle
                 balance: balObj?.formatted_balance || balObj?.formattedBalance || `${balVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${balSymbol}`,
                 rawBalance: balVal,
                 walletAddress: d.wallet?.address || d.address || '',
+                provider: 'waas',
+                actions,
             };
         } else {
-            const curCode = (isCrypto ? apiSymbol : d.currency) || searchId;
+            // Check if response contains a nested `wallet` object (e.g. GET /wallets/stablecoin/USDC)
+            const w = d.wallet || d;
+            const curCode = (isCrypto ? (w.symbol || apiSymbol) : (w.currency || d.currency)) || searchId;
+
+            const rawBal = w.balance_raw !== undefined
+                ? (typeof w.balance_raw === 'number' ? w.balance_raw : parseFloat(w.balance_raw))
+                : parseFloat(w.balance || w.balanceUsdc || d.balance || d.balanceUsdc || '0');
+
+            const formattedBal = w.formatted_balance || w.formattedBalance
+                || formatBalance(w.balance || w.balanceUsdc || d.balance || d.balanceUsdc || '0', curCode);
+
+            const walletAddr = w.address || w.walletAddress || w.wallet_address || d.walletAddress || d.address || '';
+
             activeWallet = {
-                id: curCode.toLowerCase(),
-                name: CURRENCY_NAMES[curCode] || curCode,
+                id: (w.id && w.id.length > 0) ? w.id : curCode.toLowerCase(),
+                name: (w.name && w.name !== 'Stablecoin' ? w.name : (CURRENCY_NAMES[curCode] || curCode)),
                 code: curCode,
                 type: isCrypto ? 'stablecoin' : 'fiat',
-                balance: formatBalance(d.balance || d.balanceUsdc || '0', curCode),
-                rawBalance: parseFloat(d.balance || d.balanceUsdc || '0'),
-                walletAddress: d.walletAddress,
-                accountNumber: d.accountNumber,
-                iban: d.iban,
-                bic: d.bic,
-                routingNumber: d.routingNumber,
-                swiftCode: d.swiftCode || d.bic,
-                bankName: d.bankName,
+                balance: formattedBal,
+                rawBalance: rawBal,
+                walletAddress: walletAddr,
+                accountNumber: w.accountNumber || d.accountNumber,
+                iban: w.iban || d.iban,
+                bic: w.bic || d.bic,
+                routingNumber: w.routingNumber || d.routingNumber,
+                swiftCode: w.swiftCode || w.bic || d.swiftCode || d.bic,
+                bankName: w.bankName || d.bankName,
+                provider: w.provider || 'caas',
+                has_wallet: w.has_wallet !== undefined ? w.has_wallet : true,
+                actions,
             };
         }
     }
@@ -185,8 +205,20 @@ export default function WalletDetailsPageClient({ id, provider, network }: Walle
                 }));
         }
     } else {
-        const rawTx = txQuery.data?.success && Array.isArray(txQuery.data.data) ? txQuery.data.data : [];
-        hasNextPage = rawTx.length >= perPage;
+        let rawTx: any[] = [];
+        const rawRes: any = txQuery.data;
+        const resData: any = rawRes?.data;
+        if (rawRes?.success) {
+            if (Array.isArray(resData)) {
+                rawTx = resData;
+            } else if (resData?.transactions && Array.isArray(resData.transactions)) {
+                rawTx = resData.transactions;
+            } else if (Array.isArray(rawRes?.transactions)) {
+                rawTx = rawRes.transactions;
+            }
+        }
+        const limitVal = resData?.limit || perPage;
+        hasNextPage = rawTx.length >= limitVal && rawTx.length > 0;
         transactionsList = rawTx;
     }
 

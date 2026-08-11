@@ -14,7 +14,8 @@ import {
     EyeOff,
     Copy,
     Check,
-    TrendingUp
+    TrendingUp,
+    Lock
 } from 'lucide-react'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
 import { Wallet } from './WalletsPage'
@@ -23,6 +24,8 @@ import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
 import { useQuery } from '@tanstack/react-query'
 import { accountService } from '@/services/account.service'
+import Sheet from '@/components/ui/Sheet'
+import { toast } from 'sonner'
 
 const formatBalance = (amount: string | number, currency: string) => {
     return formatCurrencyByLocale(amount, currency);
@@ -113,6 +116,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
     const router = useRouter();
     const [revealDetails, setRevealDetails] = useState(false);
     const [copiedField, setCopiedField] = useState<string | null>(null);
+    const [selectedTx, setSelectedTx] = useState<any | null>(null);
     const openSend = useTransactionStore((state) => state.openSend);
     const openReceive = useTransactionStore((state) => state.openReceive);
 
@@ -147,26 +151,58 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
     // Map and filter transactions for this wallet
     const filteredTxs = Array.isArray(initialTransactions) && initialTransactions.length > 0
         ? initialTransactions.map((tx) => {
-            const isIncoming = tx.isIncoming !== undefined
-                ? tx.isIncoming
-                : (tx.type?.toLowerCase().includes('deposit') ||
-                    tx.type?.toLowerCase().includes('receive') ||
-                    tx.type?.toLowerCase().includes('fund') ||
-                    (tx.type?.toLowerCase() === 'exchange' && parseFloat(tx.amount || '0') > 0));
+            const walletAddr = (wallet.walletAddress || '').toLowerCase();
+            const recvAddress = tx.receiver_address || tx.receiverAddress || tx.receiver_phone || '';
+            const recvAddrLower = recvAddress.toLowerCase();
+
+            let isIncoming = false;
+            if (tx.isIncoming !== undefined) {
+                isIncoming = Boolean(tx.isIncoming);
+            } else if (tx.is_incoming !== undefined) {
+                isIncoming = Boolean(tx.is_incoming);
+            } else if (tx.direction) {
+                const dir = String(tx.direction).toLowerCase();
+                isIncoming = dir === 'in' || dir === 'incoming' || dir === 'credit' || dir === 'deposit';
+            } else if (tx.type) {
+                const t = String(tx.type).toLowerCase();
+                isIncoming = t.includes('deposit') || t.includes('receive') || t.includes('credit') || t.includes('fund') || (t === 'exchange' && parseFloat(tx.amount || '0') > 0);
+            } else if (walletAddr && recvAddrLower && walletAddr === recvAddrLower) {
+                isIncoming = true;
+            } else if (tx.receiver_user_id && !tx.sender_user_id) {
+                isIncoming = true;
+            } else {
+                isIncoming = false;
+            }
 
             const amtFormatted = (isIncoming ? '+' : '-') + formatBalance(Math.abs(parseFloat(tx.amount || '0')), wallet.code);
             const st = (tx.status || '').toLowerCase();
+            const mappedStatus = (st === 'completed' || st === 'confirmed' || st === 'success' || st === 'sandbox_simulated')
+                ? 'completed'
+                : (st === 'queued' || st === 'pending' || st === 'processing' ? 'pending' : 'failed');
+
+            const maskedRecv = recvAddress && recvAddress.startsWith('0x')
+                ? `${recvAddress.slice(0, 6)}...${recvAddress.slice(-4)}`
+                : recvAddress;
+
+            const typeLabel = isIncoming
+                ? (tx.type || (tx.token ? `${tx.token} Deposit` : 'Deposit'))
+                : (tx.type || (tx.token ? `${tx.token} Transfer` : 'Withdrawal'));
+
+            const displayTitle = tx.title || tx.description || tx.reference || typeLabel;
+            const dateStr = new Date(tx.createdAt || tx.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const displaySubtitle = `${typeLabel} • ${dateStr}${maskedRecv ? ` • ${isIncoming ? 'From' : 'To'}: ${maskedRecv}` : ''}`;
 
             return {
                 id: tx.id,
-                title: tx.description || `${tx.type || 'Transaction'}`,
-                subtitle: `${tx.type || 'Transaction'} • ${new Date(tx.createdAt || tx.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+                title: displayTitle,
+                subtitle: displaySubtitle,
+                receiverAddress: recvAddress,
                 amount: amtFormatted,
                 isIncoming,
-                status: (st === 'completed' || st === 'confirmed') ? 'completed' : (st === 'pending' ? 'pending' : 'failed'),
+                status: mappedStatus,
+                rawTx: tx,
             };
         })
-            .slice(0, 15)
         : [];
 
     const displayBalance = wallet.balance;
@@ -229,10 +265,22 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                     </div>
 
                     {/* Quick actions Hub */}
-                    <div className="grid grid-cols-4 gap-3 select-none">
+                    <div className="grid grid-cols-3 gap-3 select-none">
                         <button
-                            onClick={() => openSend(wallet.id)}
-                            className="bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01] transition duration-200 font-semibold cursor-pointer"
+                            onClick={() => {
+                                if (wallet.actions?.can_send === false) {
+                                    toast.error('Send feature is disabled for this wallet.');
+                                    return;
+                                }
+                                openSend(wallet.id);
+                            }}
+                            disabled={wallet.actions?.can_send === false}
+                            className={cn(
+                                "bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 transition duration-200 font-semibold cursor-pointer",
+                                wallet.actions?.can_send === false
+                                    ? "opacity-40 cursor-not-allowed"
+                                    : "text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01]"
+                            )}
                         >
                             <div className="w-8 h-8 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-400 shrink-0">
                                 <Send className="h-4 w-4" />
@@ -240,8 +288,20 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                             <span className="text-[11px]">{t('action.send')}</span>
                         </button>
                         <button
-                            onClick={() => openReceive(wallet.id)}
-                            className="bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01] transition duration-200 font-semibold cursor-pointer"
+                            onClick={() => {
+                                if (wallet.actions?.can_receive === false) {
+                                    toast.error('Receive feature is disabled for this wallet.');
+                                    return;
+                                }
+                                openReceive(wallet.id);
+                            }}
+                            disabled={wallet.actions?.can_receive === false}
+                            className={cn(
+                                "bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 transition duration-200 font-semibold cursor-pointer",
+                                wallet.actions?.can_receive === false
+                                    ? "opacity-40 cursor-not-allowed"
+                                    : "text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01]"
+                            )}
                         >
                             <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
                                 <ArrowDownLeft className="h-4.5 w-4.5" />
@@ -249,20 +309,47 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                             <span className="text-[11px]">{t('action.receive')}</span>
                         </button>
                         <button
-                            onClick={() => router.push('/exchange')}
-                            className="bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01] transition duration-200 font-semibold cursor-pointer"
+                            onClick={() => {
+                                if (wallet.actions?.can_exchange === false) {
+                                    toast.error('Exchange feature is disabled for this wallet.');
+                                    return;
+                                }
+                                router.push('/exchange');
+                            }}
+                            disabled={wallet.actions?.can_exchange === false}
+                            className={cn(
+                                "bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 transition duration-200 font-semibold cursor-pointer",
+                                wallet.actions?.can_exchange === false
+                                    ? "opacity-40 cursor-not-allowed"
+                                    : "text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01]"
+                            )}
                         >
                             <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
                                 <RefreshCw className="h-4 w-4" />
                             </div>
                             <span className="text-[11px]">{t('nav.exchange')}</span>
                         </button>
-                        <button className="bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01] transition duration-200 font-semibold cursor-pointer">
+                        {/* <button
+                            onClick={() => {
+                                if (wallet.actions?.can_withdraw === false) {
+                                    toast.error('Withdrawal is disabled for this wallet.');
+                                    return;
+                                }
+                                toast.info('Generating account statement...');
+                            }}
+                            disabled={wallet.actions?.can_withdraw === false}
+                            className={cn(
+                                "bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 transition duration-200 font-semibold cursor-pointer",
+                                wallet.actions?.can_withdraw === false
+                                    ? "opacity-40 cursor-not-allowed"
+                                    : "text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01]"
+                            )}
+                        >
                             <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0">
                                 <FileText className="h-4 w-4" />
                             </div>
                             <span className="text-[11px]">{t('details.action.statement')}</span>
-                        </button>
+                        </button> */}
                     </div>
 
                     {/* Transaction History list */}
@@ -301,7 +388,11 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                         <div className="space-y-4">
                             {filteredTxs.length > 0 ? (
                                 filteredTxs.map((tx) => (
-                                    <div key={tx.id} className="flex items-center justify-between py-1 border-b border-white/[0.03] last:border-b-0">
+                                    <div
+                                        key={tx.id}
+                                        onClick={() => setSelectedTx(tx)}
+                                        className="flex items-center justify-between py-2 px-2.5 rounded-2xl hover:bg-white/[0.04] active:scale-[0.99] transition duration-150 cursor-pointer border-b border-white/[0.03] last:border-b-0 group select-none"
+                                    >
                                         <div className="flex items-center space-x-3.5 min-w-0">
                                             <div className={cn(
                                                 "w-9 h-9 rounded-full flex items-center justify-center shrink-0 border",
@@ -510,6 +601,144 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                 </div>
 
             </div>
+
+            {/* Transaction Detail Sheet */}
+            <Sheet
+                isOpen={!!selectedTx}
+                onClose={() => setSelectedTx(null)}
+                title="Transaction Details"
+                description="Detailed overview and cryptographic proof of transfer"
+            >
+                {selectedTx && (
+                    <div className="space-y-6 text-left pt-2 pb-6">
+
+                        {/* Top Balance / Status Summary Banner */}
+                        <div className="bg-[#0C1224] border border-white/5 rounded-3xl p-6 text-center space-y-3 relative overflow-hidden">
+                            <div className="flex justify-center">
+                                <div className={cn(
+                                    "w-12 h-12 rounded-2xl flex items-center justify-center border shadow-lg",
+                                    selectedTx.isIncoming
+                                        ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+                                        : "bg-rose-500/10 border-rose-500/25 text-rose-400"
+                                )}>
+                                    {selectedTx.isIncoming ? <ArrowDownLeft className="h-6 w-6" /> : <Send className="h-5 w-5" />}
+                                </div>
+                            </div>
+
+                            <div>
+                                <span className={cn(
+                                    "font-mono text-2xl font-black tracking-tight block",
+                                    selectedTx.isIncoming ? "text-emerald-400" : "text-white"
+                                )}>
+                                    {selectedTx.amount}
+                                </span>
+                                <span className="text-xs text-slate-400 font-sans font-semibold block mt-1">
+                                    {selectedTx.isIncoming ? 'Incoming Deposit' : 'Outgoing Transfer'}
+                                </span>
+                            </div>
+
+                            <div className="inline-flex items-center space-x-2 bg-white/5 border border-white/10 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                                <span className={cn(
+                                    "w-2 h-2 rounded-full",
+                                    selectedTx.status === 'completed' ? "bg-emerald-400" : (selectedTx.status === 'pending' ? "bg-amber-400 animate-pulse" : "bg-rose-500")
+                                )} />
+                                <span className={selectedTx.status === 'completed' ? "text-emerald-400" : (selectedTx.status === 'pending' ? "text-amber-400" : "text-rose-400")}>
+                                    {selectedTx.rawTx?.status || selectedTx.status}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Field breakdown list */}
+                        <div className="bg-[#0C1224] border border-white/5 rounded-2xl p-4 space-y-3.5 text-xs font-sans">
+
+                            {/* Reference */}
+                            {(selectedTx.rawTx?.reference || selectedTx.rawTx?.idempotency_key) && (
+                                <div className="flex items-center justify-between py-1 border-b border-white/5">
+                                    <span className="text-slate-500 font-medium">Reference</span>
+                                    <div className="flex items-center space-x-2 font-mono text-white font-bold">
+                                        <span>{selectedTx.rawTx?.reference || selectedTx.rawTx?.idempotency_key}</span>
+                                        <button
+                                            onClick={() => handleCopy(selectedTx.rawTx?.reference || selectedTx.rawTx?.idempotency_key, 'ref')}
+                                            className="text-slate-500 hover:text-white transition cursor-pointer"
+                                        >
+                                            {copiedField === 'ref' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Tx Hash / Transfer ID */}
+                            {(selectedTx.rawTx?.tx_hash || selectedTx.rawTx?.caas_transfer_id) && (
+                                <div className="flex flex-col space-y-1 py-1 border-b border-white/5">
+                                    <span className="text-slate-500 font-medium">Transaction Hash</span>
+                                    <div className="flex items-center justify-between bg-black/30 border border-white/5 rounded-xl px-2.5 py-1.5 font-mono text-[11px] text-slate-300">
+                                        <span className="truncate mr-2">{selectedTx.rawTx?.tx_hash || selectedTx.rawTx?.caas_transfer_id}</span>
+                                        <button
+                                            onClick={() => handleCopy(selectedTx.rawTx?.tx_hash || selectedTx.rawTx?.caas_transfer_id, 'hash')}
+                                            className="text-slate-500 hover:text-white transition cursor-pointer shrink-0"
+                                        >
+                                            {copiedField === 'hash' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Receiver Address */}
+                            {selectedTx.receiverAddress && (
+                                <div className="flex flex-col space-y-1 py-1 border-b border-white/5">
+                                    <span className="text-slate-500 font-medium">{selectedTx.isIncoming ? 'Deposit Address' : 'Receiver Address'}</span>
+                                    <div className="flex items-center justify-between bg-black/30 border border-white/5 rounded-xl px-2.5 py-1.5 font-mono text-[11px] text-slate-300">
+                                        <span className="truncate mr-2">{selectedTx.receiverAddress}</span>
+                                        <button
+                                            onClick={() => handleCopy(selectedTx.receiverAddress, 'recv')}
+                                            className="text-slate-500 hover:text-white transition cursor-pointer shrink-0"
+                                        >
+                                            {copiedField === 'recv' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Date & Time */}
+                            <div className="flex items-center justify-between py-1 border-b border-white/5">
+                                <span className="text-slate-500 font-medium">Date & Time</span>
+                                <span className="font-mono text-slate-300 font-medium">
+                                    {new Date(selectedTx.rawTx?.createdAt || selectedTx.rawTx?.created_at || Date.now()).toLocaleString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit'
+                                    })}
+                                </span>
+                            </div>
+
+                            {/* Token / Currency */}
+                            <div className="flex items-center justify-between py-1 border-b border-white/5">
+                                <span className="text-slate-500 font-medium">Asset</span>
+                                <span className="font-mono text-white font-bold">{selectedTx.rawTx?.token || wallet.code}</span>
+                            </div>
+
+                            {/* Quote ID if present */}
+                            {selectedTx.rawTx?.quote_id && (
+                                <div className="flex items-center justify-between py-1">
+                                    <span className="text-slate-500 font-medium">Quote ID</span>
+                                    <span className="font-mono text-slate-400">{selectedTx.rawTx.quote_id}</span>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Footer encryption badge */}
+                        <div className="flex items-center justify-center space-x-2 text-[10px] text-slate-500 font-bold tracking-wide select-none pt-2 font-mono">
+                            <Lock className="h-3.5 w-3.5 stroke-[2.5]" />
+                            <span>Verified by Rach CAAS Engine & 256-bit AES</span>
+                        </div>
+
+                    </div>
+                )}
+            </Sheet>
 
         </div>
     );

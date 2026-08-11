@@ -118,7 +118,7 @@ class AccountService extends BaseService {
     return response.data;
   }
 
-  async getStablecoinWalletTransactions(symbol: string): Promise<{ success: boolean; data: any[] }> {
+  async getStablecoinWalletTransactions(symbol: string): Promise<{ success: boolean; data: any }> {
     const response = await this.api.get(`/wallets/stablecoin/${symbol}/transactions`);
     return response.data;
   }
@@ -138,17 +138,17 @@ class AccountService extends BaseService {
     }
   }
 
-  async getWalletTransactions(currency: string): Promise<{ success: boolean; data: any[] }> {
+  async getWalletTransactions(currency: string, page: number = 1): Promise<{ success: boolean; data: any }> {
     const code = currency.toUpperCase();
     if (code === 'IUSD' || code === 'USDC' || code === 'USDT') {
       const symbol = code === 'IUSD' ? 'iUSD' : code;
-      const response = await this.api.get(`/wallets/stablecoin/${symbol}/transactions`);
+      const response = await this.api.get(`/wallets/stablecoin/${symbol}/transactions`, { params: { page } });
       return response.data;
     } else if (code === 'XAF' || code === 'XOF') {
-      const response = await this.api.get(`/accounts/${code}/transactions`);
+      const response = await this.api.get(`/accounts/${code}/transactions`, { params: { page } });
       return response.data;
     } else {
-      const response = await this.api.get(`/wallets/fiat/${code}/transactions`);
+      const response = await this.api.get(`/wallets/fiat/${code}/transactions`, { params: { page } });
       return response.data;
     }
   }
