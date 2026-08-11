@@ -31,6 +31,43 @@ const formatBalance = (amount: string | number, currency: string) => {
     return formatCurrencyByLocale(amount, currency);
 };
 
+const getTokenStyles = (token?: string, walletCode?: string) => {
+    const sym = (token || walletCode || '').toUpperCase();
+    if (sym === 'USDC') {
+        return {
+            sym: 'USDC',
+            badgeBg: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+            iconBg: 'bg-blue-500/10 border-blue-500/25 text-blue-400',
+        };
+    }
+    if (sym === 'USDT') {
+        return {
+            sym: 'USDT',
+            badgeBg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+            iconBg: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400',
+        };
+    }
+    if (sym === 'IUSD') {
+        return {
+            sym: 'iUSD',
+            badgeBg: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
+            iconBg: 'bg-indigo-500/10 border-indigo-500/25 text-indigo-400',
+        };
+    }
+    if (sym === 'BUSD') {
+        return {
+            sym: 'BUSD',
+            badgeBg: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+            iconBg: 'bg-amber-500/10 border-amber-500/25 text-amber-400',
+        };
+    }
+    return {
+        sym: sym || 'CRYPTO',
+        badgeBg: 'bg-slate-500/10 border-slate-500/20 text-slate-400',
+        iconBg: 'bg-slate-500/10 border-slate-500/25 text-slate-400',
+    };
+};
+
 // 30-Day Activity Chart Component
 const ActivityChart: React.FC = () => {
     return (
@@ -117,6 +154,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
     const [revealDetails, setRevealDetails] = useState(false);
     const [copiedField, setCopiedField] = useState<string | null>(null);
     const [selectedTx, setSelectedTx] = useState<any | null>(null);
+    const [tokenFilter, setTokenFilter] = useState<'ALL' | 'USDT' | 'USDC'>('ALL');
     const openSend = useTransactionStore((state) => state.openSend);
     const openReceive = useTransactionStore((state) => state.openReceive);
 
@@ -174,7 +212,8 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                 isIncoming = false;
             }
 
-            const amtFormatted = (isIncoming ? '+' : '-') + formatBalance(Math.abs(parseFloat(tx.amount || '0')), wallet.code);
+            const txToken = tx.token || wallet.code;
+            const amtFormatted = (isIncoming ? '+' : '-') + formatBalance(Math.abs(parseFloat(tx.amount || '0')), txToken);
             const st = (tx.status || '').toLowerCase();
             const mappedStatus = (st === 'completed' || st === 'confirmed' || st === 'success' || st === 'sandbox_simulated')
                 ? 'completed'
@@ -197,6 +236,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                 title: displayTitle,
                 subtitle: displaySubtitle,
                 receiverAddress: recvAddress,
+                token: tx.token || wallet.code,
                 amount: amtFormatted,
                 isIncoming,
                 status: mappedStatus,
@@ -204,6 +244,12 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
             };
         })
         : [];
+
+    const displayedTxs = filteredTxs.filter((tx) => {
+        if (tokenFilter === 'ALL') return true;
+        const itemToken = (tx.token || tx.rawTx?.token || wallet.code).toUpperCase();
+        return itemToken === tokenFilter;
+    });
 
     const displayBalance = wallet.balance;
 
@@ -329,35 +375,40 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                             </div>
                             <span className="text-[11px]">{t('nav.exchange')}</span>
                         </button>
-                        {/* <button
-                            onClick={() => {
-                                if (wallet.actions?.can_withdraw === false) {
-                                    toast.error('Withdrawal is disabled for this wallet.');
-                                    return;
-                                }
-                                toast.info('Generating account statement...');
-                            }}
-                            disabled={wallet.actions?.can_withdraw === false}
-                            className={cn(
-                                "bg-[#0C1224] border border-white/5 rounded-2xl p-3 flex flex-col items-center justify-center space-y-2 transition duration-200 font-semibold cursor-pointer",
-                                wallet.actions?.can_withdraw === false
-                                    ? "opacity-40 cursor-not-allowed"
-                                    : "text-slate-400 hover:text-white hover:border-white/10 hover:bg-white/[0.01]"
-                            )}
-                        >
-                            <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0">
-                                <FileText className="h-4 w-4" />
-                            </div>
-                            <span className="text-[11px]">{t('details.action.statement')}</span>
-                        </button> */}
                     </div>
 
                     {/* Transaction History list */}
                     <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 text-left shadow-xl space-y-5">
-                        <div className="flex justify-between items-center select-none">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none">
                             <h3 className="font-satoshi font-bold text-base text-white">
                                 {isMomoWallet ? 'Mobile Money Activity' : t('section.recent')}
                             </h3>
+
+                            {/* Token Filter Pills for Stablecoins / Crypto */}
+                            {!isMomoWallet && (
+                                <div className="flex items-center space-x-1 bg-black/40 border border-white/10 p-1 rounded-xl">
+                                    {(['ALL', 'USDT', 'USDC'] as const).map((filterOpt) => (
+                                        <button
+                                            key={filterOpt}
+                                            type="button"
+                                            onClick={() => setTokenFilter(filterOpt)}
+                                            className={cn(
+                                                "px-2.5 py-1 text-[10px] font-mono font-bold rounded-lg uppercase tracking-wider transition cursor-pointer select-none",
+                                                tokenFilter === filterOpt 
+                                                    ? (filterOpt === 'USDT'
+                                                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                                        : filterOpt === 'USDC'
+                                                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                                            : "bg-white/10 text-white border border-white/15")
+                                                    : "text-slate-400 hover:text-white"
+                                            )}
+                                        >
+                                            {filterOpt === 'ALL' ? 'All Tokens' : filterOpt}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
                             {isMomoWallet && setMomoTab && (
                                 <div className="flex space-x-1 bg-black/40 border border-white/10 p-1 rounded-xl">
                                     <button
@@ -386,31 +437,41 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
 
                         {/* List items */}
                         <div className="space-y-3.5 min-h-[300px] max-h-[540px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                            {filteredTxs.length > 0 ? (
-                                filteredTxs.map((tx) => (
-                                    <div
-                                        key={tx.id}
-                                        onClick={() => setSelectedTx(tx)}
-                                        className="flex items-center justify-between py-2 px-2.5 rounded-2xl hover:bg-white/[0.04] active:scale-[0.99] transition duration-150 cursor-pointer border-b border-white/[0.03] last:border-b-0 group select-none"
-                                    >
-                                        <div className="flex items-center space-x-3.5 min-w-0">
-                                            <div className={cn(
-                                                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 border",
-                                                tx.isIncoming
-                                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                                                    : "bg-rose-500/10 border-rose-500/20 text-rose-400"
-                                            )}>
-                                                {tx.isIncoming ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <Send className="h-3.5 w-3.5" />}
+                            {displayedTxs.length > 0 ? (
+                                displayedTxs.map((tx) => {
+                                    const tokenStyle = getTokenStyles(tx.token, wallet.code);
+                                    return (
+                                        <div
+                                            key={tx.id}
+                                            onClick={() => setSelectedTx(tx)}
+                                            className="flex items-center justify-between py-2 px-2.5 rounded-2xl hover:bg-white/[0.04] active:scale-[0.99] transition duration-150 cursor-pointer border-b border-white/[0.03] last:border-b-0 group select-none"
+                                        >
+                                            <div className="flex items-center space-x-3.5 min-w-0">
+                                                <div className={cn(
+                                                    "w-9 h-9 rounded-full flex items-center justify-center shrink-0 border",
+                                                    tx.isIncoming
+                                                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                                        : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                                                )}>
+                                                    {tx.isIncoming ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <Send className="h-3.5 w-3.5" />}
+                                                </div>
+                                                <div className="text-left min-w-0">
+                                                    <div className="flex items-center space-x-2">
+                                                        <h4 className="font-sans font-bold text-xs text-white truncate">
+                                                            {tx.title}
+                                                        </h4>
+                                                        <span className={cn(
+                                                            "px-1.5 py-0.25 rounded text-[9px] font-black tracking-wider uppercase border shrink-0 select-none font-mono",
+                                                            tokenStyle.badgeBg
+                                                        )}>
+                                                            {tokenStyle.sym}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[10px] text-slate-500 font-medium block mt-0.5 select-none">
+                                                        {tx.subtitle}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="text-left min-w-0">
-                                                <h4 className="font-sans font-bold text-xs text-white truncate">
-                                                    {tx.title}
-                                                </h4>
-                                                <span className="text-[10px] text-slate-500 font-medium block mt-0.5 select-none">
-                                                    {tx.subtitle}
-                                                </span>
-                                            </div>
-                                        </div>
 
                                         {/* Amount and Status details */}
                                         <div className="text-right select-none">
@@ -428,10 +489,12 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                                             </span>
                                         </div>
                                     </div>
-                                ))
+                                );
+                            })
                             ) : (
-                                <div className="text-center py-6 text-xs text-slate-500 font-sans select-none">
-                                    {t('details.tx.empty')}
+                                <div className="text-center py-12 text-xs text-slate-500 font-sans select-none space-y-1">
+                                    <p className="font-bold text-slate-400">No transactions match filter ({tokenFilter})</p>
+                                    <p className="text-[11px] opacity-75">Switch the token filter tab to "All Tokens" to view all records</p>
                                 </div>
                             )}
                         </div>
@@ -717,7 +780,15 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                             {/* Token / Currency */}
                             <div className="flex items-center justify-between py-1 border-b border-white/5">
                                 <span className="text-slate-500 font-medium">Asset</span>
-                                <span className="font-mono text-white font-bold">{selectedTx.rawTx?.token || wallet.code}</span>
+                                <div className="flex items-center space-x-2">
+                                    <span className="font-mono text-white font-bold">{selectedTx.rawTx?.token || selectedTx.token || wallet.code}</span>
+                                    <span className={cn(
+                                        "px-2 py-0.5 rounded text-[10px] font-black tracking-wider uppercase border font-mono select-none",
+                                        getTokenStyles(selectedTx.rawTx?.token || selectedTx.token, wallet.code).badgeBg
+                                    )}>
+                                        {getTokenStyles(selectedTx.rawTx?.token || selectedTx.token, wallet.code).sym}
+                                    </span>
+                                </div>
                             </div>
 
                             {/* Quote ID if present */}

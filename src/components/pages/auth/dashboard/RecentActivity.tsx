@@ -11,6 +11,38 @@ const formatBalance = (amount: string | number, currency: string) => {
     return formatCurrencyByLocale(amount, currency);
 };
 
+const getTokenStyles = (token?: string, walletCode?: string) => {
+    const sym = (token || walletCode || '').toUpperCase();
+    if (sym === 'USDC') {
+        return {
+            sym: 'USDC',
+            badgeBg: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+        };
+    }
+    if (sym === 'USDT') {
+        return {
+            sym: 'USDT',
+            badgeBg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+        };
+    }
+    if (sym === 'IUSD') {
+        return {
+            sym: 'iUSD',
+            badgeBg: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
+        };
+    }
+    if (sym === 'BUSD') {
+        return {
+            sym: 'BUSD',
+            badgeBg: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+        };
+    }
+    return {
+        sym: sym || 'CRYPTO',
+        badgeBg: 'bg-slate-500/10 border-slate-500/20 text-slate-400',
+    };
+};
+
 const RecentActivity: React.FC = () => {
     const { t } = useLanguageStore();
     const activityQuery = useQuery({
@@ -46,10 +78,12 @@ const RecentActivity: React.FC = () => {
             ) : txList.length > 0 ? (
                 <div className="space-y-3.5 min-h-[220px] max-h-[480px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                     {txList.slice(0, 5).map((tx) => {
-                        const isIncoming = tx.type.toLowerCase().includes('deposit') || 
-                                           tx.type.toLowerCase().includes('receive') || 
-                                           tx.type.toLowerCase().includes('fund') ||
-                                           (tx.type.toLowerCase() === 'exchange' && parseFloat(tx.amount) > 0);
+                        const tokenSym = (tx as any).token || tx.currency;
+                        const tokenStyle = getTokenStyles(tokenSym);
+                        const isIncoming = tx.type?.toLowerCase().includes('deposit') || 
+                                           tx.type?.toLowerCase().includes('receive') || 
+                                           tx.type?.toLowerCase().includes('fund') ||
+                                           (tx.type?.toLowerCase() === 'exchange' && parseFloat(tx.amount) > 0);
                         
                         const valNum = Math.abs(parseFloat(tx.amount));
                         const amtFormatted = (isIncoming ? '+' : '-') + formatBalance(valNum, tx.currency);
@@ -66,9 +100,17 @@ const RecentActivity: React.FC = () => {
                                         {isIncoming ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <Send className="h-3.5 w-3.5" />}
                                     </div>
                                     <div className="text-left min-w-0">
-                                        <h4 className="font-sans font-bold text-xs text-white truncate">
-                                            {tx.description || `${tx.type} transaction`}
-                                        </h4>
+                                        <div className="flex items-center space-x-2">
+                                            <h4 className="font-sans font-bold text-xs text-white truncate">
+                                                {tx.description || `${tx.type} transaction`}
+                                            </h4>
+                                            <span className={cn(
+                                                "px-1.5 py-0.25 rounded text-[9px] font-black tracking-wider uppercase border shrink-0 select-none font-mono",
+                                                tokenStyle.badgeBg
+                                            )}>
+                                                {tokenStyle.sym}
+                                            </span>
+                                        </div>
                                         <span className="text-[10px] text-slate-500 font-medium block mt-0.5 select-none">
                                             {tx.type} • {new Date(tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                         </span>
