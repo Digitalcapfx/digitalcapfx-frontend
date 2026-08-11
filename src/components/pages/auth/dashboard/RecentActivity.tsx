@@ -44,7 +44,7 @@ const RecentActivity: React.FC = () => {
                     <p className="text-[11px] text-slate-550 font-sans">{t('activity.loading')}</p>
                 </div>
             ) : txList.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3.5 min-h-[220px] max-h-[480px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                     {txList.slice(0, 5).map((tx) => {
                         const isIncoming = tx.type.toLowerCase().includes('deposit') || 
                                            tx.type.toLowerCase().includes('receive') || 

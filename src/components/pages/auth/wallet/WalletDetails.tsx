@@ -385,7 +385,7 @@ const WalletDetails: React.FC<WalletDetailsProps> = ({
                         </div>
 
                         {/* List items */}
-                        <div className="space-y-4">
+                        <div className="space-y-3.5 min-h-[300px] max-h-[540px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                             {filteredTxs.length > 0 ? (
                                 filteredTxs.map((tx) => (
                                     <div
