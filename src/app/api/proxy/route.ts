@@ -11,6 +11,71 @@ const getAccountTypeFromToken = (token: string): string | null => {
     }
 };
 
+// Module-level active token refresh Promise to prevent concurrent request race conditions
+let activeRefreshPromise: Promise<{ accessToken: string; refreshToken: string } | null> | null = null;
+
+async function performTokenRefresh(backendUrl: string, refreshToken: string) {
+    if (activeRefreshPromise) {
+        return activeRefreshPromise;
+    }
+
+    activeRefreshPromise = (async () => {
+        try {
+            const refreshRes = await fetch(`${backendUrl}/auth/token/refresh`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    refresh_token: refreshToken,
+                    refreshToken: refreshToken,
+                }),
+            });
+
+            const refreshText = await refreshRes.text();
+            let refreshData: any;
+            try {
+                refreshData = JSON.parse(refreshText);
+            } catch (e) {
+                refreshData = null;
+            }
+
+            if (refreshRes.status >= 200 && refreshRes.status < 300 && refreshData) {
+                const dataObj = refreshData?.data || refreshData;
+                const newAccessToken =
+                    dataObj?.access_token ||
+                    dataObj?.accessToken ||
+                    dataObj?.token ||
+                    refreshData?.access_token ||
+                    refreshData?.accessToken ||
+                    refreshData?.token ||
+                    null;
+
+                const newRefreshToken =
+                    dataObj?.refresh_token ||
+                    dataObj?.refreshToken ||
+                    refreshData?.refresh_token ||
+                    refreshData?.refreshToken ||
+                    refreshToken;
+
+                if (newAccessToken) {
+                    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+                }
+            }
+            return null;
+        } catch (err) {
+            console.error('[API PROXY] Token refresh failure:', err);
+            return null;
+        } finally {
+            setTimeout(() => {
+                activeRefreshPromise = null;
+            }, 100);
+        }
+    })();
+
+    return activeRefreshPromise;
+}
+
 export async function POST(request: NextRequest) {
     const backendUrl = process.env.BACKEND_API_URL;
     if (!backendUrl) {
@@ -62,58 +127,18 @@ export async function POST(request: NextRequest) {
             const refreshToken = request.cookies.get('noe_refresh_token')?.value;
 
             if (refreshToken) {
-                try {
-                    const refreshRes = await fetch(`${backendUrl}/auth/token/refresh`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            refresh_token: refreshToken,
-                            refreshToken: refreshToken,
-                        }),
+                const refreshed = await performTokenRefresh(backendUrl, refreshToken);
+                if (refreshed && refreshed.accessToken) {
+                    newAccessToken = refreshed.accessToken;
+                    newRefreshToken = refreshed.refreshToken;
+                    didRefresh = true;
+
+                    forwardHeaders.set('Authorization', `Bearer ${newAccessToken}`);
+                    response = await fetch(targetUrl, {
+                        method: method.toUpperCase(),
+                        headers: forwardHeaders,
+                        body: fetchBody,
                     });
-
-                    const refreshText = await refreshRes.text();
-                    let refreshData: any;
-                    try {
-                        refreshData = JSON.parse(refreshText);
-                    } catch (e) {
-                        refreshData = null;
-                    }
-
-                    if (refreshRes.status >= 200 && refreshRes.status < 300 && refreshData) {
-                        const dataObj = refreshData?.data || refreshData;
-
-                        newAccessToken =
-                            dataObj?.access_token ||
-                            dataObj?.accessToken ||
-                            dataObj?.token ||
-                            refreshData?.access_token ||
-                            refreshData?.accessToken ||
-                            refreshData?.token ||
-                            null;
-
-                        newRefreshToken =
-                            dataObj?.refresh_token ||
-                            dataObj?.refreshToken ||
-                            refreshData?.refresh_token ||
-                            refreshData?.refreshToken ||
-                            refreshToken;
-
-                        if (newAccessToken) {
-                            didRefresh = true;
-
-                            forwardHeaders.set('Authorization', `Bearer ${newAccessToken}`);
-                            response = await fetch(targetUrl, {
-                                method: method.toUpperCase(),
-                                headers: forwardHeaders,
-                                body: fetchBody,
-                            });
-                        }
-                    }
-                } catch (refreshErr) {
-                    console.error('[API PROXY] Token rotation error:', refreshErr);
                 }
             }
         }
