@@ -12,6 +12,7 @@ import { momoService } from '@/services/momo.service'
 import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
 import { FEATURE_FLAGS, filterCryptoItems } from '@/config/featureFlags'
+import { calculateCaasTotalRequired } from '@/constants/fees'
 
 // Import subcomponents
 import { SendMoneyForm } from './send/SendMoneyForm'
@@ -316,11 +317,22 @@ export const SendMoneySheet: React.FC = () => {
 
     // Check if form is valid to proceed
     const isFormValid = () => {
-        if (!selectedWalletId || !amount || parseFloat(amount) <= 0) return false;
+        const numAmt = parseFloat(amount || '0');
+        if (!selectedWalletId || !amount || numAmt <= 0) return false;
 
         if (isCrypto) {
+            const isCaasWallet = activeWallet.provider !== 'waas';
+            if (isCaasWallet) {
+                const totalRequired = calculateCaasTotalRequired(numAmt);
+                if (totalRequired > activeWallet.rawBalance) {
+                    return false;
+                }
+            } else if (numAmt > activeWallet.rawBalance) {
+                return false;
+            }
             return cryptoAddress.length > 5;
         } else {
+            if (numAmt > activeWallet.rawBalance) return false;
             if (recipientType === 'saved') {
                 return !!selectedBeneficiaryId;
             } else {

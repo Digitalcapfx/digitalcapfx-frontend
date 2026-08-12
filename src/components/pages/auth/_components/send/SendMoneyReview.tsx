@@ -3,10 +3,11 @@
 import React from 'react'
 import { Info, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { formatCurrencyByLocale } from '@/lib/utils'
+import { formatCurrencyByLocale, formatValueByLocale } from '@/lib/utils'
 import { Wallet } from '../SendMoneySheet'
 import { Beneficiary } from '@/services/withdrawal.service'
 import { useLanguageStore } from '@/store/languageStore'
+import { CAAS_FEE_PERCENTAGE, calculateCaasFee } from '@/constants/fees'
 
 interface SendMoneyReviewProps {
     amount: string;
@@ -44,13 +45,12 @@ export const SendMoneyReview: React.FC<SendMoneyReviewProps> = ({
     const { t } = useLanguageStore();
 
     // Computes review variables
-    const feeAmount = isCrypto || isMobileMoney || isInternal
-        ? 0 // Transaction fee not hardcoded (set to 0 / free for now)
-        : (quoteDetails?.fee || 0);
+    const isCaasWallet = isCrypto && activeWallet.provider !== 'waas';
+    const feeAmount = isCaasWallet
+        ? calculateCaasFee(parseFloat(amount))
+        : (isCrypto || isMobileMoney || isInternal ? 0 : (quoteDetails?.fee || 0));
 
-    const totalSending = isCrypto || isMobileMoney || isInternal
-        ? (parseFloat(amount) + feeAmount)
-        : (parseFloat(amount));
+    const totalSending = parseFloat(amount) + feeAmount;
 
     const totalRecipientGets = isCrypto || isMobileMoney || isInternal
         ? parseFloat(amount)
@@ -68,13 +68,15 @@ export const SendMoneyReview: React.FC<SendMoneyReviewProps> = ({
         <div className="space-y-6 flex flex-col justify-between h-full text-left">
             <div className="space-y-5">
                 <div className="bg-gradient-to-br from-[#0F172A] to-[#0A0F1D] border border-white/5 rounded-2.5xl p-6 text-center shadow-xl select-none">
-                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-widest block">{t('send.review.totalSending')}</span>
-                    <span className="text-3.5xl font-black text-white block mt-1.5 font-satoshi">
-                        {formatCurrencyByLocale(totalSending, activeWallet.code)}
+                    <span className="text-[10px] font-bold text-slate-555 uppercase tracking-widest block">Send Amount</span>
+                    <span className="text-3.5xl font-black text-white block mt-1.5 font-satoshi font-mono">
+                        {formatCurrencyByLocale(amount, activeWallet.code)}
                     </span>
-                    <span className="text-[9.5px] text-slate-500 font-bold block mt-1.5 uppercase font-mono">
-                        {t('send.review.base', { amount: formatCurrencyByLocale(amount, activeWallet.code) })}
-                    </span>
+                    {isCaasWallet && (
+                        <span className="text-[9.5px] text-slate-400 font-bold block mt-1.5 uppercase font-mono">
+                            Total Deducted: <span className="text-amber-400 font-bold">{formatCurrencyByLocale(totalSending, activeWallet.code)}</span> (Includes {CAAS_FEE_PERCENTAGE}% Fee)
+                        </span>
+                    )}
                 </div>
 
                 <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 space-y-3.5 select-none text-xs font-sans">
@@ -89,6 +91,30 @@ export const SendMoneyReview: React.FC<SendMoneyReviewProps> = ({
                         <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('send.review.recipient')}</span>
                         <span className="font-bold text-white block">{displayRecipientName}</span>
                     </div>
+
+                    <div className="flex justify-between items-center py-0.5">
+                        <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('send.review.recipientGets')}</span>
+                        <span className="font-bold text-emerald-400 font-mono">
+                            {formatCurrencyByLocale(totalRecipientGets, isDifferentCurrency && activeBeneficiary ? activeBeneficiary.currency : activeWallet.code)}
+                        </span>
+                    </div>
+
+                    {isCaasWallet && (
+                        <>
+                            <div className="flex justify-between items-center py-0.5">
+                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Transfer Fee ({CAAS_FEE_PERCENTAGE}%)</span>
+                                <span className="font-bold text-amber-400 font-mono">
+                                    +{formatValueByLocale(feeAmount, activeWallet.code)} {activeWallet.code}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center py-0.5 border-t border-white/5 pt-2">
+                                <span className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Total Deducted from Balance</span>
+                                <span className="font-bold text-white font-mono">
+                                    {formatCurrencyByLocale(totalSending, activeWallet.code)}
+                                </span>
+                            </div>
+                        </>
+                    )}
 
                     {!isCrypto && !isInternal && (
                         <div className="flex justify-between items-center py-0.5">

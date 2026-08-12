@@ -68,3 +68,5 @@ export function formatCurrencyByLocale(amount: string | number, currency: string
   const prefix = symbols[currency.toUpperCase()] || '';
   return `${prefix}${formatted}${prefix ? '' : ` ${currency}`}`;
 }
+
+

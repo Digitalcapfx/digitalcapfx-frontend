@@ -3,7 +3,7 @@
 import React from 'react'
 import { ChevronDown, Check, Trash2 } from 'lucide-react'
 import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
-import { cn } from '@/lib/utils'
+import { cn, formatValueByLocale, formatCurrencyByLocale } from '@/lib/utils'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { PhoneInput } from '@/components/ui/PhoneInput'
 import { Wallet } from '../SendMoneySheet'
@@ -11,6 +11,7 @@ import { Beneficiary } from '@/services/withdrawal.service'
 import { Button } from '@/components/ui/Button'
 import { useLanguageStore } from '@/store/languageStore'
 import { Select } from '@/components/ui/Select'
+import { CAAS_FEE_PERCENTAGE, calculateCaasFee, calculateCaasTotalRequired } from '@/constants/fees'
 
 interface SendMoneyFormProps {
     walletsList: Wallet[];
@@ -173,7 +174,46 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                             <span className="text-2xl font-black text-slate-500 font-mono">{activeWallet.code}</span>
                         )}
                     </div>
+
+                    {isCrypto && activeWallet.provider !== 'waas' && (
+                        <span className="text-[11px] font-mono text-slate-400 block mt-2">
+                            Fee: <span className="text-amber-400 font-bold">{CAAS_FEE_PERCENTAGE}%</span>
+                        </span>
+                    )}
                 </div>
+
+                {/* CAAS 0.4% Fee Breakdown Card for USDT / USDC */}
+                {isCrypto && activeWallet.provider !== 'waas' && parseFloat(amount || '0') > 0 && (() => {
+                    const numAmt = parseFloat(amount || '0');
+                    const caasFee = calculateCaasFee(numAmt);
+                    const totalRequired = calculateCaasTotalRequired(numAmt);
+                    const isInsufficient = totalRequired > activeWallet.rawBalance;
+
+                    return (
+                        <div className="bg-black/30 border border-white/10 rounded-2xl p-4 space-y-2 text-xs font-mono select-none">
+                            <div className="flex items-center justify-between text-slate-400">
+                                <span>Send Amount</span>
+                                <span className="font-bold text-white">{formatValueByLocale(numAmt, activeWallet.code)} {activeWallet.code}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-slate-400">
+                                <span>Transfer Fee ({CAAS_FEE_PERCENTAGE}%)</span>
+                                <span className="font-bold text-amber-400">+{formatValueByLocale(caasFee, activeWallet.code)} {activeWallet.code}</span>
+                            </div>
+                            <div className="border-t border-white/10 pt-2 flex items-center justify-between text-white font-bold">
+                                <span>Total Deducted from Balance</span>
+                                <span className={cn("text-sm font-black", isInsufficient ? "text-rose-400" : "text-emerald-400")}>
+                                    {formatValueByLocale(totalRequired, activeWallet.code)} {activeWallet.code}
+                                </span>
+                            </div>
+                            {isInsufficient && (
+                                <p className="text-[11px] font-sans font-semibold text-rose-400 mt-1 text-left">
+                                    Insufficient balance. You need {formatCurrencyByLocale(totalRequired, activeWallet.code)} (includes {CAAS_FEE_PERCENTAGE}% fee), but only have {formatCurrencyByLocale(activeWallet.rawBalance, activeWallet.code)}.
+                                </p>
+                            )}
+                        </div>
+                    );
+                })()}
+
                 <div className="h-[1px] bg-white/5 my-1"></div>
 
                 {isCrypto ? (
