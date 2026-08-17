@@ -1,37 +1,22 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import {
-    ArrowUpDown,
-    TrendingUp,
-    TrendingDown,
-    Check,
-    ChevronDown,
-    Info,
-    X,
-    CheckCircle2,
-    RefreshCw
-} from 'lucide-react'
-import { CurrencyIcon } from '@/components/ui/CurrencyIcon'
-import { Sheet } from '@/components/ui/Sheet'
-import { cn, formatCurrencyByLocale, formatValueByLocale } from '@/lib/utils'
-import { NumberInput } from '@/components/ui/NumberInput'
+import { ArrowUpDown, RefreshCw, ShieldCheck } from 'lucide-react'
+import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { accountService } from '@/services/account.service'
-import { exchangeService, QuoteData } from '@/services/exchange.service'
+import { accountService, extractCryptoTokenList } from '@/services/account.service'
+import { exchangeService, QuoteData, CaasSwapResponseItem } from '@/services/exchange.service'
 import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
 import { FEATURE_FLAGS } from '@/config/featureFlags'
 
-export interface Wallet {
-    id: string;
-    name: string;
-    code: string;
-    type: 'fiat' | 'stablecoin';
-    balance: string;
-    rawBalance: number;
-    provider?: 'caas' | 'waas';
-}
+import { Wallet } from './types'
+import { ExchangeHeader } from './components/ExchangeHeader'
+import { WalletSelector } from './components/WalletSelector'
+import { LiveRatesCard } from './components/LiveRatesCard'
+import { RecentConversionsCard } from './components/RecentConversionsCard'
+import { ExchangeConfirmationModal } from './components/ExchangeConfirmationModal'
+import { ExchangeSuccessModal } from './components/ExchangeSuccessModal'
 
 const CURRENCY_NAMES: Record<string, string> = {
     USD: 'US Dollar',
@@ -40,6 +25,7 @@ const CURRENCY_NAMES: Record<string, string> = {
     XOF: 'CFA Franc BCEAO',
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
+    USDT: 'Tether USD',
     IUSD: 'Instant USD',
     NGN: 'Nigerian Naira',
 };
@@ -53,15 +39,13 @@ const getDecimals = (network: string): number => {
     if (net === 'BTC' || net === 'BCH' || net === 'LTC') return 8;
     if (net === 'SOL') return 9;
     if (net === 'TRX' || net === 'XRP' || net === 'USDC' || net === 'USDT') return 6;
-    return 18; // Default for ETH, POL, BSC, etc.
+    return 18;
 };
 
 const amountInBase = (amount: string, network: string): string => {
     const val = parseFloat(amount);
     if (isNaN(val) || val <= 0) return '0';
-    return `${val}`
-    // const decimals = getDecimals(network);
-    // return Math.round(val * Math.pow(10, decimals)).toString();
+    return `${val}`;
 };
 
 const amountFromBase = (amountBase: string, network: string): string => {
@@ -71,24 +55,14 @@ const amountFromBase = (amountBase: string, network: string): string => {
     return (val / Math.pow(10, decimals)).toString();
 };
 
-
-
-const LIVE_RATES = [
-    { pair: 'EUR/USD', rate: '1.0825', change: 0.42 },
-    { pair: 'GBP/USD', rate: '1.2710', change: 0.12 },
-    { pair: 'USD/XAF', rate: '608.4', change: -0.20 },
-    { pair: 'EUR/XOF', rate: '655.9', change: -0.05 },
-    { pair: 'GBP/EUR', rate: '1.1636', change: 0.31 },
-];
-
 export const ExchangePage: React.FC = () => {
     const { t } = useLanguageStore();
     const queryClient = useQueryClient();
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
     // Core selection states
-    const [fromWalletId, setFromWalletId] = useState<string>('usd');
-    const [toWalletId, setToWalletId] = useState<string>('eur');
+    const [fromWalletId, setFromWalletId] = useState<string>('caas-usdt');
+    const [toWalletId, setToWalletId] = useState<string>('caas-usdc');
 
     // Dropdown open control
     const [isFromDropdownOpen, setIsFromDropdownOpen] = useState(false);
@@ -106,11 +80,23 @@ export const ExchangePage: React.FC = () => {
     const [confirmQuote, setConfirmQuote] = useState<QuoteData | null>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [confirmTimer, setConfirmTimer] = useState(30);
+    const [successCaasData, setSuccessCaasData] = useState<CaasSwapResponseItem | null>(null);
 
-    // Load Wallets Dynamically
+    // Dynamic queries
     const fiatQuery = useQuery({
         queryKey: ['accounts'],
         queryFn: () => accountService.getAccounts(),
+    });
+
+    const cryptoQuery = useQuery({
+        queryKey: ['cryptoBalances'],
+        queryFn: () => accountService.getCryptoBalances(),
+    });
+
+    const caasSwapsQuery = useQuery({
+        queryKey: ['caasSwaps'],
+        queryFn: () => exchangeService.getCaasSwaps().catch(() => ({ success: false, data: [] })),
+        refetchInterval: 15000,
     });
 
     const exchangeHistoryQuery = useQuery({
@@ -128,20 +114,20 @@ export const ExchangePage: React.FC = () => {
         queryKey: ['liveExchangeRates'],
         queryFn: async () => {
             const pairs = [
+                { from: 'USDT', to: 'USDC' },
+                { from: 'USDC', to: 'USDT' },
                 { from: 'EUR', to: 'USD' },
                 { from: 'GBP', to: 'USD' },
                 { from: 'GBP', to: 'EUR' },
                 { from: 'EUR', to: 'GBP' },
-                ...(FEATURE_FLAGS.ALLOW_CRYPTO ? [
-                    { from: 'USDT', to: 'USDC' },
-                    { from: 'BTC', to: 'ETH' },
-                    { from: 'ETH', to: 'USDT' }
-                ] : [])
             ];
 
             const results = await Promise.all(
                 pairs.map(async (p) => {
                     try {
+                        if ((p.from === 'USDT' && p.to === 'USDC') || (p.from === 'USDC' && p.to === 'USDT')) {
+                            return { pair: `${p.from}/${p.to}`, rate: '1.0000', change: 0.00 };
+                        }
                         const res = await exchangeService.getRate(p.from, p.to);
                         return {
                             pair: `${p.from}/${p.to}`,
@@ -160,7 +146,37 @@ export const ExchangePage: React.FC = () => {
 
     const walletsList: Wallet[] = [];
 
-    // Map fiat wallets (EUR, USD, GBP are supported by Nilos Exchange)
+    // Map stablecoin wallets
+    const rawCryptoData = cryptoQuery.data?.success && cryptoQuery.data.data ? cryptoQuery.data.data : null;
+    const caasTokenList = extractCryptoTokenList(rawCryptoData);
+
+    const usdcItem = caasTokenList.find((t: any) => (t.symbol || '').toUpperCase() === 'USDC');
+    const usdtItem = caasTokenList.find((t: any) => (t.symbol || '').toUpperCase() === 'USDT');
+
+    const usdcBalVal = usdcItem && typeof usdcItem.balance === 'number' ? usdcItem.balance : parseFloat(usdcItem?.balance_raw || usdcItem?.balance_usdc || '0');
+    const usdtBalVal = usdtItem && typeof usdtItem.balance === 'number' ? usdtItem.balance : parseFloat(usdtItem?.balance_raw || usdtItem?.balance_usdt || '0');
+
+    walletsList.push({
+        id: 'caas-usdt',
+        name: 'USDT Wallet',
+        code: 'USDT',
+        type: 'stablecoin',
+        balance: `${usdtBalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`,
+        rawBalance: usdtBalVal,
+        provider: 'caas'
+    });
+
+    walletsList.push({
+        id: 'caas-usdc',
+        name: 'USDC Wallet',
+        code: 'USDC',
+        type: 'stablecoin',
+        balance: `${usdcBalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC`,
+        rawBalance: usdcBalVal,
+        provider: 'caas'
+    });
+
+    // Map fiat wallets
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
         fiatQuery.data.data
             .filter((acc) => acc.currency === 'EUR' || acc.currency === 'USD' || acc.currency === 'GBP')
@@ -176,78 +192,30 @@ export const ExchangePage: React.FC = () => {
             });
     }
 
-    // Map WaaS wallets if ALLOW_CRYPTO is true
-    if (FEATURE_FLAGS.ALLOW_CRYPTO) {
-        const waasAddressesData = waasWalletsQuery.data?.data?.addresses || waasWalletsQuery.data?.data || [];
-        if (Array.isArray(waasAddressesData)) {
-            waasAddressesData.forEach((w: any) => {
-                const balancesArr = Array.isArray(w.balances) ? w.balances : [];
-                
-                const nativeSymbol = w.network || 'POL';
-                const nativeBalObj = balancesArr.find((b: any) => b.symbol?.toUpperCase() === nativeSymbol.toUpperCase() || b.currency?.toUpperCase() === nativeSymbol.toUpperCase());
-                const nativeBalVal = nativeBalObj?.balance !== undefined ? parseFloat(nativeBalObj.balance.toString()) : 0;
-                const nativeFormattedBal = nativeBalObj?.formatted_balance || 
-                                           nativeBalObj?.formattedBalance || 
-                                           formatBalance(nativeBalVal, nativeSymbol);
-
-                walletsList.push({
-                    id: nativeSymbol.toLowerCase(),
-                    name: `${w.network} Wallet`,
-                    code: nativeSymbol,
-                    type: 'stablecoin',
-                    balance: nativeFormattedBal,
-                    rawBalance: nativeBalVal,
-                    provider: 'waas'
-                });
-
-                balancesArr.forEach((b: any) => {
-                    const sym = b.symbol || b.currency || '';
-                    if (!sym || sym.toUpperCase() === nativeSymbol.toUpperCase()) return;
-
-                    const balVal = b.balance !== undefined ? parseFloat(b.balance.toString()) : 0;
-                    const formattedBal = b.formatted_balance || 
-                                         b.formattedBalance || 
-                                         formatBalance(balVal, sym);
-
-                    walletsList.push({
-                        id: sym.toLowerCase(),
-                        name: `${sym} Wallet`,
-                        code: sym,
-                        type: 'stablecoin',
-                        balance: formattedBal,
-                        rawBalance: balVal,
-                        provider: 'waas'
-                    });
-                });
-            });
-        }
-    }
-
-    // Default configuration fallbacks
+    // Selected Wallet Fallbacks
     const fromWallet = walletsList.find(w => w.id === fromWalletId) || walletsList[0] || {
-        id: 'usd',
-        name: 'US Dollar',
-        code: 'USD',
-        type: 'fiat' as const,
-        balance: '$0.00',
+        id: 'caas-usdt',
+        name: 'USDT Wallet',
+        code: 'USDT',
+        type: 'stablecoin' as const,
+        balance: '0.00 USDT',
         rawBalance: 0,
+        provider: 'caas' as const
     };
 
-    const isFromFiat = fromWallet.type === 'fiat';
-
-    // Target wallets matching constraints: matching type (crypto/crypto or fiat/fiat) and excluding the selected From wallet
     const filteredToWallets = walletsList.filter(w => w.id !== fromWallet.id && w.type === fromWallet.type);
 
     const toWallet = walletsList.find(w => w.id === toWalletId) || filteredToWallets[0] || walletsList[1] || {
-        id: 'eur',
-        name: 'Euro',
-        code: 'EUR',
-        type: 'fiat' as const,
-        balance: '€0.00',
+        id: 'caas-usdc',
+        name: 'USDC Wallet',
+        code: 'USDC',
+        type: 'stablecoin' as const,
+        balance: '0.00 USDC',
         rawBalance: 0,
+        provider: 'caas' as const
     };
 
-    // Auto update selection if violated
+    // Auto fix selection if invalid
     useEffect(() => {
         if (walletsList.length > 0) {
             if (fromWallet.id === toWallet.id || fromWallet.type !== toWallet.type) {
@@ -259,9 +227,11 @@ export const ExchangePage: React.FC = () => {
         }
     }, [fromWalletId, walletsList.length, fromWallet.type, toWallet.type]);
 
+    const isCaasSwap = fromWallet.provider === 'caas' || 
+        (fromWallet.type === 'stablecoin' && ['USDT', 'USDC'].includes(fromWallet.code.toUpperCase()) && ['USDT', 'USDC'].includes(toWallet.code.toUpperCase()));
+
     const isCryptoSwap = fromWallet.type === 'stablecoin';
 
-    // Live rates query
     const rateQuery = useQuery({
         queryKey: ['exchangeRate', fromWallet.code, toWallet.code],
         queryFn: () => exchangeService.getRate(fromWallet.code, toWallet.code),
@@ -277,23 +247,27 @@ export const ExchangePage: React.FC = () => {
             toToken: toWallet.code,
             amountIn: amountInBase(fromAmount || '1', fromWallet.code)
         }),
-        enabled: isCryptoSwap && !!fromWallet.code && !!toWallet.code && fromWallet.code !== toWallet.code && walletsList.length > 0 && parseFloat(fromAmount || '0') > 0,
+        enabled: isCryptoSwap && !isCaasSwap && !!fromWallet.code && !!toWallet.code && fromWallet.code !== toWallet.code && walletsList.length > 0 && parseFloat(fromAmount || '0') > 0,
         refetchInterval: 15000,
     });
 
-    const activeRate = isCryptoSwap
-        ? (cryptoRateQuery.data?.success && cryptoRateQuery.data.data && parseFloat(cryptoRateQuery.data.data.fromAmount) > 0
-            ? (parseFloat(cryptoRateQuery.data.data.toAmountExpected) / parseFloat(cryptoRateQuery.data.data.fromAmount)) * (Math.pow(10, getDecimals(fromWallet.code)) / Math.pow(10, getDecimals(toWallet.code)))
-            : 1.0)
-        : (rateQuery.data?.success ? rateQuery.data.data.rate * rateMultiplier : 1.0 * rateMultiplier);
+    const activeRate = isCaasSwap
+        ? 1.0
+        : isCryptoSwap
+            ? (cryptoRateQuery.data?.success && cryptoRateQuery.data.data && parseFloat(cryptoRateQuery.data.data.fromAmount) > 0
+                ? (parseFloat(cryptoRateQuery.data.data.toAmountExpected) / parseFloat(cryptoRateQuery.data.data.fromAmount)) * (Math.pow(10, getDecimals(fromWallet.code)) / Math.pow(10, getDecimals(toWallet.code)))
+                : 1.0)
+            : (rateQuery.data?.success ? rateQuery.data.data.rate * rateMultiplier : 1.0 * rateMultiplier);
 
-    // Estimate conversions
     useEffect(() => {
         if (fromAmount === '') {
             setToAmount('');
             return;
         }
-        if (isCryptoSwap) {
+        if (isCaasSwap) {
+            const val = parseFloat(fromAmount || '0');
+            setToAmount(isNaN(val) ? '' : val.toFixed(2));
+        } else if (isCryptoSwap) {
             if (cryptoRateQuery.data?.success && cryptoRateQuery.data.data) {
                 const amtExpectedBase = cryptoRateQuery.data.data.toAmountExpected || '0';
                 const humanReadable = amountFromBase(amtExpectedBase, toWallet.code);
@@ -305,9 +279,8 @@ export const ExchangePage: React.FC = () => {
             const val = parseFloat(fromAmount) * activeRate;
             setToAmount(val.toFixed(2));
         }
-    }, [fromAmount, fromWallet.code, toWallet.code, activeRate, isCryptoSwap, cryptoRateQuery.data]);
+    }, [fromAmount, fromWallet.code, toWallet.code, activeRate, isCaasSwap, isCryptoSwap, cryptoRateQuery.data]);
 
-    // simulated live ticks
     useEffect(() => {
         const interval = setInterval(() => {
             setTimer((prev) => {
@@ -321,7 +294,6 @@ export const ExchangePage: React.FC = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // Countdown for confirmation quote
     useEffect(() => {
         if (!isConfirmOpen) return;
         const interval = setInterval(() => {
@@ -337,7 +309,6 @@ export const ExchangePage: React.FC = () => {
         return () => clearInterval(interval);
     }, [isConfirmOpen]);
 
-    // Mutations
     const createQuoteMutation = useMutation({
         mutationFn: () => exchangeService.createQuote({
             from: fromWallet.code,
@@ -361,6 +332,40 @@ export const ExchangePage: React.FC = () => {
         }
     });
 
+    const executeCaasSwapMutation = useMutation({
+        mutationFn: () => exchangeService.executeCaasSwap({
+            amount: fromAmount,
+            token_in: fromWallet.code.toUpperCase(),
+            token_out: toWallet.code.toUpperCase(),
+        }),
+        onSuccess: (data) => {
+            if (data?.success && data.data) {
+                const item = data.data;
+                const tokenIn = item.tokenIn || item.token_in || fromWallet.code;
+                const tokenOut = item.tokenOut || item.token_out || toWallet.code;
+                const amtIn = item.amountIn || item.amount_in || fromAmount;
+                const amtOut = item.amountOut || item.amount_out || amtIn;
+
+                setIsConfirmOpen(false);
+                setSuccessCaasData(item);
+                setIsSuccessOpen(true);
+                queryClient.invalidateQueries({ queryKey: ['cryptoBalances'] });
+                queryClient.invalidateQueries({ queryKey: ['caasSwaps'] });
+                queryClient.invalidateQueries({ queryKey: ['accounts'] });
+                queryClient.invalidateQueries({ queryKey: ['activity'] });
+                queryClient.invalidateQueries({ queryKey: ['exchangeHistory'] });
+                toast.success(`Swapped ${amtIn} ${tokenIn} to ${amtOut} ${tokenOut}`);
+            } else {
+                toast.error(data?.error?.message || 'Failed to execute CaaS swap.');
+            }
+        },
+        onError: (err: any) => {
+            const rawError = err.response?.data?.error;
+            const msg = typeof rawError === 'object' ? rawError.message : (rawError || 'Failed to execute CaaS swap.');
+            toast.error(msg);
+        }
+    });
+
     const executeExchangeMutation = useMutation({
         mutationFn: (quoteId: string) => exchangeService.executeExchange({
             from: fromWallet.code,
@@ -375,7 +380,6 @@ export const ExchangePage: React.FC = () => {
                 setIsSuccessOpen(true);
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 queryClient.invalidateQueries({ queryKey: ['waasWallets'] });
-                queryClient.invalidateQueries({ queryKey: ['waasWalletsDetails'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
                 queryClient.invalidateQueries({ queryKey: ['exchangeHistory'] });
             } else {
@@ -396,7 +400,7 @@ export const ExchangePage: React.FC = () => {
             fromToken: fromWallet.code,
             toToken: toWallet.code,
             amountIn: amountInBase(fromAmount, fromWallet.code),
-            amountOutMin: cryptoRateQuery.data?.data?.toAmountMin || amountInBase((parseFloat(toAmount) * 0.99).toString(), toWallet.code) // 1% slippage fallback
+            amountOutMin: cryptoRateQuery.data?.data?.toAmountMin || amountInBase((parseFloat(toAmount) * 0.99).toString(), toWallet.code)
         }),
         onSuccess: (data) => {
             if (data?.success) {
@@ -404,7 +408,6 @@ export const ExchangePage: React.FC = () => {
                 setIsSuccessOpen(true);
                 queryClient.invalidateQueries({ queryKey: ['accounts'] });
                 queryClient.invalidateQueries({ queryKey: ['waasWallets'] });
-                queryClient.invalidateQueries({ queryKey: ['waasWalletsDetails'] });
                 queryClient.invalidateQueries({ queryKey: ['activity'] });
                 queryClient.invalidateQueries({ queryKey: ['exchangeHistory'] });
             } else {
@@ -427,7 +430,19 @@ export const ExchangePage: React.FC = () => {
     const handleConvert = (e: React.FormEvent) => {
         e.preventDefault();
         if (!fromAmount || parseFloat(fromAmount) <= 0) return;
-        if (isCryptoSwap) {
+        
+        if (isCaasSwap) {
+            setConfirmQuote({
+                quoteId: 'caas-swap-quote',
+                rate: 1.0,
+                sourceAmount: parseFloat(fromAmount),
+                targetAmount: parseFloat(fromAmount),
+                fee: 0,
+                expiresAt: new Date(Date.now() + 30000).toISOString()
+            });
+            setConfirmTimer(30);
+            setIsConfirmOpen(true);
+        } else if (isCryptoSwap) {
             if (!cryptoRateQuery.data?.success || !cryptoRateQuery.data.data) {
                 toast.error('No crypto swap rate quote available. Please wait a moment.');
                 return;
@@ -451,7 +466,9 @@ export const ExchangePage: React.FC = () => {
     };
 
     const handleConfirmExchange = () => {
-        if (isCryptoSwap) {
+        if (isCaasSwap) {
+            executeCaasSwapMutation.mutate();
+        } else if (isCryptoSwap) {
             executeWaaSSwapMutation.mutate();
         } else if (confirmQuote?.quoteId) {
             executeExchangeMutation.mutate(confirmQuote.quoteId);
@@ -460,18 +477,57 @@ export const ExchangePage: React.FC = () => {
 
     const handleCloseSuccess = () => {
         setIsSuccessOpen(false);
+        setSuccessCaasData(null);
         setFromAmount('100');
     };
 
-    const estimatedFee = parseFloat(fromAmount || '0') * 0.0015;
-
     // Load recent conversions
-    const rawHistory = exchangeHistoryQuery.data?.success && Array.isArray(exchangeHistoryQuery.data.data)
+    const rawCaasHistory = caasSwapsQuery.data?.success && Array.isArray(caasSwapsQuery.data.data)
+        ? caasSwapsQuery.data.data.map((s: CaasSwapResponseItem) => {
+            const tokenIn = s.tokenIn || s.token_in || 'USDT';
+            const tokenOut = s.tokenOut || s.token_out || 'USDC';
+            const rawAmtIn = s.amountIn || s.amount_in || '0';
+            const rawAmtOut = s.amountOut != null ? s.amountOut : (s.amount_out != null ? s.amount_out : rawAmtIn);
+
+            const amtInVal = parseFloat(rawAmtIn);
+            const amtOutVal = parseFloat(rawAmtOut);
+
+            const formattedIn = isNaN(amtInVal) ? rawAmtIn : amtInVal.toFixed(2);
+            const formattedOut = isNaN(amtOutVal) ? rawAmtOut : amtOutVal.toFixed(2);
+
+            const dateStr = s.createdAt || s.created_at || new Date().toISOString();
+            const ref = s.reference || s.caasSwapId || s.caas_swap_id || s.id;
+
+            return {
+                id: s.id || ref,
+                fromCode: tokenIn,
+                toCode: tokenOut,
+                sourceAmount: rawAmtIn,
+                targetAmount: rawAmtOut,
+                fromVal: `${formattedIn} ${tokenIn}`,
+                toVal: `${formattedOut} ${tokenOut}`,
+                rate: '1.0000',
+                createdAt: dateStr,
+                status: s.status,
+                reference: ref,
+                isCaas: true,
+            };
+        })
+        : [];
+
+    const rawFiatHistory = exchangeHistoryQuery.data?.success && Array.isArray(exchangeHistoryQuery.data.data)
         ? exchangeHistoryQuery.data.data
         : [];
-    const recentExchanges = rawHistory.slice(0, 5);
 
-    const isLoading = fiatQuery.isLoading;
+    const combinedHistory = [...rawCaasHistory, ...rawFiatHistory].sort((a: any, b: any) => {
+        const dateA = new Date(a.createdAt || a.created_at || 0).getTime();
+        const dateB = new Date(b.createdAt || b.created_at || 0).getTime();
+        return dateB - dateA;
+    });
+
+    const recentExchanges = combinedHistory.slice(0, 6);
+
+    const isLoading = fiatQuery.isLoading && cryptoQuery.isLoading;
 
     if (isLoading && walletsList.length === 0) {
         return (
@@ -483,103 +539,47 @@ export const ExchangePage: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">            <div className="space-y-6 text-left">
-                {/* Header Area */}
-                <div className="space-y-1 select-none">
-                    <h2 className="text-2xl font-black text-white font-satoshi">
-                        {t('nav.exchange')}
-                    </h2>
-                    <p className="text-xs font-semibold text-slate-555 font-sans">
-                        {t('exchange.subtitle')}
-                    </p>
-                </div>
+        <div className="space-y-6">
+            <div className="space-y-6 text-left">
+                {/* Header Area Component */}
+                <ExchangeHeader isCaasSwap={isCaasSwap} />
 
                 {/* Layout Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
 
                     {/* Left Column Form (3/5 width) */}
                     <form onSubmit={handleConvert} className="lg:col-span-3 space-y-5">
-
                         <div className="bg-[#080D1E] border border-white/5 rounded-3xl p-6.5 relative space-y-5 shadow-2xl">
 
-                            {/* FROM Input Card */}
-                            <div className="space-y-2 text-left">
-                                <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('exchange.from')}</span>
-                                <div className="relative">
-                                    <div
-                                        className="bg-[#0C1224] border border-white/10 rounded-2xl p-4 flex-wrap flex items-center justify-between transition focus-within:border-primary-500/50"
-                                    >
-                                        <div
-                                            onClick={() => setIsFromDropdownOpen(!isFromDropdownOpen)}
-                                            className="flex items-center space-x-2.5 cursor-pointer select-none"
-                                        >
-                                            <CurrencyIcon code={fromWallet.code} size="md" />
-                                            <div className="text-left">
-                                                <span className="font-bold text-white text-sm block leading-tight">{fromWallet.code}</span>
-                                                <ChevronDown className="h-3 w-3 text-slate-500 inline mt-0.5" />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-col items-end shrink-0">
-                                            <NumberInput
-                                                value={fromAmount}
-                                                onChange={setFromAmount}
-                                                placeholder="0.00"
-                                                className="bg-transparent border-none focus:outline-none focus:ring-0 text-right text-white font-mono font-black text-xl placeholder-slate-700 leading-none"
-                                            />
-                                        </div>
+                            {/* Banner Notification */}
+                            {isCaasSwap && (
+                                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3.5 flex items-center justify-between text-xs select-none">
+                                    <div className="flex items-center space-x-2 text-emerald-400">
+                                        <ShieldCheck className="h-4.5 w-4.5 shrink-0" />
+                                        <span className="font-bold text-[11px]">
+                                            Instant Stablecoin Swap • 1:1 Rate
+                                        </span>
                                     </div>
-
-                                    {/* Overlay to close dropdown when clicking outside */}
-                                    {isFromDropdownOpen && (
-                                        <div
-                                            className="fixed inset-0 z-20"
-                                            onClick={() => setIsFromDropdownOpen(false)}
-                                        />
-                                    )}
-
-                                    {/* Dropdown Menu FROM */}
-                                    {isFromDropdownOpen && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#0E1528] border border-white/10 rounded-2xl shadow-2xl z-30 max-h-[220px] overflow-y-auto scrollbar-none py-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                                            {walletsList.map((w) => (
-                                                <div
-                                                    key={w.id}
-                                                    onClick={() => {
-                                                        setFromWalletId(w.id);
-                                                        setIsFromDropdownOpen(false);
-                                                    }}
-                                                    className={cn(
-                                                        "px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition",
-                                                        fromWalletId === w.id ? "bg-white/[0.01]" : ""
-                                                    )}
-                                                >
-                                                    <div className="flex items-center space-x-3">
-                                                        <CurrencyIcon code={w.code} size="md" />
-                                                        <div className="text-left">
-                                                            <span className="font-bold text-white text-xs block leading-tight">{w.name}</span>
-                                                            <span className="text-[9px] text-slate-500 font-bold">{w.code} • {w.balance}</span>
-                                                        </div>
-                                                    </div>
-                                                    {fromWalletId === w.id && <Check className="h-4 w-4 text-primary-400" />}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                    <span className="text-[9.5px] font-mono bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-lg uppercase">
+                                        Active
+                                    </span>
                                 </div>
-                                <div className="flex justify-between items-center text-[10px] text-slate-555 font-bold select-none px-1">
-                                    <span>{t('exchange.walletBalance')} {fromWallet.balance}</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const num = fromWallet.rawBalance;
-                                            setFromAmount(num > 0 ? num.toString() : '0');
-                                        }}
-                                        className="text-primary-400 hover:text-primary-355 hover:underline cursor-pointer"
-                                    >
-                                        {t('exchange.useMax')}
-                                    </button>
-                                </div>
-                            </div>
+                            )}
+
+                            {/* FROM Wallet Selector Component */}
+                            <WalletSelector
+                                label={t('exchange.from')}
+                                selectedWallet={fromWallet}
+                                walletsList={walletsList}
+                                isOpen={isFromDropdownOpen}
+                                onToggleOpen={() => setIsFromDropdownOpen(!isFromDropdownOpen)}
+                                onCloseDropdown={() => setIsFromDropdownOpen(false)}
+                                onSelectWallet={(id) => setFromWalletId(id)}
+                                amount={fromAmount}
+                                onAmountChange={setFromAmount}
+                                showMaxButton={true}
+                                onMaxClick={() => setFromAmount(fromWallet.rawBalance > 0 ? fromWallet.rawBalance.toString() : '0')}
+                            />
 
                             {/* Center Swap Button */}
                             <div className="relative h-2 flex items-center justify-center z-10 select-none">
@@ -592,74 +592,28 @@ export const ExchangePage: React.FC = () => {
                                 </button>
                             </div>
 
-                            {/* TO Input Card */}
-                            <div className="space-y-2 text-left">
-                                <span className="text-[10px] font-bold text-slate-555 uppercase tracking-wider block">{t('exchange.to')}</span>
-                                <div className="relative">
-                                    <div
-                                        className="bg-[#0C1224] border border-white/10 rounded-2xl p-4 flex flex-wrap items-center justify-between transition focus-within:border-primary-500/50"
-                                    >
-                                        <div
-                                            onClick={() => setIsToDropdownOpen(!isToDropdownOpen)}
-                                            className="flex items-center space-x-2.5 cursor-pointer select-none"
-                                        >
-                                            <CurrencyIcon code={toWallet.code} size="md" />
-                                            <div className="text-left">
-                                                <span className="font-bold text-white text-sm block leading-tight">{toWallet.code}</span>
-                                                <ChevronDown className="h-3 w-3 text-slate-500 inline mt-0.5" />
-                                            </div>
-                                        </div>
+                            {/* TO Wallet Selector Component */}
+                            <WalletSelector
+                                label={t('exchange.to')}
+                                selectedWallet={toWallet}
+                                walletsList={filteredToWallets}
+                                isOpen={isToDropdownOpen}
+                                onToggleOpen={() => setIsToDropdownOpen(!isToDropdownOpen)}
+                                onCloseDropdown={() => setIsToDropdownOpen(false)}
+                                onSelectWallet={(id) => setToWalletId(id)}
+                                amount={toAmount}
+                                isReadOnly={true}
+                            />
 
-                                        <div className="flex items-center shrink-0">
-                                            <span className="font-mono font-black text-xl text-emerald-400 mr-1 select-all">
-                                                {formatValueByLocale(toAmount, toWallet.code, toWallet.type === 'fiat')}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Overlay to close dropdown when clicking outside */}
-                                    {isToDropdownOpen && (
-                                        <div
-                                            className="fixed inset-0 z-20"
-                                            onClick={() => setIsToDropdownOpen(false)}
-                                        />
-                                    )}
-
-                                    {/* Dropdown Menu TO */}
-                                    {isToDropdownOpen && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#0E1528] border border-white/10 rounded-2xl shadow-2xl z-30 max-h-[220px] overflow-y-auto scrollbar-none py-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                                            {filteredToWallets.map((w) => (
-                                                <div
-                                                    key={w.id}
-                                                    onClick={() => {
-                                                        setToWalletId(w.id);
-                                                        setIsToDropdownOpen(false);
-                                                    }}
-                                                    className={cn(
-                                                        "px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.03] transition",
-                                                        toWalletId === w.id ? "bg-white/[0.01]" : ""
-                                                    )}
-                                                >
-                                                    <div className="flex items-center space-x-3">
-                                                        <CurrencyIcon code={w.code} size="md" />
-                                                        <div className="text-left">
-                                                            <span className="font-bold text-white text-xs block leading-tight">{w.name}</span>
-                                                            <span className="text-[9px] text-slate-500 font-bold">{w.code} • {w.balance}</span>
-                                                        </div>
-                                                    </div>
-                                                    {toWalletId === w.id && <Check className="h-4 w-4 text-primary-400" />}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Exchange rate status block */}
+                            {/* Exchange Rate Status Block */}
                             <div className="bg-black/25 border border-white/5 rounded-2xl p-4.5 flex justify-between items-center text-xs font-semibold select-none">
                                 <div className="text-left space-y-0.5">
-                                    <span className="text-white block font-bold font-mono">1 {fromWallet.code} = {activeRate.toFixed(4)} {toWallet.code}</span>
-                                    <span className="text-[10px] text-slate-555 block">{t('exchange.midMarketRate')}</span>
+                                    <span className="text-white block font-bold font-mono">
+                                        1 {fromWallet.code} = {activeRate.toFixed(2)} {toWallet.code}
+                                    </span>
+                                    <span className="text-[10px] text-slate-555 block">
+                                        {isCaasSwap ? '1:1 Stablecoin Rate' : t('exchange.midMarketRate')}
+                                    </span>
                                 </div>
                                 <div className="bg-[#0C1224] border border-white/5 text-[10px] text-slate-400 font-mono px-3 py-1.5 rounded-xl flex items-center space-x-1">
                                     <RefreshCw className="h-3 w-3 text-slate-500 animate-spin" />
@@ -667,38 +621,10 @@ export const ExchangePage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Fee Breakdown Block */}
-                            <div className="bg-black/20 border border-white/5 rounded-2.5xl p-5 space-y-3.5 select-none font-sans text-xs">
-                                <div className="flex justify-between items-center pb-1 border-b border-white/[0.03]">
-                                    <span className="text-slate-400 font-bold">{t('exchange.feeBreakdown')}</span>
-                                    <span className="font-bold text-emerald-400 font-mono">
-                                        {formatBalance(estimatedFee, fromWallet.code)}
-                                    </span>
-                                </div>
-
-                                <div className="flex justify-between items-center py-0.5">
-                                    <span className="text-slate-555 font-semibold">{t('exchange.exchangeFee')}</span>
-                                    <span className="font-bold text-white font-mono flex items-center space-x-1">
-                                        <CurrencyIcon code={fromWallet.code} size="sm" />
-                                        <span>{estimatedFee.toFixed(fromWallet.type === 'fiat' ? 2 : 4)} {fromWallet.code} (0.15%)</span>
-                                    </span>
-                                </div>
-
-                                <div className="flex justify-between items-center py-0.5">
-                                    <span className="text-slate-555 font-semibold">{t('exchange.networkFee')}</span>
-                                    <span className="font-bold text-emerald-500">{t('exchange.free')}</span>
-                                </div>
-
-                                <div className="flex justify-between items-center py-0.5">
-                                    <span className="text-slate-555 font-semibold">{t('exchange.settlement')}</span>
-                                    <span className="font-bold text-white">{t('exchange.instant')}</span>
-                                </div>
-                            </div>
-
                             {/* Convert CTA */}
                             <button
                                 type="submit"
-                                disabled={!fromAmount || parseFloat(fromAmount) <= 0 || createQuoteMutation.isPending}
+                                disabled={!fromAmount || parseFloat(fromAmount) <= 0 || createQuoteMutation.isPending || executeCaasSwapMutation.isPending}
                                 className={cn(
                                     "w-full py-4 rounded-xl font-bold text-sm tracking-wide shadow-lg transition duration-200 cursor-pointer active:scale-[0.98]",
                                     (fromAmount && parseFloat(fromAmount) > 0)
@@ -706,245 +632,59 @@ export const ExchangePage: React.FC = () => {
                                         : "bg-slate-800 text-slate-550 cursor-not-allowed"
                                 )}
                             >
-                                {isCryptoSwap && cryptoRateQuery.isFetching ? t('exchange.cta.fetchingRate') : createQuoteMutation.isPending ? t('exchange.cta.requestingQuote') : t('exchange.cta.exchangeNow')}
+                                {executeCaasSwapMutation.isPending 
+                                    ? 'Swapping Stablecoins...' 
+                                    : isCryptoSwap && cryptoRateQuery.isFetching 
+                                        ? t('exchange.cta.fetchingRate') 
+                                        : createQuoteMutation.isPending 
+                                            ? t('exchange.cta.requestingQuote') 
+                                            : isCaasSwap 
+                                                ? `Swap ${fromWallet.code} to ${toWallet.code} Now` 
+                                                : t('exchange.cta.exchangeNow')}
                             </button>
-
                         </div>
-
                     </form>
 
                     {/* Right Column Rates/Conversions (2/5 width) */}
                     <div className="lg:col-span-2 space-y-6">
+                        {/* Live Rates Card Component */}
+                        <LiveRatesCard rates={liveRatesQuery.data} />
 
-                        {/* Live Rates panel */}
-                        <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 shadow-xl space-y-4">
-                            <div className="flex justify-between items-center select-none pb-1 border-b border-white/[0.03]">
-                                <h3 className="font-satoshi font-bold text-sm text-white">{t('live.rates')}</h3>
-                                <span className="text-[10px] font-bold text-emerald-400 font-mono flex items-center space-x-1 select-none">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-ping"></span>
-                                    <span>{t('exchange.live')}</span>
-                                </span>
-                            </div>
-                            <div className="space-y-3.5">
-                                {(liveRatesQuery.data && liveRatesQuery.data.length > 0 ? liveRatesQuery.data : [
-                                    { pair: 'EUR/USD', rate: '1.0825', change: 0.42 },
-                                    { pair: 'GBP/USD', rate: '1.2710', change: 0.12 },
-                                    { pair: 'GBP/EUR', rate: '1.1636', change: 0.31 },
-                                    { pair: 'EUR/GBP', rate: '0.8594', change: -0.15 },
-                                ]).map((rate) => (
-                                    <div key={rate.pair} className="flex justify-between items-center text-xs">
-                                        <span className="font-bold text-slate-355">{rate.pair}</span>
-                                        <div className="text-right flex items-center space-x-2 font-mono">
-                                            <span className="font-bold text-white">{rate.rate}</span>
-                                            <span className={cn(
-                                                "text-[10px] font-bold flex items-center space-x-0.5",
-                                                rate.change > 0 ? "text-emerald-400" : "text-rose-455"
-                                            )}>
-                                                {rate.change > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                                                <span>{rate.change > 0 ? '+' : ''}{rate.change}%</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Recent Conversions panel */}
-                        <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 shadow-xl space-y-4">
-                            <h3 className="font-satoshi font-bold text-sm text-white select-none pb-1 border-b border-white/[0.03] text-left">
-                                {t('exchange.recentConversions')}
-                            </h3>
-                            <div className="space-y-4">
-                                {recentExchanges.length > 0 ? (
-                                    recentExchanges.map((conv: any) => (
-                                        <div key={conv.id} className="flex justify-between items-center text-xs">
-                                            <div className="flex items-center space-x-2.5 min-w-0">
-                                                <div className="flex items-center -space-x-1.5 shrink-0">
-                                                    <CurrencyIcon code={conv.fromCode || conv.sourceCurrency || 'USD'} size="sm" />
-                                                    <CurrencyIcon code={conv.toCode || conv.targetCurrency || 'EUR'} size="sm" />
-                                                </div>
-                                                <div className="text-left">
-                                                    <span className="font-bold text-white block leading-tight">
-                                                        {conv.fromVal || formatBalance(conv.sourceAmount || '0', conv.sourceCurrency || 'USD')} → {conv.toVal || formatBalance(conv.targetAmount || '0', conv.targetCurrency || 'EUR')}
-                                                    </span>
-                                                    <span className="text-[9px] text-slate-500 font-bold block mt-0.5 select-none">
-                                                        {conv.date || (conv.createdAt ? new Date(conv.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A')} • Rate {conv.rate}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                                                <Check className="h-3 w-3" />
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-6 text-xs text-slate-500 font-sans select-none">
-                                        {t('exchange.noRecentConversions')}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Institutional Rates Box */}
-                        <div className="bg-primary-500/5 border border-primary-500/10 rounded-2.5xl p-5 flex items-start space-x-3 text-left">
-                            <Info className="h-4.5 w-4.5 text-primary-400 shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                                <h4 className="text-xs font-bold text-white">{t('exchange.institutionalRates')}</h4>
-                                <p className="text-[10.5px] leading-relaxed text-slate-400">
-                                    {t('exchange.institutionalRatesDesc')}
-                                </p>
-                            </div>
-                        </div>
-
+                        {/* Recent Conversions Card Component */}
+                        <RecentConversionsCard recentExchanges={recentExchanges} />
                     </div>
 
                 </div>
             </div>
 
-            {/* Exchange Quote Confirmation Modal Sheet */}
-            <Sheet
+            {/* Exchange Quote Confirmation Modal Component */}
+            <ExchangeConfirmationModal
                 isOpen={isConfirmOpen}
                 onClose={() => setIsConfirmOpen(false)}
-            >
-                <div className="space-y-6 flex flex-col justify-between h-full text-center">
-                    <div className="space-y-6 select-none pt-8 text-left">
-                        <div className="space-y-2">
-                            <h3 className="font-satoshi font-black text-2xl text-white tracking-tight">{t('exchange.confirm.title')}</h3>
-                            <p className="text-[#6D778A] text-xs font-sans">
-                                {t('exchange.confirm.subtitle')}
-                            </p>
-                        </div>
+                isCaasSwap={isCaasSwap}
+                confirmQuote={confirmQuote}
+                fromWallet={fromWallet}
+                toWallet={toWallet}
+                fromAmount={fromAmount}
+                toAmount={toAmount}
+                activeRate={activeRate}
+                confirmTimer={confirmTimer}
+                isPending={executeExchangeMutation.isPending || executeWaaSSwapMutation.isPending || executeCaasSwapMutation.isPending}
+                onConfirm={handleConfirmExchange}
+            />
 
-                        {confirmQuote && (
-                            <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 space-y-4 font-sans text-xs">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-slate-400 font-semibold">{t('exchange.confirm.youSell')}</span>
-                                    <span className="font-extrabold text-white font-mono text-sm">
-                                        {formatBalance(confirmQuote.sourceAmount, fromWallet.code)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-slate-400 font-semibold">{t('exchange.confirm.youReceive')}</span>
-                                    <span className="font-extrabold text-emerald-400 font-mono text-sm">
-                                        {formatBalance(confirmQuote.targetAmount, toWallet.code)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-slate-400 font-semibold">{t('exchange.confirm.rate')}</span>
-                                    <span className="font-bold text-white font-mono">
-                                        1 {fromWallet.code} = {confirmQuote.rate.toFixed(4)} {toWallet.code}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-slate-400 font-semibold">{t('exchange.confirm.marginFee')}</span>
-                                    <span className="font-bold text-slate-300 font-mono">
-                                        {formatBalance(confirmQuote.fee, fromWallet.code)}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-4 flex items-center justify-between text-xs select-none">
-                            <span className="text-amber-400 font-bold font-sans">{t('exchange.confirm.lockExpiration')}</span>
-                            <div className="bg-[#0C1224] border border-white/5 font-mono text-amber-400 px-3 py-1 rounded-xl flex items-center space-x-1 shrink-0">
-                                <RefreshCw className="h-3 w-3 text-amber-500 animate-spin" />
-                                <span>00:{confirmTimer.toString().padStart(2, '0')}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-3 mt-auto">
-                        <button
-                            onClick={handleConfirmExchange}
-                            disabled={executeExchangeMutation.isPending || executeWaaSSwapMutation.isPending}
-                            className="w-full bg-emerald-500 hover:bg-emerald-450 text-white font-bold text-sm py-4 rounded-xl shadow-lg transition duration-200 cursor-pointer active:scale-[0.98]"
-                        >
-                            {executeExchangeMutation.isPending || executeWaaSSwapMutation.isPending ? t('exchange.confirm.btn.pending') : t('exchange.confirm.btn.confirm')}
-                        </button>
-                        <button
-                            onClick={() => setIsConfirmOpen(false)}
-                            className="w-full bg-[#0C1224] border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white font-bold text-sm py-4 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98]"
-                        >
-                            {t('exchange.confirm.btn.cancel')}
-                        </button>
-                    </div>
-                </div>
-            </Sheet>
-
-            {/* Exchange Success Sheet Drawer */}
-            <Sheet
+            {/* Exchange Success Modal Component */}
+            <ExchangeSuccessModal
                 isOpen={isSuccessOpen}
                 onClose={handleCloseSuccess}
-            >
-                <div className="space-y-6 flex flex-col justify-between h-full text-center">
-
-                    {/* Success Header */}
-                    <div className="space-y-6 select-none pt-8">
-                        <div className="relative inline-flex items-center justify-center">
-                            <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-[20px]"></div>
-                            <div className="relative w-18 h-18 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
-                                <CheckCircle2 className="h-9 w-9" />
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <span className="text-[10px] font-bold text-emerald-400 tracking-[0.2em] uppercase font-mono block">
-                                {t('exchange.success.title')}
-                            </span>
-
-                            <div className="flex items-center justify-center space-x-2 text-2xl font-black text-white font-satoshi">
-                                <CurrencyIcon code={fromWallet.code} size="sm" />
-                                <span>{parseFloat(fromAmount).toLocaleString()} {fromWallet.code}</span>
-                            </div>
-
-                            <span className="text-[9px] font-bold text-slate-555 uppercase tracking-widest block py-0.5 select-none">
-                                {t('exchange.success.exchangedTo')}
-                            </span>
-
-                            <div className="flex items-center justify-center space-x-2 text-2.5xl font-black text-emerald-400 font-satoshi">
-                                <CurrencyIcon code={toWallet.code} size="sm" />
-                                <span>{parseFloat(toAmount).toLocaleString()} {toWallet.code}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Receipt Details Card */}
-                    <div className="bg-[#0C1224] border border-[#131B30] rounded-2.5xl p-5 text-left space-y-3.5 select-none font-sans text-xs max-w-md mx-auto w-full">
-                        <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-550 font-bold uppercase tracking-wider text-[9px]">{t('exchange.confirm.rate')}</span>
-                            <span className="font-mono text-slate-350">1 {fromWallet.code} = {activeRate.toFixed(4)} {toWallet.code}</span>
-                        </div>
-
-                        <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('exchange.exchangeFee')}</span>
-                            <span className="font-bold text-white font-mono flex items-center space-x-1.5">
-                                <CurrencyIcon code={fromWallet.code} size="sm" />
-                                <span>{estimatedFee.toFixed(fromWallet.type === 'fiat' ? 2 : 4)} {fromWallet.code}</span>
-                            </span>
-                        </div>
-
-                        <div className="flex justify-between items-center py-0.5">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('exchange.settlement')}</span>
-                            <span className="text-white">{t('exchange.success.instantSameDay')}</span>
-                        </div>
-
-                        <div className="flex justify-between items-center py-0.5 border-t border-white/5 pt-3">
-                            <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">{t('exchange.success.txId')}</span>
-                            <span className="font-mono text-slate-350">CNV-EXEC-OK</span>
-                        </div>
-                    </div>
-
-                    {/* CTA Done Button */}
-                    <button
-                        onClick={handleCloseSuccess}
-                        className="w-full bg-primary-500 hover:bg-primary-450 text-white font-bold text-sm py-4 rounded-xl shadow-lg transition duration-200 cursor-pointer active:scale-[0.98] mt-auto select-none"
-                    >
-                        {t('exchange.success.btn.done')}
-                    </button>
-
-                </div>
-            </Sheet>
-
+                isCaasSwap={isCaasSwap}
+                fromWallet={fromWallet}
+                toWallet={toWallet}
+                fromAmount={fromAmount}
+                toAmount={toAmount}
+                activeRate={activeRate}
+                successCaasData={successCaasData}
+            />
         </div>
     );
 };

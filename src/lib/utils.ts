@@ -42,7 +42,8 @@ export function formatValueByLocale(amount: string | number, currency: string, i
   if (isNaN(val)) return '0.00';
   
   const isLocalAfrican = currency.toUpperCase() === 'XAF' || currency.toUpperCase() === 'XOF';
-  const decimals = isLocalAfrican ? 0 : (isFiat ? 2 : 4);
+  const isStablecoin = currency.toUpperCase() === 'USDT' || currency.toUpperCase() === 'USDC';
+  const decimals = isLocalAfrican ? 0 : (isFiat || isStablecoin ? 2 : 4);
   
   const locale = typeof navigator !== 'undefined' ? navigator.language : undefined;
   

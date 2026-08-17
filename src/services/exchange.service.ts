@@ -63,6 +63,50 @@ export interface RatesResponse {
   data: RateItem[];
 }
 
+export interface CaasSwapRequest {
+  amount: string;
+  token_in: string;
+  token_out: string;
+}
+
+export interface CaasSwapResponseItem {
+  id: string;
+  caasSwapId?: string;
+  caas_swap_id?: string;
+  reference?: string;
+  userId?: string;
+  user_id?: string;
+  tokenIn?: string;
+  token_in?: string;
+  tokenOut?: string;
+  token_out?: string;
+  amountIn?: string;
+  amount_in?: string;
+  amountOut?: string | null;
+  amount_out?: string | null;
+  status: 'pending' | 'processing' | 'settled' | 'failed' | string;
+  txHash?: string;
+  tx_hash?: string;
+  idempotencyKey?: string;
+  idempotency_key?: string;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+}
+
+export interface CaasSwapResponse {
+  success: boolean;
+  data?: CaasSwapResponseItem;
+  error?: any;
+}
+
+export interface CaasSwapListResponse {
+  success: boolean;
+  data?: CaasSwapResponseItem[];
+  error?: any;
+}
+
 class ExchangeService extends BaseService {
   async getRates(): Promise<RatesResponse> {
     const response = await this.api.get('/rates');
@@ -100,6 +144,24 @@ class ExchangeService extends BaseService {
     const response = await this.api.post('/wallets/swap/execute', payload);
     return response.data;
   }
+
+  async executeCaasSwap(payload: CaasSwapRequest): Promise<CaasSwapResponse> {
+    const response = await this.api.post('/crypto/swaps', payload);
+    return response.data;
+  }
+
+  async getCaasSwaps(page: number = 1, perPage: number = 20): Promise<CaasSwapListResponse> {
+    const response = await this.api.get('/crypto/swaps', {
+      params: { page, per_page: perPage },
+    });
+    return response.data;
+  }
+
+  async getCaasSwap(id: string): Promise<CaasSwapResponse> {
+    const response = await this.api.get(`/crypto/swaps/${id}`);
+    return response.data;
+  }
 }
 
 export const exchangeService = new ExchangeService();
+

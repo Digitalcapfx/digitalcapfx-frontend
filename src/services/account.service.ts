@@ -45,7 +45,7 @@ export interface CryptoBalanceResponse {
 
 export const extractCryptoTokenList = (data: any): CryptoTokenData[] => {
   if (!data) return [];
-  if (data.tokens && Array.isArray(data.tokens)) {
+  if (data.tokens && Array.isArray(data.tokens) && data.tokens.length > 0) {
     const rootAddress = data.wallet_address || data.walletAddress || '';
     return data.tokens.map((t: any) => ({
       ...t,
@@ -55,6 +55,29 @@ export const extractCryptoTokenList = (data: any): CryptoTokenData[] => {
   }
   if (Array.isArray(data)) {
     return data;
+  }
+  if (typeof data === 'object') {
+    const rootAddress = data.wallet_address || data.walletAddress || '';
+    const tokens: CryptoTokenData[] = [];
+    const usdcVal = parseFloat(data.balance_usdc || data.balanceUsdc || (data.symbol === 'USDC' ? data.balance : 0) || '0');
+    tokens.push({
+      symbol: 'USDC',
+      name: 'USD Coin',
+      balance: usdcVal,
+      balance_raw: data.balance_usdc || String(usdcVal),
+      balance_formatted: `${usdcVal.toFixed(2)} USDC`,
+      wallet_address: rootAddress,
+    });
+    const usdtVal = parseFloat(data.balance_usdt || data.balanceUsdt || (data.symbol === 'USDT' ? data.balance : 0) || '0');
+    tokens.push({
+      symbol: 'USDT',
+      name: 'Tether USD',
+      balance: usdtVal,
+      balance_raw: data.balance_usdt || String(usdtVal),
+      balance_formatted: `${usdtVal.toFixed(2)} USDT`,
+      wallet_address: rootAddress,
+    });
+    return tokens;
   }
   return [data];
 };
