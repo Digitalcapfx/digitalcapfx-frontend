@@ -3,9 +3,9 @@ import { create } from 'zustand';
 export interface BalanceMatrix {
   XOF: number;
   XAF: number;
-  EUR: number;
-  USD: number;
-  GBP: number;
+  // EUR: number;
+  // USD: number;
+  // GBP: number;
   USDT: number;
   USDC: number;
 }
@@ -33,9 +33,9 @@ export const useWebStore = create<WebStore>((set) => ({
   balances: {
     XOF: 250000,
     XAF: 0,
-    EUR: 150,
-    USD: 85,
-    GBP: 0,
+    // EUR: 150,
+    // USD: 85,
+    // GBP: 0,
     USDT: 450,
     USDC: 120,
   },

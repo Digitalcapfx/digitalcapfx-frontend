@@ -20,9 +20,9 @@ export const LiveRatesCard: React.FC<LiveRatesCardProps> = ({ rates }) => {
 
     const displayRates = rates && rates.length > 0 ? rates : [
         { pair: 'USDT/USDC', rate: '1.0000', change: 0.00 },
-        { pair: 'EUR/USD', rate: '1.0825', change: 0.42 },
-        { pair: 'GBP/USD', rate: '1.2710', change: 0.12 },
-        { pair: 'GBP/EUR', rate: '1.1636', change: 0.31 },
+        // { pair: 'EUR/USD', rate: '1.0825', change: 0.42 },
+        // { pair: 'GBP/USD', rate: '1.2710', change: 0.12 },
+        // { pair: 'GBP/EUR', rate: '1.1636', change: 0.31 },
     ];
 
     return (

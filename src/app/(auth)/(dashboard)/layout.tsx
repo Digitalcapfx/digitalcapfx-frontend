@@ -44,7 +44,7 @@ const SIDEBAR_LINKS = [
     { label: 'Wallets', icon: Wallet, href: '/wallets' },
     { label: 'Cards', icon: CreditCard, href: '/cards' },
     { label: 'Exchange', icon: RefreshCw, href: '/exchange' },
-    { label: 'Airtime & Bills', icon: Smartphone, href: '/vtu' },
+    // { label: 'Airtime & Bills', icon: Smartphone, href: '/vtu' },
     { label: 'Activity', icon: Clock, href: '/activity' },
     { label: 'Referrals', icon: Gift, href: '/referrals' },
     { label: 'Support Desk', icon: HelpCircle, href: '/support' },
@@ -254,7 +254,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const navigationLinks = [
         { label: t('nav.overview'), icon: LayoutDashboard, href: '/dashboard' },
         { label: t('nav.wallets'), icon: Wallet, href: '/wallets' },
-        { label: t('nav.vtu'), icon: Smartphone, href: '/vtu' },
+        // { label: t('nav.vtu'), icon: Smartphone, href: '/vtu' },
         { label: t('nav.exchange'), icon: RefreshCw, href: '/exchange' },
         { label: t('nav.cards'), icon: CreditCard, href: '/cards' },
         { label: t('nav.activity'), icon: Clock, href: '/activity' },

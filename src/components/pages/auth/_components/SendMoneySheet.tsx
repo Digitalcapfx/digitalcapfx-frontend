@@ -32,9 +32,9 @@ export interface Wallet {
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
-    USD: 'US Dollar',
-    EUR: 'Euro',
-    GBP: 'British Pound',
+    // USD: 'US Dollar',
+    // EUR: 'Euro',
+    // GBP: 'British Pound',
     XOF: 'CFA Franc BCEAO',
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
@@ -173,19 +173,21 @@ export const SendMoneySheet: React.FC = () => {
         });
     }
 
-    // Map fiat wallets
+    // Map fiat wallets (display only XAF and XOF)
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
-        fiatQuery.data.data.forEach((acc) => {
-            walletsList.push({
-                id: acc.currency.toLowerCase(),
-                name: CURRENCY_NAMES[acc.currency] || acc.currency,
-                code: acc.currency,
-                type: 'fiat',
-                balance: formatBalance(acc.balance, acc.currency),
-                rawBalance: parseFloat(acc.balance || '0'),
-                accountNumber: acc.accountNumber,
+        fiatQuery.data.data
+            .filter((acc) => ['XAF', 'XOF'].includes(acc.currency.toUpperCase()))
+            .forEach((acc) => {
+                walletsList.push({
+                    id: acc.currency.toLowerCase(),
+                    name: CURRENCY_NAMES[acc.currency] || acc.currency,
+                    code: acc.currency,
+                    type: 'fiat',
+                    balance: formatBalance(acc.balance, acc.currency),
+                    rawBalance: parseFloat(acc.balance || '0'),
+                    accountNumber: acc.accountNumber,
+                });
             });
-        });
     }
 
     // Map WaaS wallets

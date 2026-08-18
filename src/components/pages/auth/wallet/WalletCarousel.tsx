@@ -86,18 +86,20 @@ const WalletCarousel: React.FC = () => {
     const fiatWallets: Array<{ currency: string; amount: string; cardNum: string; bg: string }> = [];
     const cryptoWallets: Array<{ currency: string; name: string; amount: string; cardNum: string; bg: string; provider: 'waas'; network?: string }> = [];
 
-    // Push fiat accounts
+    // Push fiat accounts (display only XAF and XOF)
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
-        fiatQuery.data.data.forEach((acc) => {
-            const num = acc.accountNumber || '';
-            const shortNum = num ? num.slice(-4) : 'DFX';
-            fiatWallets.push({
-                currency: acc.currency,
-                cardNum: shortNum,
-                amount: formatBalance(acc.balance, acc.currency),
-                bg: getCardBg(acc.currency),
+        fiatQuery.data.data
+            .filter((acc) => ['XAF', 'XOF'].includes(acc.currency.toUpperCase()))
+            .forEach((acc) => {
+                const num = acc.accountNumber || '';
+                const shortNum = num ? num.slice(-4) : 'DFX';
+                fiatWallets.push({
+                    currency: acc.currency,
+                    cardNum: shortNum,
+                    amount: formatBalance(acc.balance, acc.currency),
+                    bg: getCardBg(acc.currency),
+                });
             });
-        });
     }
 
     // Push CaaS stablecoin balances (USDC/USDT)

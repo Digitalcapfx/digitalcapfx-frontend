@@ -19,15 +19,15 @@ import { ExchangeConfirmationModal } from './components/ExchangeConfirmationModa
 import { ExchangeSuccessModal } from './components/ExchangeSuccessModal'
 
 const CURRENCY_NAMES: Record<string, string> = {
-    USD: 'US Dollar',
-    EUR: 'Euro',
-    GBP: 'British Pound',
+    // USD: 'US Dollar',
+    // EUR: 'Euro',
+    // GBP: 'British Pound',
     XOF: 'CFA Franc BCEAO',
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
     USDT: 'Tether USD',
     IUSD: 'Instant USD',
-    NGN: 'Nigerian Naira',
+    // NGN: 'Nigerian Naira',
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
@@ -116,10 +116,10 @@ export const ExchangePage: React.FC = () => {
             const pairs = [
                 { from: 'USDT', to: 'USDC' },
                 { from: 'USDC', to: 'USDT' },
-                { from: 'EUR', to: 'USD' },
-                { from: 'GBP', to: 'USD' },
-                { from: 'GBP', to: 'EUR' },
-                { from: 'EUR', to: 'GBP' },
+                // { from: 'EUR', to: 'USD' },
+                // { from: 'GBP', to: 'USD' },
+                // { from: 'GBP', to: 'EUR' },
+                // { from: 'EUR', to: 'GBP' },
             ];
 
             const results = await Promise.all(
@@ -176,21 +176,21 @@ export const ExchangePage: React.FC = () => {
         provider: 'caas'
     });
 
-    // Map fiat wallets
-    if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
-        fiatQuery.data.data
-            .filter((acc) => acc.currency === 'EUR' || acc.currency === 'USD' || acc.currency === 'GBP')
-            .forEach((acc) => {
-                walletsList.push({
-                    id: acc.currency.toLowerCase(),
-                    name: CURRENCY_NAMES[acc.currency] || acc.currency,
-                    code: acc.currency,
-                    type: 'fiat',
-                    balance: formatBalance(acc.balance, acc.currency),
-                    rawBalance: parseFloat(acc.balance || '0'),
-                });
-            });
-    }
+    // Map fiat wallets (USD, EUR, GBP, NGN commented out; exchange features stablecoins only)
+    // if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
+    //     fiatQuery.data.data
+    //         .filter((acc) => acc.currency === 'EUR' || acc.currency === 'USD' || acc.currency === 'GBP')
+    //         .forEach((acc) => {
+    //             walletsList.push({
+    //                 id: acc.currency.toLowerCase(),
+    //                 name: CURRENCY_NAMES[acc.currency] || acc.currency,
+    //                 code: acc.currency,
+    //                 type: 'fiat',
+    //                 balance: formatBalance(acc.balance, acc.currency),
+    //                 rawBalance: parseFloat(acc.balance || '0'),
+    //             });
+    //         });
+    // }
 
     // Selected Wallet Fallbacks
     const fromWallet = walletsList.find(w => w.id === fromWalletId) || walletsList[0] || {

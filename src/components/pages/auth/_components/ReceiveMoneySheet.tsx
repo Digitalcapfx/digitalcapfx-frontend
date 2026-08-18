@@ -35,14 +35,14 @@ export interface Wallet {
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
-    USD: 'US Dollar',
-    EUR: 'Euro',
-    GBP: 'British Pound',
+    // USD: 'US Dollar',
+    // EUR: 'Euro',
+    // GBP: 'British Pound',
     XOF: 'CFA Franc BCEAO',
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
     IUSD: 'Instant USD',
-    NGN: 'Nigerian Naira',
+    // NGN: 'Nigerian Naira',
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
@@ -136,23 +136,25 @@ export const ReceiveMoneySheet: React.FC = () => {
         });
     }
 
-    // Map fiat wallets
+    // Map fiat wallets (display only XAF and XOF)
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
-        fiatQuery.data.data.forEach((acc) => {
-            walletsList.push({
-                id: acc.currency.toLowerCase(),
-                name: CURRENCY_NAMES[acc.currency] || acc.currency,
-                code: acc.currency,
-                type: 'fiat',
-                balance: formatCurrencyByLocale(acc.balance, acc.currency),
-                rawBalance: parseFloat(acc.balance || '0'),
-                accountNumber: acc.accountNumber,
-                iban: acc.iban || null,
-                bic: acc.bic || null,
-                sortCode: acc.sortCode || null,
-                accountNumberUk: acc.accountNumberUk || null,
+        fiatQuery.data.data
+            .filter((acc) => ['XAF', 'XOF'].includes(acc.currency.toUpperCase()))
+            .forEach((acc) => {
+                walletsList.push({
+                    id: acc.currency.toLowerCase(),
+                    name: CURRENCY_NAMES[acc.currency] || acc.currency,
+                    code: acc.currency,
+                    type: 'fiat',
+                    balance: formatCurrencyByLocale(acc.balance, acc.currency),
+                    rawBalance: parseFloat(acc.balance || '0'),
+                    accountNumber: acc.accountNumber,
+                    iban: acc.iban || null,
+                    bic: acc.bic || null,
+                    sortCode: acc.sortCode || null,
+                    accountNumberUk: acc.accountNumberUk || null,
+                });
             });
-        });
     }
 
     // Map WaaS wallets if ALLOW_CRYPTO is true
