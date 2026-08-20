@@ -225,7 +225,7 @@ export default function ContactPage() {
                                         <label className="text-xs font-semibold text-slate-300 block">Phone</label>
                                         <input
                                             type="tel"
-                                            placeholder="+234 800 000 0000"
+                                            placeholder="+237 670 000 000"
                                             value={phone}
                                             onChange={(e) => setPhone(e.target.value)}
                                             className="w-full bg-[#050816] border border-white/10 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-primary-500 transition placeholder-slate-600 font-sans"
@@ -236,7 +236,7 @@ export default function ContactPage() {
                                         <label className="text-xs font-semibold text-slate-300 block">Country</label>
                                         <input
                                             type="text"
-                                            placeholder="e.g. Nigeria / Ivory Coast"
+                                            placeholder="e.g. Cameroon / Ivory Coast"
                                             value={country}
                                             onChange={(e) => setCountry(e.target.value)}
                                             className="w-full bg-[#050816] border border-white/10 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-primary-500 transition placeholder-slate-600 font-sans"

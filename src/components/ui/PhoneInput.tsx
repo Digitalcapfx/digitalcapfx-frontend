@@ -51,6 +51,18 @@ const CountrySelect: React.FC<CountrySelectProps> = ({ value, onChange, options,
         }
     });
 
+    // Prioritize Cameroon (CM) and Ivory Coast (CI) at top of list when browsing
+    const prioritizedOptions = [...filteredOptions].sort((a, b) => {
+        if (searchQuery.trim()) return 0;
+        const priorityCodes = ['CM', 'CI'];
+        const aIndex = priorityCodes.indexOf(a.value || '');
+        const bIndex = priorityCodes.indexOf(b.value || '');
+        if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+        if (aIndex !== -1) return -1;
+        if (bIndex !== -1) return 1;
+        return 0;
+    });
+
     const ActiveFlag = value ? flags[value as keyof typeof flags] : null;
     const activeDialCode = value ? getCountryCallingCode(value as Country) : '';
 
@@ -93,8 +105,8 @@ const CountrySelect: React.FC<CountrySelectProps> = ({ value, onChange, options,
 
                     {/* Scrollable Items */}
                     <div className="max-h-[200px] overflow-y-auto space-y-1 pr-1 scrollbar-thin">
-                        {filteredOptions.length > 0 ? (
-                            filteredOptions.map((opt) => {
+                        {prioritizedOptions.length > 0 ? (
+                            prioritizedOptions.map((opt) => {
                                 if (!opt.value) return null;
                                 const isSelected = opt.value === value;
                                 const Flag = flags[opt.value as keyof typeof flags];
@@ -154,10 +166,11 @@ export interface PhoneInputProps {
     required?: boolean;
     disabled?: boolean;
     className?: string;
+    defaultCountry?: Country;
 }
 
 export const PhoneInput = React.forwardRef<any, PhoneInputProps>(
-    ({ value, onChange, placeholder = 'Enter phone number', label, error, required = false, disabled = false, className }, ref) => {
+    ({ value, onChange, placeholder = 'Enter phone number', label, error, required = false, disabled = false, className, defaultCountry = 'CM' }, ref) => {
         
         // Parse current country code from value or fallback to default
         const getInitialCountry = (val: string): Country => {
@@ -169,7 +182,7 @@ export const PhoneInput = React.forwardRef<any, PhoneInputProps>(
                     }
                 } catch (e) {}
             }
-            return 'NG';
+            return defaultCountry;
         };
 
         const [country, setCountry] = useState<Country>(() => getInitialCountry(value));
@@ -261,7 +274,7 @@ export const PhoneInput = React.forwardRef<any, PhoneInputProps>(
                         }}
                         placeholder={placeholder}
                         disabled={disabled}
-                        defaultCountry="NG"
+                        defaultCountry={defaultCountry}
                         international={false}
                         countrySelectComponent={CountrySelect}
                         inputComponent={PhoneInputElement}

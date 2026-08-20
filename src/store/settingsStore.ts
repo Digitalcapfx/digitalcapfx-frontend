@@ -68,11 +68,11 @@ export const useSettingsStore = create<SettingsState>()(
                 firstName: 'Teena',
                 lastName: 'Xavier',
                 dob: '1900-12-03',
-                country: 'Nigeria',
-                address: '1 Ozumba Mbadiwe Avenue, Victoria Island, Lagos',
-                nationality: 'Nigeria',
+                country: 'Cameroon',
+                address: 'Akwa, Douala',
+                nationality: 'Cameroonian',
                 occupation: 'UI/UX Designer',
-                phoneNumber: '+234 810 000 0000'
+                phoneNumber: '+237 670 000 000'
             },
             twoFactor: true,
             loginNotif: true,
