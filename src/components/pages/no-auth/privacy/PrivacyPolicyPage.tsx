@@ -31,7 +31,7 @@ const SECTIONS = [
                     <p className="text-white font-semibold text-base">DigitalCap FX SARL</p>
                     <p className="text-slate-400 text-sm">Douala, République du Cameroun</p>
                     <p className="text-cyan-400 text-sm font-mono mt-1">
-                        <a href="mailto:digitalcapfx@dgcap.com" className="hover:underline">digitalcapfx@dgcap.com</a>
+                        <a href="mailto:compliance@digitalcapfx.com" className="hover:underline">compliance@digitalcapfx.com</a>
                     </p>
                 </div>
             </div>
@@ -176,11 +176,11 @@ const SECTIONS = [
                     For any question regarding this Policy or to exercise your rights, please contact us at:
                 </p>
                 <a
-                    href="mailto:digitalcapfx@dgcap.com"
+                    href="mailto:compliance@digitalcapfx.com"
                     className="inline-flex items-center space-x-2 text-cyan-400 hover:text-cyan-300 font-mono text-base font-semibold transition"
                 >
                     <Mail className="w-5 h-5" />
-                    <span>digitalcapfx@dgcap.com</span>
+                    <span>compliance@digitalcapfx.com</span>
                 </a>
                 <p className="text-slate-400 text-xs sm:text-sm mt-1">
                     Registered Office: Douala, République du Cameroun

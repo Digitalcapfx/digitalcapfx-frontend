@@ -152,7 +152,7 @@ const SECTIONS = [
         title: '14. Complaints and Dispute Resolution',
         content: (
             <p>
-                Any complaint regarding the Service may be submitted to <a href="mailto:digitalcapfx@dgcap.com" className="text-cyan-400 font-mono hover:underline">digitalcapfx@dgcap.com</a>. We endeavor to address any complaint within a reasonable time. In the absence of an amicable resolution, the dispute may be brought before the competent courts in accordance with Section 15.
+                Any complaint regarding the Service may be submitted to <a href="mailto:compliance@digitalcapfx.com" className="text-cyan-400 font-mono hover:underline">compliance@digitalcapfx.com</a>. We endeavor to address any complaint within a reasonable time. In the absence of an amicable resolution, the dispute may be brought before the competent courts in accordance with Section 15.
             </p>
         )
     },
@@ -202,11 +202,11 @@ const SECTIONS = [
                     For any question regarding these Terms, please contact us at:
                 </p>
                 <a
-                    href="mailto:digitalcapfx@dgcap.com"
+                    href="mailto:compliance@digitalcapfx.com"
                     className="inline-flex items-center space-x-2 text-cyan-400 hover:text-cyan-300 font-mono text-base font-semibold transition"
                 >
                     <Mail className="w-5 h-5" />
-                    <span>digitalcapfx@dgcap.com</span>
+                    <span>compliance@digitalcapfx.com</span>
                 </a>
                 <p className="text-slate-400 text-xs sm:text-sm mt-1">
                     Registered office: Douala, République du Cameroun
