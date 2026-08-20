@@ -4,6 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { TrendingUp, TrendingDown, ArrowUpRight, Star } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
+import LanguageSelector from '@/components/ui/LanguageSelector'
 
 interface AuthLayoutProps {
     children: React.ReactNode;
@@ -143,6 +144,14 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
 
             {/* Right Column (Child forms) */}
             <div className="col-span-12 lg:col-span-8 flex flex-col justify-center items-center p-4 sm:p-8 md:p-12 min-h-screen relative overflow-hidden bg-[#040714]">
+                {/* Top Right Header Bar (Logo on mobile, LanguageSelector on all screens) */}
+                <div className="w-full flex items-center justify-between lg:justify-end px-4 sm:px-8 py-4 absolute top-0 left-0 right-0 z-20">
+                    <div className="lg:hidden">
+                        <Logo href="/" size="sm" />
+                    </div>
+                    <LanguageSelector />
+                </div>
+
                 {/* Background Glow Orbs */}
                 <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
                 <div className="absolute bottom-10 right-10 w-[350px] h-[350px] bg-primary-600/10 rounded-full blur-[100px] pointer-events-none" />

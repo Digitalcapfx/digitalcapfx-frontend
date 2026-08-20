@@ -4,61 +4,56 @@ import React from 'react'
 import { Globe, Bitcoin, Zap, Shield, CreditCard, TrendingUp } from 'lucide-react'
 
 import { FEATURE_FLAGS } from '@/config/featureFlags'
-
-interface Feature {
-    title: string;
-    description: string;
-    icon: React.ElementType;
-    iconColor: string;
-    iconBg: string;
-}
-
-const FEATURES: Feature[] = [
-    {
-        title: 'Multi-Currency',
-        description: 'Hold and exchange XAF, XOF, USD, GBP, EUR and more — all in one account.',
-        icon: Globe,
-        iconColor: 'text-primary-500',
-        iconBg: 'bg-primary-500/10',
-    },
-    ...(FEATURE_FLAGS.ALLOW_CRYPTO ? [{
-        title: 'Crypto Built-In',
-        description: 'BTC, ETH, SOL, USDT, USDC and more. Your crypto wallet, fully integrated.',
-        icon: Bitcoin,
-        iconColor: 'text-[#F59E0B]',
-        iconBg: 'bg-[#F59E0B]/10',
-    }] : []),
-    {
-        title: 'Instant Transfers',
-        description: 'Send and receive money in seconds. No borders, no waiting, no hidden fees.',
-        icon: Zap,
-        iconColor: 'text-[#7C3AED]',
-        iconBg: 'bg-[#7C3AED]/10',
-    },
-    {
-        title: 'Bank-Grade Security',
-        description: '256-bit encryption, biometric auth, and secure vault storage for assets.',
-        icon: Shield,
-        iconColor: 'text-[#22C55E]',
-        iconBg: 'bg-[#22C55E]/10',
-    },
-    {
-        title: 'Virtual Cards',
-        description: 'Create disposable virtual cards instantly. Freeze or cancel with one tap.',
-        icon: CreditCard,
-        iconColor: 'text-[#19C2FF]',
-        iconBg: 'bg-[#19C2FF]/10',
-    },
-    {
-        title: 'Real-Time Exchange',
-        description: 'Swap between fiat and digital balances at live market rates.',
-        icon: TrendingUp,
-        iconColor: 'text-[#FB7185]',
-        iconBg: 'bg-[#FB7185]/10',
-    },
-];
+import { useLanguageStore } from '@/store/languageStore'
 
 const FeaturesSection = () => {
+    const { t } = useLanguageStore();
+
+    const FEATURES = [
+        {
+            title: t('features.multiCurrency.title', { defaultValue: 'Multi-Currency' }),
+            description: t('features.multiCurrency.desc', { defaultValue: 'Hold and exchange XAF, XOF, USD, GBP, EUR and more — all in one account.' }),
+            icon: Globe,
+            iconColor: 'text-primary-500',
+            iconBg: 'bg-primary-500/10',
+        },
+        ...(FEATURE_FLAGS.ALLOW_CRYPTO ? [{
+            title: t('features.crypto.title', { defaultValue: 'Crypto Built-In' }),
+            description: t('features.crypto.desc', { defaultValue: 'BTC, ETH, SOL, USDT, USDC and more. Your crypto wallet, fully integrated.' }),
+            icon: Bitcoin,
+            iconColor: 'text-[#F59E0B]',
+            iconBg: 'bg-[#F59E0B]/10',
+        }] : []),
+        {
+            title: t('features.transfers.title', { defaultValue: 'Instant Transfers' }),
+            description: t('features.transfers.desc', { defaultValue: 'Send and receive money in seconds. No borders, no waiting, no hidden fees.' }),
+            icon: Zap,
+            iconColor: 'text-[#7C3AED]',
+            iconBg: 'bg-[#7C3AED]/10',
+        },
+        {
+            title: t('features.security.title', { defaultValue: 'Bank-Grade Security' }),
+            description: t('features.security.desc', { defaultValue: '256-bit encryption, biometric auth, and secure vault storage for assets.' }),
+            icon: Shield,
+            iconColor: 'text-[#22C55E]',
+            iconBg: 'bg-[#22C55E]/10',
+        },
+        {
+            title: t('features.cards.title', { defaultValue: 'Virtual Cards' }),
+            description: t('features.cards.desc', { defaultValue: 'Create disposable virtual cards instantly. Freeze or cancel with one tap.' }),
+            icon: CreditCard,
+            iconColor: 'text-[#19C2FF]',
+            iconBg: 'bg-[#19C2FF]/10',
+        },
+        {
+            title: t('features.exchange.title', { defaultValue: 'Real-Time Exchange' }),
+            description: t('features.exchange.desc', { defaultValue: 'Swap between fiat and digital balances at live market rates.' }),
+            icon: TrendingUp,
+            iconColor: 'text-[#FB7185]',
+            iconBg: 'bg-[#FB7185]/10',
+        },
+    ];
+
     return (
         <section id="features">
             <div className="py-14 lg:py-24 text-center space-y-8 md:space-y-16">
@@ -66,12 +61,12 @@ const FeaturesSection = () => {
                 <div className="space-y-4 md:space-y-6 max-w-3xl mx-auto flex flex-col items-center">
                     <div className="inline-flex items-center space-x-2 bg-primary-500/10 border border-primary-500/20 px-3 py-1.5 rounded-full select-none text-balance">
                         <span className="text-[10px] font-bold tracking-wider text-primary-500 uppercase text-balance">
-                            ⚡ Full-Featured Platform
+                            {t('features.badge', { defaultValue: '⚡ Full-Featured Platform' })}
                         </span>
                     </div>
                     <h2 className="font-satoshi font-black text-3xl sm:text-4xl lg:text-[48px] leading-[1.15] text-white tracking-tight text-pretty">
-                        Everything your business needs <br />
-                        <span className="bg-brand-gradient bg-clip-text text-transparent">to move money globally</span>
+                        {t('features.title', { defaultValue: 'Everything your business needs' })} <br />
+                        <span className="bg-brand-gradient bg-clip-text text-transparent">{t('features.titleHighlight', { defaultValue: 'to move money globally' })}</span>
                     </h2>
                 </div>
 

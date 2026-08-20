@@ -2,6 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import { Mail, Shield } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
+import { useLanguageStore } from '@/store/languageStore'
 
 // Custom inline SVG icons for brands not present in this lucide-react version
 const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -34,54 +35,60 @@ const SOCIAL_LINKS = [
 
 const FOOTER_SECTIONS = [
     {
+        titleKey: 'footer.product',
         title: 'Product',
         links: [
-            { label: 'Features', href: '#features' },
-            { label: 'Virtual Cards', href: '#virtual-cards' },
-            { label: 'Exchange Rates', href: '#exchange-rates' },
-            { label: 'Security', href: '#security' },
+            { labelKey: 'footer.features', label: 'Features', href: '#features' },
+            { labelKey: 'footer.virtualCards', label: 'Virtual Cards', href: '#virtual-cards' },
+            { labelKey: 'footer.exchangeRates', label: 'Exchange Rates', href: '#exchange-rates' },
+            { labelKey: 'footer.security', label: 'Security', href: '#security' },
         ],
     },
     {
+        titleKey: 'footer.company',
         title: 'Company',
         links: [
-            { label: 'About Us', href: '/about' },
-            { label: 'Careers', href: '/careers' },
-            { label: 'Blog', href: '/blog' },
-            { label: 'Press Kit', href: '/press-kit' },
-            { label: 'Contact', href: '/contact' },
+            { labelKey: 'footer.aboutUs', label: 'About Us', href: '/about' },
+            { labelKey: 'footer.careers', label: 'Careers', href: '/careers' },
+            { labelKey: 'footer.blog', label: 'Blog', href: '/blog' },
+            { labelKey: 'footer.pressKit', label: 'Press Kit', href: '/press-kit' },
+            { labelKey: 'footer.contact', label: 'Contact', href: '/contact' },
         ],
     },
     {
+        titleKey: 'footer.resources',
         title: 'Resources',
         links: [
-            { label: 'Help Center', href: '#help-center' },
-            { label: 'API Docs', href: '#api-docs' },
-            { label: 'Status', href: '#status' },
-            { label: 'Community', href: '#community' },
-            { label: 'Partners', href: '#partners' },
+            { labelKey: 'footer.helpCenter', label: 'Help Center', href: '#help-center' },
+            { labelKey: 'footer.apiDocs', label: 'API Docs', href: '#api-docs' },
+            { labelKey: 'footer.status', label: 'Status', href: '#status' },
+            { labelKey: 'footer.community', label: 'Community', href: '#community' },
+            { labelKey: 'footer.partners', label: 'Partners', href: '#partners' },
         ],
     },
     {
+        titleKey: 'footer.legal',
         title: 'Legal',
         links: [
-            { label: 'Privacy Policy', href: '/privacy' },
-            { label: 'Terms of Service', href: '/terms' },
-            { label: 'Cookie Policy', href: '#cookie-policy' },
-            { label: 'Licenses', href: '#licenses' },
-            { label: 'AML Policy', href: '#aml-policy' },
+            { labelKey: 'footer.privacyPolicy', label: 'Privacy Policy', href: '/privacy' },
+            { labelKey: 'footer.termsOfService', label: 'Terms of Service', href: '/terms' },
+            { labelKey: 'footer.cookiePolicy', label: 'Cookie Policy', href: '#cookie-policy' },
+            { labelKey: 'footer.licenses', label: 'Licenses', href: '#licenses' },
+            { labelKey: 'footer.amlPolicy', label: 'AML Policy', href: '#aml-policy' },
         ],
     },
 ];
 
 const COMPLIANCE_ITEMS = [
-    { label: '256-bit Encryption' },
-    { label: 'PCI DSS Compliant' },
-    { label: 'SOC 2 Certified' },
-    { label: 'FDIC Insured' },
+    { labelKey: 'footer.encryption', label: '256-bit Encryption' },
+    { labelKey: 'footer.pci', label: 'PCI DSS Compliant' },
+    { labelKey: 'footer.soc2', label: 'SOC 2 Certified' },
+    { labelKey: 'footer.fdic', label: 'FDIC Insured' },
 ];
 
 const Footer = () => {
+    const { t } = useLanguageStore();
+
     return (
         <footer className="w-full bg-[#050816] text-slate-400 mt-auto">
             {/* Top Grid Section */}
@@ -91,7 +98,7 @@ const Footer = () => {
                 <div className="col-span-12 lg:col-span-4 space-y-6">
                     <Logo href="/" size="md" />
                     <p className="text-sm leading-relaxed text-slate-400 max-w-sm font-sans">
-                        Banking without borders. Hold, send, exchange and spend across fiat, stablecoins — all in one account.
+                        {t('footer.tagline', { defaultValue: 'Banking without borders. Hold, send, exchange and spend across fiat, stablecoins — all in one account.' })}
                     </p>
                     <div className="flex items-center space-x-3">
                         {SOCIAL_LINKS.map((social) => {
@@ -115,7 +122,7 @@ const Footer = () => {
                     {FOOTER_SECTIONS.map((section) => (
                         <div key={section.title} className="space-y-4">
                             <h4 className="text-xs font-bold uppercase tracking-wider text-white font-satoshi">
-                                {section.title}
+                                {t(section.titleKey, { defaultValue: section.title })}
                             </h4>
                             <ul className="space-y-3">
                                 {section.links.map((link) => (
@@ -124,7 +131,7 @@ const Footer = () => {
                                             href={link.href}
                                             className="text-sm text-slate-400 hover:text-white transition duration-200 font-sans"
                                         >
-                                            {link.label}
+                                            {t(link.labelKey, { defaultValue: link.label })}
                                         </Link>
                                     </li>
                                 ))}
@@ -142,7 +149,7 @@ const Footer = () => {
                         {COMPLIANCE_ITEMS.map((item) => (
                             <div key={item.label} className="flex items-center space-x-2 text-xs font-medium text-slate-400">
                                 <Shield className="h-5 w-5 text-emerald-500 fill-emerald-500/10" />
-                                <span className="font-sans">{item.label}</span>
+                                <span className="font-sans">{t(item.labelKey, { defaultValue: item.label })}</span>
                             </div>
                         ))}
                     </div>
@@ -153,17 +160,17 @@ const Footer = () => {
             <section className="border-t border-white/5 bg-black/20">
                 <div className="mx-auto px-4 md:px-8 py-8 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <p className="text-xs text-slate-500 font-sans">
-                        © {new Date().getFullYear()} DigitalCapFx. All rights reserved.
+                        © {new Date().getFullYear()} DigitalCapFx. {t('footer.allRights', { defaultValue: 'All rights reserved.' })}
                     </p>
                     <div className="flex items-center space-x-6">
                         <Link href="/privacy" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
-                            Privacy
+                            {t('footer.privacy', { defaultValue: 'Privacy' })}
                         </Link>
                         <Link href="/terms" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
-                            Terms
+                            {t('footer.terms', { defaultValue: 'Terms' })}
                         </Link>
                         <Link href="#cookies" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
-                            Cookies
+                            {t('footer.cookies', { defaultValue: 'Cookies' })}
                         </Link>
                     </div>
                 </div>

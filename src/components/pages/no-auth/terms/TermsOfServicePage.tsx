@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { FileText, Mail, ArrowUpRight, AlertTriangle } from 'lucide-react'
+import { useLanguageStore } from '@/store/languageStore'
 
 const SECTIONS = [
     {
@@ -217,6 +218,7 @@ const SECTIONS = [
 ]
 
 export default function TermsOfServicePage() {
+    const { t } = useLanguageStore();
     return (
         <div className="w-full text-white min-h-screen font-sans bg-[#050816] pb-32">
             <main className="max-w-7xl mx-auto px-6 sm:px-10 md:px-16 pt-16">

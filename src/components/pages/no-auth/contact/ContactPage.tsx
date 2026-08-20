@@ -15,8 +15,10 @@ import {
     Globe
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useLanguageStore } from '@/store/languageStore'
 
 export default function ContactPage() {
+    const { t } = useLanguageStore()
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
     const [email, setEmail] = useState('')
@@ -80,19 +82,19 @@ export default function ContactPage() {
                     <div className="inline-flex items-center space-x-2 px-3 py-1 bg-primary-500/10 border border-primary-500/20 rounded-full">
                         <Sparkles className="h-3 w-3 text-primary-400" />
                         <span className="text-[11px] font-bold text-primary-400 uppercase tracking-widest">
-                            GET IN TOUCH
+                            {t('contact.badge', { defaultValue: 'GET IN TOUCH' })}
                         </span>
                     </div>
 
                     <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                        Let's build{' '}
+                        {t('contact.heroPrefix', { defaultValue: "Let's build" })}{' '}
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-cyan-400 to-blue-500">
-                            together.
+                            {t('contact.heroHighlight', { defaultValue: 'together.' })}
                         </span>
                     </h1>
 
                     <p className="text-slate-400 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl mx-auto font-sans">
-                        Whether you're ready to sign up, need help with our API, or want to explore a partnership — we'd love to hear from you.
+                        {t('contact.subtitle', { defaultValue: "Whether you're ready to sign up, need help with our API, or want to explore a partnership — we'd love to hear from you." })}
                     </p>
                 </div>
 
@@ -106,9 +108,9 @@ export default function ContactPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <h3 className="text-base font-bold text-white">Sales</h3>
+                                <h3 className="text-base font-bold text-white">{t('contact.salesTitle', { defaultValue: 'Sales' })}</h3>
                                 <p className="text-slate-400 text-xs leading-relaxed">
-                                    Ready to get started or need a custom quote?
+                                    {t('contact.salesDesc', { defaultValue: 'Ready to get started or need a custom quote?' })}
                                 </p>
                             </div>
 
@@ -128,9 +130,9 @@ export default function ContactPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <h3 className="text-base font-bold text-white">Support</h3>
+                                <h3 className="text-base font-bold text-white">{t('contact.supportTitle', { defaultValue: 'Support' })}</h3>
                                 <p className="text-slate-400 text-xs leading-relaxed">
-                                    Technical help, account issues, or billing questions.
+                                    {t('contact.supportDesc', { defaultValue: 'Technical help, account issues, or billing questions.' })}
                                 </p>
                             </div>
 
@@ -150,9 +152,9 @@ export default function ContactPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <h3 className="text-base font-bold text-white">Partnerships</h3>
+                                <h3 className="text-base font-bold text-white">{t('contact.partnerTitle', { defaultValue: 'Partnerships' })}</h3>
                                 <p className="text-slate-400 text-xs leading-relaxed">
-                                    Interested in becoming a technology or channel partner?
+                                    {t('contact.partnerDesc', { defaultValue: 'Interested in becoming a technology or channel partner?' })}
                                 </p>
                             </div>
 
@@ -174,17 +176,17 @@ export default function ContactPage() {
                         <div className="lg:col-span-7 bg-[#090E1E] border border-white/10 rounded-3xl p-6 sm:p-8 md:p-10 space-y-6 shadow-2xl">
                             <div className="space-y-1">
                                 <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest block font-mono">
-                                    SEND A MESSAGE
+                                    {t('contact.formBadge', { defaultValue: 'SEND A MESSAGE' })}
                                 </span>
                                 <h2 className="text-2xl md:text-3xl font-extrabold text-white">
-                                    Talk to us
+                                    {t('contact.formTitle', { defaultValue: 'Talk to us' })}
                                 </h2>
                             </div>
 
                             <form onSubmit={handleFormSubmit} className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5 text-left">
-                                        <label className="text-xs font-semibold text-slate-300 block">First name *</label>
+                                        <label className="text-xs font-semibold text-slate-300 block">{t('contact.form.firstName', { defaultValue: 'First name *' })}</label>
                                         <input
                                             type="text"
                                             placeholder="Peter"
@@ -196,7 +198,7 @@ export default function ContactPage() {
                                     </div>
 
                                     <div className="space-y-1.5 text-left">
-                                        <label className="text-xs font-semibold text-slate-300 block">Last name *</label>
+                                        <label className="text-xs font-semibold text-slate-300 block">{t('contact.form.lastName', { defaultValue: 'Last name *' })}</label>
                                         <input
                                             type="text"
                                             placeholder="Adeyemi"
@@ -209,7 +211,7 @@ export default function ContactPage() {
                                 </div>
 
                                 <div className="space-y-1.5 text-left">
-                                    <label className="text-xs font-semibold text-slate-300 block">Email *</label>
+                                    <label className="text-xs font-semibold text-slate-300 block">{t('contact.form.email', { defaultValue: 'Email *' })}</label>
                                     <input
                                         type="email"
                                         placeholder="you@company.com"
@@ -222,7 +224,7 @@ export default function ContactPage() {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5 text-left">
-                                        <label className="text-xs font-semibold text-slate-300 block">Phone</label>
+                                        <label className="text-xs font-semibold text-slate-300 block">{t('contact.form.phone', { defaultValue: 'Phone' })}</label>
                                         <input
                                             type="tel"
                                             placeholder="+237 670 000 000"
@@ -233,7 +235,7 @@ export default function ContactPage() {
                                     </div>
 
                                     <div className="space-y-1.5 text-left">
-                                        <label className="text-xs font-semibold text-slate-300 block">Country</label>
+                                        <label className="text-xs font-semibold text-slate-300 block">{t('contact.form.country', { defaultValue: 'Country' })}</label>
                                         <input
                                             type="text"
                                             placeholder="e.g. Cameroon / Ivory Coast"
@@ -245,10 +247,10 @@ export default function ContactPage() {
                                 </div>
 
                                 <div className="space-y-1.5 text-left">
-                                    <label className="text-xs font-semibold text-slate-300 block">Message *</label>
+                                    <label className="text-xs font-semibold text-slate-300 block">{t('contact.form.message', { defaultValue: 'Message *' })}</label>
                                     <textarea
                                         rows={4}
-                                        placeholder="Tell us about your business, your volume, and what you're looking to achieve..."
+                                        placeholder={t('contact.form.messagePlaceholder', { defaultValue: "Tell us about your business, your volume, and what you're looking to achieve..." })}
                                         value={message}
                                         onChange={(e) => setMessage(e.target.value)}
                                         className="w-full bg-[#050816] border border-white/10 rounded-xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-primary-500 transition placeholder-slate-600 font-sans resize-none"
@@ -261,7 +263,7 @@ export default function ContactPage() {
                                     disabled={isSubmitting}
                                     className="w-full bg-gradient-to-r from-cyan-400 via-primary-500 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-white font-bold text-xs sm:text-sm py-3.5 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-primary-500/20 transition-all duration-200 disabled:opacity-50"
                                 >
-                                    <span>{isSubmitting ? 'Sending Message...' : 'Send Message'}</span>
+                                    <span>{isSubmitting ? t('contact.form.sending', { defaultValue: 'Sending Message...' }) : t('contact.form.btn', { defaultValue: 'Send Message' })}</span>
                                     <ArrowRight className="h-4 w-4" />
                                 </button>
                             </form>
@@ -272,27 +274,27 @@ export default function ContactPage() {
                             {/* Card 1: RESPONSE TIMES */}
                             <div className="bg-[#090E1E] border border-white/10 rounded-3xl p-6 space-y-4 shadow-xl">
                                 <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest block font-mono">
-                                    RESPONSE TIMES
+                                    {t('contact.responseTimesBadge', { defaultValue: 'RESPONSE TIMES' })}
                                 </span>
 
                                 <div className="space-y-3 divide-y divide-white/5 text-xs">
                                     <div className="flex items-center justify-between pt-1">
-                                        <span className="text-slate-300 font-medium">Sales enquiries</span>
+                                        <span className="text-slate-300 font-medium">{t('contact.salesEnquiries', { defaultValue: 'Sales enquiries' })}</span>
                                         <span className="text-cyan-400 font-mono font-bold">&lt; 4 hours</span>
                                     </div>
 
                                     <div className="flex items-center justify-between pt-3">
-                                        <span className="text-slate-300 font-medium">Technical support</span>
+                                        <span className="text-slate-300 font-medium">{t('contact.techSupport', { defaultValue: 'Technical support' })}</span>
                                         <span className="text-emerald-400 font-mono font-bold">&lt; 1 hour</span>
                                     </div>
 
                                     <div className="flex items-center justify-between pt-3">
-                                        <span className="text-slate-300 font-medium">Partnerships</span>
+                                        <span className="text-slate-300 font-medium">{t('contact.partnershipsLabel', { defaultValue: 'Partnerships' })}</span>
                                         <span className="text-cyan-400 font-mono font-bold">&lt; 24 hours</span>
                                     </div>
 
                                     <div className="flex items-center justify-between pt-3">
-                                        <span className="text-slate-300 font-medium">General enquiries</span>
+                                        <span className="text-slate-300 font-medium">{t('contact.generalEnquiries', { defaultValue: 'General enquiries' })}</span>
                                         <span className="text-slate-400 font-mono">1 business day</span>
                                     </div>
                                 </div>

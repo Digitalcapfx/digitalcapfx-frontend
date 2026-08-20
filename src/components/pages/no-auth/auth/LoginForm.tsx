@@ -1,5 +1,3 @@
-'use client'
-
 import React from 'react'
 import Link from 'next/link'
 import { ArrowRight, Lock, ShieldAlert, ArrowLeft, RefreshCw } from 'lucide-react'
@@ -7,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { Input } from '@/components/ui/Input'
 import { PhoneInput } from '@/components/ui/PhoneInput'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface LoginFormProps {
     phone: string;
@@ -53,18 +52,20 @@ const LoginForm: React.FC<LoginFormProps> = ({
     onGoogleSubmit,
     googleLoading = false
 }) => {
+    const { t } = useLanguageStore();
+
     if (is2FA) {
         return (
             <div className="space-y-6 text-left animate-in fade-in duration-200">
                 <div>
                     <span className="text-[10px] font-bold text-primary-400 tracking-[0.2em] uppercase font-mono block mb-2 select-none">
-                        MFA Verification
+                        {t('auth.mfa.label', { defaultValue: 'MFA Verification' })}
                     </span>
                     <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
-                        Two-Factor Authentication
+                        {t('auth.mfa.title', { defaultValue: 'Two-Factor Authentication' })}
                     </h1>
                     <p className="text-slate-400 text-sm mt-2 font-sans select-none">
-                        Enter the 6-digit confirmation code from your authenticator app to complete your session sign-in.
+                        {t('auth.mfa.subtitle', { defaultValue: 'Enter the 6-digit confirmation code from your authenticator app to complete your session sign-in.' })}
                     </p>
                 </div>
 
@@ -76,7 +77,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
                 <form onSubmit={on2FASubmit} className="space-y-5">
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Verification code</label>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">{t('auth.mfa.codeLabel', { defaultValue: 'Verification code' })}</label>
                         <input 
                             type="text"
                             maxLength={6}
@@ -96,7 +97,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                             className="w-1/2 rounded-xl h-11 text-xs"
                             leftIcon={<ArrowLeft className="h-4 w-4" />}
                         >
-                            Back
+                            {t('action.back', { defaultValue: 'Back' })}
                         </Button>
                         <Button
                             type="submit"
@@ -104,7 +105,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                             disabled={otpCode.length !== 6 || loading}
                             className="w-1/2 rounded-xl h-11 text-xs"
                         >
-                            {loading ? 'Verifying...' : 'Verify & Sign In'}
+                            {loading ? t('auth.mfa.verifying', { defaultValue: 'Verifying...' }) : t('auth.mfa.verifyBtn', { defaultValue: 'Verify & Sign In' })}
                         </Button>
                     </div>
                 </form>
@@ -117,18 +118,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
             {/* Header info */}
             <div>
                 <span className="text-[10px] font-bold text-cyan-400 tracking-[0.2em] uppercase font-mono block mb-1 select-none">
-                    Welcome Back
+                    {t('auth.login.welcomeBack', { defaultValue: 'Welcome Back' })}
                 </span>
                 <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
-                    Sign in to your account
+                    {t('auth.login.title', { defaultValue: 'Sign in to your account' })}
                 </h1>
                 <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-1 select-none">
-                    <span className="text-slate-350 text-sm font-sans">Don't have an account?</span>
+                    <span className="text-slate-350 text-sm font-sans">{t('auth.login.noAccount', { defaultValue: "Don't have an account?" })}</span>
                     <Link 
                         href="/get-started" 
                         className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-500/50 font-bold text-xs transition-all duration-200 shadow-sm shadow-cyan-500/10"
                     >
-                        <span>Create one free</span>
+                        <span>{t('auth.login.createOne', { defaultValue: 'Create one free' })}</span>
                         <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                 </div>
@@ -146,8 +147,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 {/* Phone Field */}
                 <PhoneInput
                     required
-                    label="Phone number*"
-                    placeholder="Enter phone number"
+                    label={t('auth.login.phoneLabel', { defaultValue: 'Phone number*' })}
+                    placeholder={t('auth.login.phonePlaceholder', { defaultValue: 'Enter phone number' })}
                     value={phone}
                     onChange={setPhone}
                     error={phoneError}
@@ -157,14 +158,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 <div className="space-y-1.5 relative">
                     <div className="absolute right-0 top-0 select-none z-10">
                         <Link href="/forgot-password" className="text-xs font-bold text-cyan-400 hover:text-cyan-300 hover:underline transition-colors">
-                            Forgot PIN?
+                            {t('auth.login.forgotPin', { defaultValue: 'Forgot PIN?' })}
                         </Link>
                     </div>
                     <Input 
                         required
                         type="password"
-                        label="PIN (6 Digits)*"
-                        placeholder="Enter your 6-digit PIN"
+                        label={t('auth.login.pinLabel', { defaultValue: 'PIN (6 Digits)*' })}
+                        placeholder={t('auth.login.pinPlaceholder', { defaultValue: 'Enter your 6-digit PIN' })}
                         maxLength={6}
                         value={pin}
                         onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
@@ -180,7 +181,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                     <label 
                         className="text-xs font-semibold text-slate-350 cursor-pointer font-sans"
                     >
-                        Remember me for 30 days
+                        {t('auth.login.rememberMe', { defaultValue: 'Remember me for 30 days' })}
                     </label>
                 </div>
 
@@ -193,7 +194,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                         className="w-full rounded-xl h-[52px] font-bold text-base bg-gradient-to-r from-primary-600 via-primary-500 to-cyan-500 hover:from-primary-500 hover:to-cyan-400 text-white shadow-xl shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
                         rightIcon={<ArrowRight className="h-5 w-5" />}
                     >
-                        {loading ? 'Signing in...' : 'Sign in'}
+                        {loading ? t('auth.login.signingIn', { defaultValue: 'Signing in...' }) : t('auth.login.signInBtn', { defaultValue: 'Sign in' })}
                     </Button>
                 </div>
 
@@ -204,7 +205,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 <div className="space-y-4 pt-1">
                     <div className="flex items-center justify-between select-none">
                         <div className="h-[1px] bg-white/10 flex-1"></div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 font-mono">Or continue with</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 font-mono">{t('auth.login.orContinue', { defaultValue: 'Or continue with' })}</span>
                         <div className="h-[1px] bg-white/10 flex-1"></div>
                     </div>
                     
@@ -224,7 +225,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                                 </svg>
-                                <span className="tracking-wide">Continue with Google</span>
+                                <span className="tracking-wide">{t('auth.login.googleBtn', { defaultValue: 'Continue with Google' })}</span>
                             </>
                         )}
                     </button>
@@ -234,7 +235,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
             {/* Encryption badge footer */}
             <div className="flex items-center justify-center space-x-2 text-[10px] text-slate-400 font-bold tracking-wide select-none pt-2 font-sans">
                 <Lock className="h-3 w-3 stroke-[2.5] text-cyan-400" />
-                <span>Secured with 256-bit AES encryption • FCA authorised</span>
+                <span>{t('auth.login.encryption', { defaultValue: 'Secured with 256-bit AES encryption • FCA authorised' })}</span>
             </div>
         </div>
     )

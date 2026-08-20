@@ -1,31 +1,82 @@
-import { create } from 'zustand'
+'use client'
+
 import i18n from '@/lib/i18n'
+import { useTranslation } from 'react-i18next'
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export type Language = 'en' | 'fr' | 'es' | 'zh'
 
-interface LanguageState {
+interface LanguageStoreState {
     language: Language
     setLanguage: (lang: Language) => void
-    t: (key: string, options?: any) => string
 }
 
-export const useLanguageStore = create<LanguageState>((set) => {
-    // Sync initial language state with i18n
-    const initialLang = ((i18n.language || 'en').split('-')[0]) as Language
+export const useLanguageBaseStore = create<LanguageStoreState>()(
+    persist(
+        (set) => {
+            const getInitialLang = (): Language => {
+                if (typeof window !== 'undefined') {
+                    const saved = localStorage.getItem('i18nextLng') || localStorage.getItem('digitalfx_language')
+                    if (saved) {
+                        const code = saved.split('-')[0] as Language
+                        if (['en', 'fr', 'es', 'zh'].includes(code)) return code
+                    }
+                }
+                return ((i18n.language || 'en').split('-')[0]) as Language
+            }
 
-    // Listen to i18next language change events to sync Zustand store state
-    i18n.on('languageChanged', (lng) => {
-        const lang = (lng.split('-')[0]) as Language
-        set({ language: lang })
-    })
+            const initialLang = getInitialLang()
+            if (typeof window !== 'undefined' && initialLang !== i18n.language) {
+                i18n.changeLanguage(initialLang)
+            }
+
+            i18n.on('languageChanged', (lng) => {
+                const lang = (lng.split('-')[0]) as Language
+                set({ language: lang })
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('i18nextLng', lang)
+                }
+            })
+
+            return {
+                language: initialLang,
+                setLanguage: (lang: Language) => {
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('i18nextLng', lang)
+                        localStorage.setItem('digitalfx_language', lang)
+                    }
+                    i18n.changeLanguage(lang)
+                    set({ language: lang })
+                }
+            }
+        },
+        {
+            name: 'digitalfx_language'
+        }
+    )
+)
+
+export function useLanguageStore() {
+    const { t: i18nT, i18n: i18nInstance } = useTranslation()
+    const { language, setLanguage } = useLanguageBaseStore()
+
+    const currentLang = ((i18nInstance?.language || language || 'en').split('-')[0]) as Language
 
     return {
-        language: initialLang,
+        language: currentLang,
         setLanguage: (lang: Language) => {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('i18nextLng', lang)
+                localStorage.setItem('digitalfx_language', lang)
+            }
             i18n.changeLanguage(lang)
+            setLanguage(lang)
         },
         t: (key: string, options?: any) => {
-            return i18n.t(key, options) as string
+            return i18nT(key, options) as string
         }
     }
-})
+}
+
+export default useLanguageStore

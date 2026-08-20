@@ -36,6 +36,7 @@ import { authService } from '@/services/auth.service'
 import { accountService } from '@/services/account.service'
 import { toast } from 'sonner'
 import { useLanguageStore, Language } from '@/store/languageStore'
+import LanguageSelector from '@/components/ui/LanguageSelector'
 import { Select } from '@/components/ui/Select'
 import '@/lib/i18n'
 
@@ -397,20 +398,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     {/* Notification & Avatar controls + Hamburger beside it on Mobile */}
                     <div className="flex items-center space-x-3 lg:space-x-4">
-                        <div className="relative select-none shrink-0 w-[100px]">
-                            <Select
-                                options={[
-                                    { value: 'en', label: '🇺🇸 EN' },
-                                    { value: 'fr', label: '🇫🇷 FR' },
-                                    { value: 'es', label: '🇪🇸 ES' },
-                                    { value: 'zh', label: '🇨🇳 ZH' }
-                                ]}
-                                value={language}
-                                onChange={(val) => setLanguage(val as Language)}
-                                searchable={false}
-                                className="h-[36px] text-[10px] uppercase font-mono px-2 py-1 bg-black/40"
-                            />
-                        </div>
+                        <LanguageSelector />
 
                         {/* <Link
                             href="/settings/notifications"

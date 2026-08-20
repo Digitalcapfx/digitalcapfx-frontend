@@ -12,8 +12,10 @@ import {
     Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useLanguageStore } from '@/store/languageStore'
 
 export default function AboutUsPage() {
+    const { t } = useLanguageStore()
     const [newsletterEmail, setNewsletterEmail] = useState('')
 
     const handleSubscribe = (e: React.FormEvent) => {
@@ -41,20 +43,16 @@ export default function AboutUsPage() {
                             <div className="inline-flex items-center space-x-2 px-3 py-1 bg-primary-500/10 border border-primary-500/20 rounded-full">
                                 <Sparkles className="h-3 w-3 text-primary-400" />
                                 <span className="text-[11px] font-bold text-primary-400 uppercase tracking-widest">
-                                    ABOUT DIGITALCAP FX
+                                    {t('about.badge', { defaultValue: 'ABOUT DIGITALCAP FX' })}
                                 </span>
                             </div>
 
                             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                                Building Africa's <br className="hidden sm:inline" />
-                                Financial Infrastructure <br className="hidden sm:inline" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-cyan-400 to-blue-500">
-                                    for the Next Generation.
-                                </span>
+                                {t('about.title', { defaultValue: "Building Africa's Financial Infrastructure for the Next Generation." })}
                             </h1>
 
                             <p className="text-slate-400 text-xs sm:text-sm md:text-base leading-relaxed max-w-lg font-sans">
-                                Instead of simply moving money, we're building the infrastructure that powers cross-border commerce, treasury management, foreign exchange and global business banking.
+                                {t('about.subtitle', { defaultValue: "Instead of simply moving money, we're building the infrastructure that powers cross-border commerce, treasury management, foreign exchange and global business banking." })}
                             </p>
 
                             <div className="flex flex-wrap items-center gap-3.5 pt-2">
@@ -62,15 +60,15 @@ export default function AboutUsPage() {
                                     href="/get-started"
                                     className="bg-gradient-to-r from-primary-500 to-cyan-500 hover:from-primary-600 hover:to-cyan-600 text-white font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-xl flex items-center space-x-2 shadow-lg shadow-primary-500/20 transition duration-200"
                                 >
-                                    <span>Get Started</span>
+                                    <span>{t('nav.getStarted', { defaultValue: 'Get Started' })}</span>
                                     <ArrowRight className="h-4 w-4" />
                                 </Link>
 
                                 <Link
-                                    href="#contact"
+                                    href="/contact"
                                     className="bg-[#0C1224] hover:bg-white/5 border border-white/10 text-white font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-xl transition duration-200"
                                 >
-                                    Contact Us
+                                    {t('footer.contact', { defaultValue: 'Contact Us' })}
                                 </Link>
                             </div>
                         </div>

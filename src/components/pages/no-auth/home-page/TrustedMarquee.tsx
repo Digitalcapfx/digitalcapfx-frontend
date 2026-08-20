@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useLanguageStore } from '@/store/languageStore'
 
 const PARTNERS = [
     'Standard Bank',
@@ -18,6 +19,7 @@ const PARTNERS = [
 ];
 
 const TrustedMarquee = () => {
+    const { t } = useLanguageStore();
     // Duplicate partners to fill screen and scroll continuously
     const doublePartners = [...PARTNERS, ...PARTNERS, ...PARTNERS];
 
@@ -25,7 +27,7 @@ const TrustedMarquee = () => {
         <div className="w-full bg-[#0C1224] py-12 border-b border-white/5 relative overflow-hidden select-none">
             {/* Centered Heading */}
             <div className="text-center text-[11px] font-bold tracking-[0.25em] text-[#3E4658] uppercase mb-8 select-none">
-                Trusted Infrastructure & Networks
+                {t('trusted.title', { defaultValue: 'Trusted Infrastructure & Networks' })}
             </div>
 
             {/* Left and Right Fade overlays */}

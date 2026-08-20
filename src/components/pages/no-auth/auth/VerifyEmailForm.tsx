@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { ArrowLeft, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { OtpInput } from '@/components/ui/OtpInput'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface VerifyEmailFormProps {
     email: string;
@@ -20,6 +21,7 @@ const VerifyEmailForm: React.FC<VerifyEmailFormProps> = ({
     code,
     setCode,
 }) => {
+    const { t } = useLanguageStore();
     const [timer, setTimer] = useState(292); // 04:52
 
     // Countdown Timer Loop
@@ -47,7 +49,7 @@ const VerifyEmailForm: React.FC<VerifyEmailFormProps> = ({
                     className="inline-flex items-center space-x-2 text-xs font-bold text-slate-500 hover:text-slate-350 transition-colors font-sans select-none"
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    <span>Back</span>
+                    <span>{t('action.back', { defaultValue: 'Back' })}</span>
                 </button>
             </div>
 
@@ -62,10 +64,10 @@ const VerifyEmailForm: React.FC<VerifyEmailFormProps> = ({
             {/* Header info */}
             <div className="space-y-2">
                 <h1 className="font-satoshi font-black text-3xl text-white tracking-tight">
-                    Verify your email
+                    {t('auth.verifyEmail.title', { defaultValue: 'Verify your email' })}
                 </h1>
                 <p className="text-slate-400 text-sm font-sans leading-relaxed">
-                    We sent a 6-digit code to <br />
+                    {t('auth.verifyEmail.sentCode', { defaultValue: 'We sent a 6-digit code to' })} <br />
                     <strong className="text-white font-bold font-mono">{email}</strong>
                 </p>
             </div>
@@ -87,31 +89,31 @@ const VerifyEmailForm: React.FC<VerifyEmailFormProps> = ({
                     disabled={code.length !== 6}
                     className="w-full rounded-full h-[52px] font-semibold text-base shadow-lg shadow-primary-500/10"
                 >
-                    Verify email
+                    {t('auth.verifyEmail.btn', { defaultValue: 'Verify email' })}
                 </Button>
             </form>
 
             {/* Timer Footer */}
             <div className="flex justify-between items-center text-xs font-semibold select-none pt-2 font-sans text-slate-500">
                 <div>
-                    Code expires in <span className="text-white font-mono">{formatTime(timer)}</span>
+                    {t('auth.verifyEmail.expiresIn', { defaultValue: 'Code expires in' })} <span className="text-white font-mono">{formatTime(timer)}</span>
                 </div>
                 {timer > 0 ? (
-                    <span className="text-slate-650">Resend code</span>
+                    <span className="text-slate-650">{t('auth.verifyEmail.resend', { defaultValue: 'Resend code' })}</span>
                 ) : (
                     <button 
                         onClick={() => setTimer(300)}
                         className="text-primary-400 hover:underline cursor-pointer"
                     >
-                        Resend code
+                        {t('auth.verifyEmail.resend', { defaultValue: 'Resend code' })}
                     </button>
                 )}
             </div>
 
             {/* Expiration subtext */}
             <div className="text-center lg:text-left select-none pt-4 border-t border-white/5 font-sans">
-                <p className="text-[10px] font-bold text-slate-550 uppercase tracking-wide">
-                    Check your spam folder if you don't see the email.
+                <p className="text-[10px] font-bold text-slate-555 uppercase tracking-wide">
+                    {t('auth.verifyEmail.spamNotice', { defaultValue: "Check your spam folder if you don't see the email." })}
                 </p>
             </div>
         </div>

@@ -5,14 +5,17 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { ArrowRight, Check } from 'lucide-react'
-
-const BENEFITS = [
-    "No hidden fees",
-    "Instant setup",
-    "FDIC insured"
-];
+import { useLanguageStore } from '@/store/languageStore'
 
 const HeroSection = () => {
+    const { t } = useLanguageStore();
+
+    const BENEFITS = [
+        t('hero.benefit1', { defaultValue: "No hidden fees" }),
+        t('hero.benefit2', { defaultValue: "Instant setup" }),
+        t('hero.benefit3', { defaultValue: "FDIC insured" })
+    ];
+
     return (
         <section className="w-full max-w-full overflow-hidden">
             <main className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center  py-12 pt-24 lg:py-32">
@@ -23,18 +26,18 @@ const HeroSection = () => {
                     <div className="inline-flex items-center space-x-2 bg-primary-500/10 border border-primary-500/20 px-3 py-1.5 rounded-full select-none">
                         <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E] animate-pulse"></span>
                         <span className="text-[10px] font-bold tracking-wider text-primary-500 uppercase">
-                            Now Supporting 13+ Currencies
+                            {t('hero.badge', { defaultValue: "Now Supporting 13+ Currencies" })}
                         </span>
                     </div>
 
                     {/* Heading */}
                     <div className="space-y-4">
                         <h1 className="font-satoshi font-black text-4xl sm:text-5xl lg:text-[60px] leading-[1.1] text-white tracking-tight">
-                            Banking, <br className="hidden sm:inline" />
-                            <span className="bg-brand-gradient bg-clip-text text-transparent">reimagined.</span>
+                            {t('hero.titlePrefix', { defaultValue: "Banking," })} <br className="hidden sm:inline" />
+                            <span className="bg-brand-gradient bg-clip-text text-transparent">{t('hero.titleHighlight', { defaultValue: "reimagined." })}</span>
                         </h1>
                         <p className="text-[#6D778A] text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl font-sans">
-                            One account for fiat. Send, receive, exchange, and spend iUSD – all from a single, beautifully designed platform.
+                            {t('hero.subtitle', { defaultValue: "One account for fiat. Send, receive, exchange, and spend iUSD – all from a single, beautifully designed platform." })}
                         </p>
                     </div>
 
@@ -47,12 +50,12 @@ const HeroSection = () => {
                                 className="rounded-full px-7 shadow-lg shadow-primary-500/20 text-sm font-bold"
                                 rightIcon={<ArrowRight className="h-5 w-5" />}
                             >
-                                Open Account
+                                {t('hero.openAccount', { defaultValue: "Open Account" })}
                             </Button>
                         </Link>
                         <Link href="/login">
                             <button className="h-[52px] cursor-pointer px-8 rounded-2xl border border-white/15 text-white hover:bg-white/5 hover:border-white/20 transition duration-200 text-sm font-semibold focus:outline-none select-none active:scale-[0.98]">
-                                Log in
+                                {t('nav.login', { defaultValue: "Log in" })}
                             </button>
                         </Link>
                     </div>

@@ -1,5 +1,5 @@
 /**
- * Fee configuration constants for DigitalFX Web Application
+ * Fee configuration constants for DigitalCapFx Web Application
  */
 
 /**

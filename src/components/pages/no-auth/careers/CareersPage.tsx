@@ -20,6 +20,7 @@ import {
     Award
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface JobRole {
     id: string
@@ -109,6 +110,7 @@ const OPEN_ROLES: JobRole[] = [
 const DEPARTMENTS = ['All', 'Engineering', 'Product', 'Finance', 'Operations', 'Sales']
 
 export default function CareersPage() {
+    const { t } = useLanguageStore()
     const [selectedDepartment, setSelectedDepartment] = useState('All')
     const [newsletterEmail, setNewsletterEmail] = useState('')
 
@@ -146,19 +148,16 @@ export default function CareersPage() {
                             <div className="inline-flex items-center space-x-2 px-3 py-1 bg-primary-500/10 border border-primary-500/20 rounded-full">
                                 <Sparkles className="h-3 w-3 text-primary-400" />
                                 <span className="text-[11px] font-bold text-primary-400 uppercase tracking-widest">
-                                    CAREERS AT DIGITALCAP FX
+                                    {t('careers.badge', { defaultValue: 'CAREERS AT DIGITALCAP FX' })}
                                 </span>
                             </div>
 
                             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                                Build the Future of <br className="hidden sm:inline" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-cyan-400 to-blue-500">
-                                    Global Finance.
-                                </span>
+                                {t('careers.title', { defaultValue: 'Build the Future of Global Finance.' })}
                             </h1>
 
                             <p className="text-slate-400 text-xs sm:text-sm md:text-base leading-relaxed max-w-lg font-sans">
-                                Join a team of engineers, designers, and operators rebuilding financial infrastructure for the next billion businesses. Remote-first. Mission-driven. Equity for all.
+                                {t('careers.subtitle', { defaultValue: 'Join a team of engineers, designers, and operators rebuilding financial infrastructure for the next billion businesses. Remote-first. Mission-driven. Equity for all.' })}
                             </p>
 
                             <div className="pt-2">
@@ -166,7 +165,7 @@ export default function CareersPage() {
                                     href="#open-positions"
                                     className="inline-flex items-center space-x-2 bg-gradient-to-r from-cyan-400 via-primary-500 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-lg shadow-primary-500/20 transition duration-200"
                                 >
-                                    <span>View Open Roles</span>
+                                    <span>{t('careers.viewRoles', { defaultValue: 'View Open Roles' })}</span>
                                     <ArrowRight className="h-4 w-4" />
                                 </a>
                             </div>

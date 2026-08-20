@@ -3,23 +3,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { Check, X } from 'lucide-react'
-
-interface ComparisonRow {
-    feature: string;
-    dfx: boolean;
-    bank: boolean;
-}
-
-const COMPARISON_ROWS: ComparisonRow[] = [
-    { feature: 'Multi-currency wallets', dfx: true, bank: false },
-    { feature: 'Instant cross-border transfers', dfx: true, bank: false },
-    { feature: 'Built-in crypto exchange', dfx: true, bank: false },
-    { feature: 'Virtual cards in seconds', dfx: true, bank: false },
-    { feature: 'No hidden fees', dfx: true, bank: false },
-    { feature: 'Real-time exchange rates', dfx: true, bank: false },
-    { feature: '24/7 support', dfx: true, bank: true },
-    { feature: 'Bank-grade security', dfx: true, bank: true },
-];
+import { useLanguageStore } from '@/store/languageStore'
 
 const CheckIcon = () => (
     <div className="w-6 h-6 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-[#22C55E] select-none">
@@ -34,6 +18,19 @@ const XIcon = () => (
 );
 
 const ComparisonSection = () => {
+    const { t } = useLanguageStore();
+
+    const COMPARISON_ROWS = [
+        { feature: t('compare.f1', { defaultValue: 'Multi-currency wallets' }), dfx: true, bank: false },
+        { feature: t('compare.f2', { defaultValue: 'Instant cross-border transfers' }), dfx: true, bank: false },
+        { feature: t('compare.f3', { defaultValue: 'Built-in crypto exchange' }), dfx: true, bank: false },
+        { feature: t('compare.f4', { defaultValue: 'Virtual cards in seconds' }), dfx: true, bank: false },
+        { feature: t('compare.f5', { defaultValue: 'No hidden fees' }), dfx: true, bank: false },
+        { feature: t('compare.f6', { defaultValue: 'Real-time exchange rates' }), dfx: true, bank: false },
+        { feature: t('compare.f7', { defaultValue: '24/7 support' }), dfx: true, bank: true },
+        { feature: t('compare.f8', { defaultValue: 'Bank-grade security' }), dfx: true, bank: true },
+    ];
+
     return (
         <section id="comparison">
             <div className="py-14 lg:py-24 text-center space-y-12">
@@ -42,14 +39,14 @@ const ComparisonSection = () => {
                 <div className="space-y-4 max-w-3xl mx-auto flex flex-col items-center">
                     <div className="inline-flex items-center space-x-2 bg-primary-500/10 border border-primary-500/20 px-3 py-1.5 rounded-full select-none">
                         <span className="text-[10px] font-bold tracking-wider text-primary-400 uppercase">
-                            ❖ Why DigitalCap FX
+                            {t('compare.badge', { defaultValue: '❖ Why DigitalCap FX' })}
                         </span>
                     </div>
                     <h2 className="font-satoshi font-black text-3xl sm:text-4xl lg:text-[48px] leading-[1.15] text-white tracking-tight">
-                        Why switch to <span className="bg-brand-gradient bg-clip-text text-transparent">DigitalCapFx?</span>
+                        {t('compare.title', { defaultValue: 'Why switch to' })} <span className="bg-brand-gradient bg-clip-text text-transparent">DigitalCapFx?</span>
                     </h2>
                     <p className="text-slate-400 text-sm sm:text-base max-w-lg font-sans">
-                        See how we compare to traditional banks. The difference speaks for itself.
+                        {t('compare.subtitle', { defaultValue: 'See how we compare to traditional banks. The difference speaks for itself.' })}
                     </p>
                 </div>
 
@@ -59,8 +56,8 @@ const ComparisonSection = () => {
 
                         {/* Header Row */}
                         <div className="grid grid-cols-12 items-center py-6 px-6 sm:px-8 border-b border-white/5 bg-white/[0.01] select-none">
-                            <div className="col-span-6 text-left text-xs font-bold uppercase tracking-wider text-slate-500 font-satoshi">
-                                Features
+                            <div className="col-span-6 text-left text-xs font-bold uppercase tracking-wider text-slate-550 font-satoshi">
+                                {t('compare.tableHeaderFeature', { defaultValue: 'Features' })}
                             </div>
                             <div className="col-span-3 flex justify-center">
                                 <div className="bg-[#0C1224] border border-white/10 px-4 py-1.5 rounded-full flex items-center justify-center shadow">
@@ -74,7 +71,7 @@ const ComparisonSection = () => {
                                 </div>
                             </div>
                             <div className="col-span-3 text-center text-xs font-bold tracking-tight text-slate-400 font-satoshi">
-                                Traditional Banks
+                                {t('compare.tableHeaderBanks', { defaultValue: 'Traditional Banks' })}
                             </div>
                         </div>
 

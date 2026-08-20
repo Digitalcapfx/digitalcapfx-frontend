@@ -268,7 +268,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
 
         container.innerHTML = `
             <div class="header">
-                <div class="logo">DigitalFX</div>
+                <div class="logo">DigitalCapFx</div>
                 <div class="title">${t('phone.send.receipt.title')}</div>
             </div>
             

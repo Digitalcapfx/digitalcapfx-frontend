@@ -33,6 +33,7 @@ export const CredentialsStep: React.FC = () => {
     email,
     phone,
     pin,
+    confirmPin,
     country,
     agree,
     companyName,
@@ -129,6 +130,13 @@ export const CredentialsStep: React.FC = () => {
       newErrors.pin = 'PIN is required';
     } else if (pin.length !== 6) {
       newErrors.pin = 'PIN must be exactly 6 digits';
+    }
+
+    // Confirm PIN check
+    if (!confirmPin.trim()) {
+      newErrors.confirmPin = 'Please confirm your PIN';
+    } else if (confirmPin !== pin) {
+      newErrors.confirmPin = 'PINs do not match';
     }
 
     // Country check
@@ -247,24 +255,40 @@ export const CredentialsStep: React.FC = () => {
           error={errors.phone}
         />
 
-        <div className="space-y-1.5">
-          <Input
-            required
-            type="password"
-            label="PIN / Password (6 Digits)*"
-            placeholder="Create a strong 6-digit PIN"
-            maxLength={6}
-            value={pin}
-            onChange={(e) => {
-              const cleaned = e.target.value.replace(/\D/g, '');
-              updateCredentials({ pin: cleaned });
-              clearFieldError('pin');
-            }}
-            error={errors.pin}
-          />
-          <span className="text-[10px] text-slate-500 font-semibold block select-none">
-            Must be a 6-digit numeric PIN code for rapid access security.
-          </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Input
+              required
+              type="password"
+              label="PIN (6 Digits)*"
+              placeholder="Create 6-digit PIN"
+              maxLength={6}
+              value={pin}
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/\D/g, '');
+                updateCredentials({ pin: cleaned });
+                clearFieldError('pin');
+              }}
+              error={errors.pin}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Input
+              required
+              type="password"
+              label="Confirm PIN*"
+              placeholder="Confirm 6-digit PIN"
+              maxLength={6}
+              value={confirmPin}
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/\D/g, '');
+                updateCredentials({ confirmPin: cleaned });
+                clearFieldError('confirmPin');
+              }}
+              error={errors.confirmPin}
+            />
+          </div>
         </div>
 
         <Select

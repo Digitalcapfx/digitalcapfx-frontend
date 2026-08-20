@@ -163,14 +163,14 @@ export const ReceiveMoneySheet: React.FC = () => {
         if (Array.isArray(waasAddressesData)) {
             waasAddressesData.forEach((w: any) => {
                 const balancesArr = Array.isArray(w.balances) ? w.balances : [];
-                
+
                 // 1. Map the native asset of the network
                 const nativeSymbol = w.network || 'POL';
                 const nativeBalObj = balancesArr.find((b: any) => b.symbol?.toUpperCase() === nativeSymbol.toUpperCase() || b.currency?.toUpperCase() === nativeSymbol.toUpperCase());
                 const nativeBalVal = nativeBalObj?.balance !== undefined ? parseFloat(nativeBalObj.balance.toString()) : 0;
-                const nativeFormattedBal = nativeBalObj?.formatted_balance || 
-                                           nativeBalObj?.formattedBalance || 
-                                           formatBalance(nativeBalVal, nativeSymbol);
+                const nativeFormattedBal = nativeBalObj?.formatted_balance ||
+                    nativeBalObj?.formattedBalance ||
+                    formatBalance(nativeBalVal, nativeSymbol);
 
                 walletsList.push({
                     id: nativeSymbol.toLowerCase(),
@@ -189,9 +189,9 @@ export const ReceiveMoneySheet: React.FC = () => {
                     if (!sym || sym.toUpperCase() === nativeSymbol.toUpperCase()) return;
 
                     const balVal = b.balance !== undefined ? parseFloat(b.balance.toString()) : 0;
-                    const formattedBal = b.formatted_balance || 
-                                         b.formattedBalance || 
-                                         formatBalance(balVal, sym);
+                    const formattedBal = b.formatted_balance ||
+                        b.formattedBalance ||
+                        formatBalance(balVal, sym);
 
                     walletsList.push({
                         id: sym.toLowerCase(),
@@ -241,7 +241,7 @@ export const ReceiveMoneySheet: React.FC = () => {
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: `DigitalFX Deposit Details (${activeWallet.code})`,
+                    title: `DigitalCapFx Deposit Details (${activeWallet.code})`,
                     text: address,
                 });
                 toast.success(t('receive.toast.shared'));

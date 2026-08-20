@@ -21,6 +21,7 @@ interface RegisterState {
   phone: string;
   phoneError: string;
   pin: string;
+  confirmPin: string;
   country: string;
   agree: boolean;
 
@@ -52,6 +53,7 @@ const initialState = {
   phone: '',
   phoneError: '',
   pin: '',
+  confirmPin: '',
   country: '',
   agree: false,
   code: '',

@@ -2,36 +2,32 @@
 
 import React from 'react'
 import { Wallet, Globe, Zap } from 'lucide-react'
-
-interface Step {
-    number: number;
-    title: string;
-    description: string;
-    icon: React.ElementType;
-}
-
-const STEPS: Step[] = [
-    {
-        number: 1,
-        title: 'Create your account',
-        description: 'Sign up in under 2 minutes. No paperwork, no branches.',
-        icon: Wallet,
-    },
-    {
-        number: 2,
-        title: 'Add your currencies',
-        description: 'Fund your wallets with fiat, stablecoins, or crypto.',
-        icon: Globe,
-    },
-    {
-        number: 3,
-        title: 'Send, exchange & spend',
-        description: 'Manage everything from one beautiful dashboard.',
-        icon: Zap,
-    },
-];
+import { useLanguageStore } from '@/store/languageStore'
 
 const HowItWorksSection = () => {
+    const { t } = useLanguageStore();
+
+    const STEPS = [
+        {
+            number: 1,
+            title: t('how.step1.title', { defaultValue: 'Create your account' }),
+            description: t('how.step1.desc', { defaultValue: 'Sign up in under 2 minutes. No paperwork, no branches.' }),
+            icon: Wallet,
+        },
+        {
+            number: 2,
+            title: t('how.step2.title', { defaultValue: 'Add your currencies' }),
+            description: t('how.step2.desc', { defaultValue: 'Fund your wallets with fiat, stablecoins, or crypto.' }),
+            icon: Globe,
+        },
+        {
+            number: 3,
+            title: t('how.step3.title', { defaultValue: 'Send, exchange & spend' }),
+            description: t('how.step3.desc', { defaultValue: 'Manage everything from one beautiful dashboard.' }),
+            icon: Zap,
+        },
+    ];
+
     return (
         <section id="how-it-works" >
             <div className="py-14 lg:py-24 text-center space-y-16 max-md:space-y-10">
@@ -41,14 +37,14 @@ const HowItWorksSection = () => {
                 <div className="space-y-4 max-w-3xl mx-auto flex flex-col items-center">
                     <div className="inline-flex items-center space-x-2 bg-primary-500/10 border border-primary-500/20 px-3 py-1.5 rounded-full select-none">
                         <span className="text-[11px] font-bold tracking-wider text-primary-500 uppercase">
-                            ⚡ How It Works
+                            {t('how.badge', { defaultValue: '⚡ How It Works' })}
                         </span>
                     </div>
                     <h2 className="font-satoshi font-black text-3xl sm:text-4xl lg:text-[48px] leading-[1.15] text-white tracking-tight">
-                        Get started in <span className="bg-brand-gradient bg-clip-text text-transparent">3 steps</span>
+                        {t('how.title', { defaultValue: 'Get started in' })} <span className="bg-brand-gradient bg-clip-text text-transparent">{t('how.titleHighlight', { defaultValue: '3 steps' })}</span>
                     </h2>
                     <p className="text-[#6D778A] text-sm sm:text-base max-w-lg">
-                        No paperwork, no waiting. Your new financial life is minutes away.
+                        {t('how.subtitle', { defaultValue: 'No paperwork, no waiting. Your new financial life is minutes away.' })}
                     </p>
                 </div>
 

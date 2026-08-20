@@ -11,6 +11,7 @@ import {
     ChevronRight
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface Article {
     id: string
@@ -139,6 +140,7 @@ const ARTICLES: Article[] = [
 const CATEGORIES = ['All', 'Payments', 'Treasury', 'Compliance', 'FX', 'Engineering', 'Business']
 
 export default function BlogPage() {
+    const { t } = useLanguageStore()
     const [selectedCategory, setSelectedCategory] = useState('All')
     const [searchQuery, setSearchQuery] = useState('')
     const [newsletterEmail, setNewsletterEmail] = useState('')
@@ -181,19 +183,16 @@ export default function BlogPage() {
                     <div className="inline-flex items-center space-x-2 px-3 py-1 bg-primary-500/10 border border-primary-500/20 rounded-full">
                         <Sparkles className="h-3 w-3 text-primary-400" />
                         <span className="text-[11px] font-bold text-primary-400 uppercase tracking-widest">
-                            BLOG
+                            {t('footer.blog', { defaultValue: 'BLOG' })}
                         </span>
                     </div>
 
                     <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                        Insights for{' '}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-cyan-400 to-blue-500">
-                            Global Businesses.
-                        </span>
+                        {t('blog.title', { defaultValue: 'Insights for Global Businesses.' })}
                     </h1>
 
                     <p className="text-slate-400 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl mx-auto font-sans">
-                        Expert perspectives on payments, FX, treasury, and compliance – for businesses operating at scale.
+                        {t('blog.subtitle', { defaultValue: 'Expert perspectives on payments, FX, treasury, and compliance – for businesses operating at scale.' })}
                     </p>
 
                     {/* Search Input Bar */}

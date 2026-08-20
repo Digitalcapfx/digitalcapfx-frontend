@@ -3,8 +3,10 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Send } from 'lucide-react'
+import { useLanguageStore } from '@/store/languageStore'
 
 const NewsletterSection = () => {
+    const { t } = useLanguageStore();
     const [email, setEmail] = useState('');
 
     const handleSubscribe = (e: React.FormEvent) => {
@@ -21,10 +23,10 @@ const NewsletterSection = () => {
                     {/* Text Details */}
                     <div className="text-left space-y-1">
                         <h3 className="font-satoshi font-bold text-lg sm:text-xl text-white tracking-tight">
-                            Stay in the loop
+                            {t('newsletter.title', { defaultValue: 'Stay in the loop' })}
                         </h3>
                         <p className="text-slate-400 text-xs sm:text-sm font-sans">
-                            Get product updates, market insights, and exclusive offers. No spam, ever.
+                            {t('newsletter.subtitle', { defaultValue: 'Get product updates, market insights, and exclusive offers. No spam, ever.' })}
                         </p>
                     </div>
 
@@ -38,7 +40,7 @@ const NewsletterSection = () => {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="your@email.com"
+                            placeholder={t('auth.register.emailPlaceholder', { defaultValue: 'your@email.com' })}
                             className="bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary-500/50 w-full sm:w-[260px] md:w-[280px] transition font-sans"
                         />
                         <Button
@@ -47,7 +49,7 @@ const NewsletterSection = () => {
                             className="rounded-xl px-6 h-[44px] font-semibold text-xs sm:text-sm shrink-0 whitespace-nowrap"
                             rightIcon={<Send className="h-3.5 w-3.5" />}
                         >
-                            Subscribe
+                            {t('newsletter.btn', { defaultValue: 'Subscribe' })}
                         </Button>
                     </form>
 

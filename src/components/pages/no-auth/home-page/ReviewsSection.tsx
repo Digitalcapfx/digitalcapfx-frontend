@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Star } from 'lucide-react'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface Review {
     name: string;
@@ -11,31 +12,33 @@ interface Review {
     rating: number;
 }
 
-const REVIEWS: Review[] = [
-    {
-        name: 'Amara Okonkwo',
-        role: 'CFO, Flutterwave',
-        avatar: 'AO',
-        quote: '"DigitalCap FX transformed our cross-border treasury. Institutional-grade FX rates and an incredibly intuitive platform. We wouldn\'t go back."',
-        rating: 5,
-    },
-    {
-        name: 'David Mensah',
-        role: 'Head of Finance, Jumia',
-        avatar: 'DM',
-        quote: '"We cut international payment costs by 40%. Settling in 12 countries now happens without any of the friction we had with traditional banking."',
-        rating: 5,
-    },
-    {
-        name: 'Sarah Adeyemi',
-        role: 'Treasury Manager, MTN',
-        avatar: 'SA',
-        quote: '"The OTC desk gives us liquidity depth we simply could not find anywhere else on the continent. Their response time is exceptional."',
-        rating: 5,
-    },
-];
-
 const ReviewsSection = () => {
+    const { t } = useLanguageStore();
+
+    const REVIEWS: Review[] = [
+        {
+            name: 'Amara Okonkwo',
+            role: t('reviews.role1', { defaultValue: 'CFO, Flutterwave' }),
+            avatar: 'AO',
+            quote: t('reviews.q1', { defaultValue: '"DigitalCap FX transformed our cross-border treasury. Institutional-grade FX rates and an incredibly intuitive platform. We wouldn\'t go back."' }),
+            rating: 5,
+        },
+        {
+            name: 'David Mensah',
+            role: t('reviews.role2', { defaultValue: 'Head of Finance, Jumia' }),
+            avatar: 'DM',
+            quote: t('reviews.q2', { defaultValue: '"We cut international payment costs by 40%. Settling in 12 countries now happens without any of the friction we had with traditional banking."' }),
+            rating: 5,
+        },
+        {
+            name: 'Sarah Adeyemi',
+            role: t('reviews.role3', { defaultValue: 'Treasury Manager, MTN' }),
+            avatar: 'SA',
+            quote: t('reviews.q3', { defaultValue: '"The OTC desk gives us liquidity depth we simply could not find anywhere else on the continent. Their response time is exceptional."' }),
+            rating: 5,
+        },
+    ];
+
     return (
         <section id="reviews" className='bg-[#0C1224]'>
             <div className="py-14 lg:py-20 text-center space-y-16">
@@ -44,11 +47,11 @@ const ReviewsSection = () => {
                 <div className="space-y-4 md:space-y-6 max-w-3xl mx-auto flex flex-col items-center">
                     <div className="inline-flex items-center space-x-2 bg-primary-500/10 border border-primary-500/20 px-3 py-1.5 rounded-full select-none">
                         <span className="text-[11px] font-bold tracking-wider text-primary-500 uppercase">
-                            ⚡ Customer Stories
+                            {t('reviews.badge', { defaultValue: '⚡ Customer Stories' })}
                         </span>
                     </div>
                     <h2 className="font-satoshi font-black text-3xl sm:text-4xl lg:text-[48px] leading-[1.15] text-white tracking-tight">
-                        Loved by <span className="bg-brand-gradient bg-clip-text text-transparent">users</span>
+                        {t('reviews.title', { defaultValue: 'Loved by' })} <span className="bg-brand-gradient bg-clip-text text-transparent">{t('reviews.titleHighlight', { defaultValue: 'users' })}</span>
                     </h2>
                 </div>
 

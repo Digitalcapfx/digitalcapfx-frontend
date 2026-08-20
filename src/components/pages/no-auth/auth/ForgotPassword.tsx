@@ -14,8 +14,10 @@ import { useMutation } from '@tanstack/react-query'
 import { authService } from '@/services/auth.service'
 import { toast } from 'sonner'
 import { isValidPhoneNumber } from 'react-phone-number-input'
+import { useLanguageStore } from '@/store/languageStore'
 
 const ForgotPassword = () => {
+    const { t } = useLanguageStore();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'email' | 'phone'>('phone');
     const usePhone = activeTab === 'phone';
@@ -28,8 +30,8 @@ const ForgotPassword = () => {
     const [errorMsg, setErrorMsg] = useState('');
 
     const forgotPasswordTabs = [
-        { id: 'phone', label: 'Phone number' },
-        { id: 'email', label: 'Email address' },
+        { id: 'phone', label: t('auth.forgot.tabPhone', { defaultValue: 'Phone number' }) },
+        { id: 'email', label: t('auth.forgot.tabEmail', { defaultValue: 'Email address' }) },
     ];
 
     // Form field errors

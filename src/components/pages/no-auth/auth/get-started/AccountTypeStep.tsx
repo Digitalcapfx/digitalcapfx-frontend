@@ -3,34 +3,36 @@ import Link from 'next/link'
 import { ArrowRight, User, Building } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useRegisterStore } from '@/store/registerStore'
-
-interface AccountTypeOption {
-  id: 'individual' | 'business';
-  title: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  tags: string[];
-}
-
-const ACCOUNT_TYPES: AccountTypeOption[] = [
-  {
-    id: 'individual',
-    title: 'Individual Account',
-    description: 'For freelancers and sole traders who need to send and receive international payments.',
-    icon: User,
-    tags: ['KYC only', 'Single user', 'Core features']
-  },
-  {
-    id: 'business',
-    title: 'Business Account',
-    description: 'For companies, startups, and organisations managing multi-currency treasury and cross-border payments.',
-    icon: Building,
-    tags: ['KYB required', 'Multi-user', 'Full platform']
-  }
-];
+import { useLanguageStore } from '@/store/languageStore'
 
 export const AccountTypeStep: React.FC = () => {
+  const { t } = useLanguageStore();
   const { accountType, setAccountType, setStep } = useRegisterStore();
+
+  const ACCOUNT_TYPES = [
+    {
+      id: 'individual' as const,
+      title: t('auth.accountType.individual.title', { defaultValue: 'Individual Account' }),
+      description: t('auth.accountType.individual.desc', { defaultValue: 'For freelancers and sole traders who need to send and receive international payments.' }),
+      icon: User,
+      tags: [
+        t('auth.accountType.tag1', { defaultValue: 'KYC only' }),
+        t('auth.accountType.tag2', { defaultValue: 'Single user' }),
+        t('auth.accountType.tag3', { defaultValue: 'Core features' })
+      ]
+    },
+    {
+      id: 'business' as const,
+      title: t('auth.accountType.business.title', { defaultValue: 'Business Account' }),
+      description: t('auth.accountType.business.desc', { defaultValue: 'For companies, startups, and organisations managing multi-currency treasury and cross-border payments.' }),
+      icon: Building,
+      tags: [
+        t('auth.accountType.tag4', { defaultValue: 'KYB required' }),
+        t('auth.accountType.tag5', { defaultValue: 'Multi-user' }),
+        t('auth.accountType.tag6', { defaultValue: 'Full platform' })
+      ]
+    }
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
