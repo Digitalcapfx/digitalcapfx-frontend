@@ -23,8 +23,10 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { cn } from '@/lib/utils'
+import { useLanguageStore } from '@/store/languageStore'
 
 export const TeamsPage: React.FC = () => {
+  const { t } = useLanguageStore();
   const queryClient = useQueryClient();
 
   // Dialog & Invite States

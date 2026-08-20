@@ -5,6 +5,7 @@ import { ArrowDownLeft, Send, Copy, Check, Lock } from 'lucide-react'
 import Sheet from '@/components/ui/Sheet'
 import { cn } from '@/lib/utils'
 import { getTokenStyles } from './TransactionItem'
+import { useLanguageStore } from '@/store/languageStore'
 
 interface TransactionDetailSheetProps {
     selectedTx: any | null;
@@ -21,6 +22,8 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
     handleCopy,
     copiedField
 }) => {
+    const { t } = useLanguageStore();
+
     if (!selectedTx) return null;
 
     const tokenStyles = getTokenStyles(selectedTx.rawTx?.token || selectedTx.token, walletCode);
@@ -29,8 +32,8 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
         <Sheet
             isOpen={!!selectedTx}
             onClose={onClose}
-            title="Transaction Details"
-            description="Detailed overview and cryptographic proof of transfer"
+            title={t('details.sheet.title', { defaultValue: 'Transaction Details' })}
+            description={t('details.sheet.desc', { defaultValue: 'Detailed overview and cryptographic proof of transfer' })}
         >
             <div className="space-y-6 text-left pt-2 pb-6">
                 
