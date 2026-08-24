@@ -23,7 +23,7 @@ export const useLanguageBaseStore = create<LanguageStoreState>()(
                         if (['en', 'fr', 'es', 'zh'].includes(code)) return code
                     }
                 }
-                return ((i18n.language || 'en').split('-')[0]) as Language
+                return ((i18n.language || 'fr').split('-')[0]) as Language
             }
 
             const initialLang = getInitialLang()
@@ -61,7 +61,7 @@ export function useLanguageStore() {
     const { t: i18nT, i18n: i18nInstance } = useTranslation()
     const { language, setLanguage } = useLanguageBaseStore()
 
-    const currentLang = ((i18nInstance?.language || language || 'en').split('-')[0]) as Language
+    const currentLang = ((i18nInstance?.language || language || 'fr').split('-')[0]) as Language
 
     return {
         language: currentLang,
