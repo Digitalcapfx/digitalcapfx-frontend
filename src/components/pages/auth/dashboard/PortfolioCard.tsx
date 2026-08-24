@@ -52,14 +52,16 @@ const PortfolioCard: React.FC = () => {
     }
 
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
-        fiatQuery.data.data.forEach((acc) => {
-            const bal = parseFloat(acc.balance || '0');
-            const currency = acc.currency.toUpperCase();
-            const rate = ratesMap[currency];
-            if (rate && rate > 0) {
-                totalUsd += bal / rate;
-            }
-        });
+        fiatQuery.data.data
+            .filter((acc) => !acc.status || acc.status.toLowerCase() === 'active')
+            .forEach((acc) => {
+                const bal = parseFloat(acc.balance || '0');
+                const currency = acc.currency.toUpperCase();
+                const rate = ratesMap[currency];
+                if (rate && rate > 0) {
+                    totalUsd += bal / rate;
+                }
+            });
     }
 
     const displayVal = '$' + totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

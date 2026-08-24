@@ -35,14 +35,14 @@ export interface Wallet {
 }
 
 const CURRENCY_NAMES: Record<string, string> = {
-    // USD: 'US Dollar',
-    // EUR: 'Euro',
-    // GBP: 'British Pound',
+    USD: 'US Dollar',
+    EUR: 'Euro',
+    GBP: 'British Pound',
+    NGN: 'Nigerian Naira',
     XOF: 'CFA Franc BCEAO',
     XAF: 'CFA Franc BEAC',
     USDC: 'USD Coin',
     IUSD: 'Instant USD',
-    // NGN: 'Nigerian Naira',
 };
 
 const formatBalance = (amount: string | number, currency: string) => {
@@ -136,19 +136,19 @@ export const ReceiveMoneySheet: React.FC = () => {
         });
     }
 
-    // Map fiat wallets (display only XAF and XOF)
+    // Map fiat wallets (display active fiats)
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
         fiatQuery.data.data
-            .filter((acc) => ['XAF', 'XOF'].includes(acc.currency.toUpperCase()))
+            .filter((acc) => !acc.status || acc.status.toLowerCase() === 'active')
             .forEach((acc) => {
                 walletsList.push({
-                    id: acc.currency.toLowerCase(),
+                    id: acc.id || acc.currency.toLowerCase(),
                     name: CURRENCY_NAMES[acc.currency] || acc.currency,
                     code: acc.currency,
                     type: 'fiat',
                     balance: formatCurrencyByLocale(acc.balance, acc.currency),
                     rawBalance: parseFloat(acc.balance || '0'),
-                    accountNumber: acc.accountNumber,
+                    accountNumber: acc.accountNumber || (acc as any).account_number,
                     iban: acc.iban || null,
                     bic: acc.bic || null,
                     sortCode: acc.sortCode || null,

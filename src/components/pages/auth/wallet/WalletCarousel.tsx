@@ -86,12 +86,12 @@ const WalletCarousel: React.FC = () => {
     const fiatWallets: Array<{ currency: string; amount: string; cardNum: string; bg: string }> = [];
     const cryptoWallets: Array<{ currency: string; name: string; amount: string; cardNum: string; bg: string; provider: 'waas'; network?: string }> = [];
 
-    // Push fiat accounts (display only XAF and XOF)
+    // Push fiat accounts (display active fiats)
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
         fiatQuery.data.data
-            .filter((acc) => ['XAF', 'XOF'].includes(acc.currency.toUpperCase()))
+            .filter((acc) => !acc.status || acc.status.toLowerCase() === 'active')
             .forEach((acc) => {
-                const num = acc.accountNumber || '';
+                const num = acc.accountNumber || (acc as any).account_number || '';
                 const shortNum = num ? num.slice(-4) : 'DFX';
                 fiatWallets.push({
                     currency: acc.currency,

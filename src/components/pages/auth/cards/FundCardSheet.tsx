@@ -71,14 +71,16 @@ export const FundCardSheet: React.FC = () => {
         });
     }
     if (fiatQuery.data?.success && Array.isArray(fiatQuery.data.data)) {
-        fiatQuery.data.data.forEach((acc) => {
-            walletsList.push({
-                name: CURRENCY_NAMES[acc.currency] || acc.currency,
-                code: acc.currency,
-                balance: formatBalance(acc.balance, acc.currency),
-                rawBalance: parseFloat(acc.balance || '0'),
+        fiatQuery.data.data
+            .filter((acc) => !acc.status || acc.status.toLowerCase() === 'active')
+            .forEach((acc) => {
+                walletsList.push({
+                    name: CURRENCY_NAMES[acc.currency] || acc.currency,
+                    code: acc.currency,
+                    balance: formatBalance(acc.balance, acc.currency),
+                    rawBalance: parseFloat(acc.balance || '0'),
+                });
             });
-        });
     }
 
     useEffect(() => {

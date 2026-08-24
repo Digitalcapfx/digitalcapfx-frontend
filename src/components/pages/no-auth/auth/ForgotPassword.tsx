@@ -12,10 +12,10 @@ import { PhoneInput } from '@/components/ui/PhoneInput'
 import AuthLayout from '@/components/pages/no-auth/layout/AuthLayout'
 import { useMutation } from '@tanstack/react-query'
 import { authService } from '@/services/auth.service'
+import { useFormErrors } from '@/hooks/useFormErrors'
 import { toast } from 'sonner'
 import { isValidPhoneNumber } from 'react-phone-number-input'
 import { useLanguageStore } from '@/store/languageStore'
-
 const ForgotPassword = () => {
     const { t } = useLanguageStore();
     const router = useRouter();
@@ -27,25 +27,12 @@ const ForgotPassword = () => {
     const [code, setCode] = useState('');
     const [newPin, setNewPin] = useState('');
     const [step, setStep] = useState<'request' | 'reset'>('request');
-    const [errorMsg, setErrorMsg] = useState('');
+    const { errors, setErrors, errorMsg, setErrorMsg, clearFieldError } = useFormErrors();
 
     const forgotPasswordTabs = [
         { id: 'phone', label: t('auth.forgot.tabPhone', { defaultValue: 'Phone number' }) },
         { id: 'email', label: t('auth.forgot.tabEmail', { defaultValue: 'Email address' }) },
     ];
-
-    // Form field errors
-    const [errors, setErrors] = useState<Record<string, string>>({});
-
-    const clearFieldError = (field: string) => {
-        if (errors[field]) {
-            setErrors((prev) => {
-                const updated = { ...prev };
-                delete updated[field];
-                return updated;
-            });
-        }
-    };
 
     // React Query Mutations
     const forgotPinMutation = useMutation({

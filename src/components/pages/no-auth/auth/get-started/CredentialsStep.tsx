@@ -13,6 +13,7 @@ import en from 'react-phone-number-input/locale/en.json'
 import { BusinessStepper } from './BusinessStepper'
 import { useMutation } from '@tanstack/react-query'
 import { authService, RegisterRequest } from '@/services/auth.service'
+import { useFormErrors } from '@/hooks/useFormErrors'
 import { toast } from 'sonner'
 import { isValidPhoneNumber } from 'react-phone-number-input'
 
@@ -46,20 +47,7 @@ export const CredentialsStep: React.FC = () => {
     setStep
   } = useRegisterStore();
 
-  const [errorMsg, setErrorMsg] = useState('');
-
-  // Single validation errors state object
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const clearFieldError = (field: string) => {
-    if (errors[field]) {
-      setErrors((prev) => {
-        const updated = { ...prev };
-        delete updated[field];
-        return updated;
-      });
-    }
-  };
+  const { errors, setErrors, errorMsg, setErrorMsg, clearFieldError } = useFormErrors();
 
   // React Query Register Mutation
   const registerMutation = useMutation({
