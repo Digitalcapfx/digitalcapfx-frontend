@@ -14,24 +14,33 @@ const siteUrl = "https://www.digitalcapfx.com";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "DigitalCap FX | Next-Gen Hybrid Fiat-Crypto Neo-Bank",
+    default: "DigitalCap FX | Global Hybrid Fiat-Crypto Neo-Bank & FX Settlement Platform",
     template: "%s | DigitalCap FX",
   },
   description:
-    "DigitalCap FX is a next-generation hybrid fiat-crypto neo-banking platform providing instant FX conversions, multi-currency wallets, virtual cards, and seamless cross-border settlement for WAEMU and CEMAC regions.",
+    "DigitalCap FX is a next-generation hybrid fiat-crypto neo-banking platform providing multi-currency accounts (USD, GBP, EUR, XOF, XAF), stablecoin vaults (USDT, USDC), instant FX currency exchange, virtual debit cards, phone-number P2P transfers, and mobile money cross-border settlement for WAEMU, CEMAC, and global markets.",
   keywords: [
     "DigitalCap FX",
     "DigitalCapFX",
     "Digital FX",
     "Hybrid Neo Bank",
     "Fiat Crypto Wallet",
-    "WAEMU FX",
-    "CEMAC FX",
-    "USDC Wallet",
-    "XOF to USD",
-    "XAF to EUR",
+    "Multi-Currency Fiat Accounts",
+    "USD Wallet",
+    "GBP Wallet",
+    "EUR Wallet",
+    "XOF to USD Exchange",
+    "XAF to EUR Exchange",
+    "USDT Stablecoin Vault",
+    "USDC Smart Contract Wallet",
+    "Virtual Debit Cards USD GBP EUR",
+    "Phone Number P2P Transfers",
+    "Mobile Money MoMo FX",
     "Cross-border Settlement",
-    "African FinTech",
+    "WAEMU FinTech",
+    "CEMAC Neo Banking",
+    "VTU Airtime Utility Payments",
+    "African & Global Cross-Border Payments",
   ],
   authors: [{ name: "DigitalCap FX", url: siteUrl }],
   creator: "DigitalCap FX",
@@ -45,9 +54,9 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   openGraph: {
-    title: "DigitalCap FX | Next-Gen Hybrid Fiat-Crypto Neo-Bank",
+    title: "DigitalCap FX | Global Hybrid Fiat-Crypto Neo-Bank & FX Settlement Platform",
     description:
-      "Instant FX conversions, multi-currency wallets, virtual cards, and seamless cross-border settlement for WAEMU & CEMAC.",
+      "Instant FX conversions across USD, GBP, EUR, XOF & XAF, multi-currency wallets, virtual debit cards, phone P2P transfers, and seamless cross-border mobile money settlement.",
     url: siteUrl,
     siteName: "DigitalCap FX",
     images: [
@@ -55,7 +64,7 @@ export const metadata: Metadata = {
         url: "/DFXLogo.svg",
         width: 1200,
         height: 630,
-        alt: "DigitalCap FX Platform",
+        alt: "DigitalCap FX Global Platform",
       },
     ],
     locale: "en_US",
@@ -63,9 +72,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "DigitalCap FX | Next-Gen Hybrid Fiat-Crypto Neo-Bank",
+    title: "DigitalCap FX | Global Hybrid Fiat-Crypto Neo-Bank",
     description:
-      "Instant FX conversions, multi-currency wallets, virtual cards, and seamless cross-border settlement for WAEMU & CEMAC.",
+      "Multi-currency wallets (USD, GBP, EUR, XOF, XAF), instant FX exchange, virtual debit cards, and cross-border mobile money settlement.",
     images: ["/DFXLogo.svg"],
   },
   icons: {
@@ -104,17 +113,17 @@ export default function RootLayout({
         logo: `${siteUrl}/DFXLogo.svg`,
         sameAs: [],
         description:
-          "Next-Generation Hybrid Fiat-Crypto Neo-Banking Platform operating across WAEMU and CEMAC regions.",
+          "Next-Generation Hybrid Fiat-Crypto Neo-Banking Platform operating across WAEMU, CEMAC, and global international markets.",
       },
       {
         "@type": "FinancialProduct",
         "@id": `${siteUrl}/#product`,
-        name: "DigitalCap FX Neo-Banking Platform",
+        name: "DigitalCap FX Multi-Currency Financial Platform",
         provider: {
           "@id": `${siteUrl}/#organization`,
         },
         description:
-          "Multi-currency fiat accounts (XOF, XAF, EUR, USD), USDC smart contract wallets, virtual debit cards, and instant cross-border settlement.",
+          "Multi-currency fiat accounts (USD, GBP, EUR, XOF, XAF), USDT & USDC crypto vaults, virtual debit cards, instant FX currency exchange, mobile money settlement, phone P2P transfers, and airtime VTU services.",
         feesAndCommissionsSpecification: "Transparent real-time exchange rates with zero hidden transaction markup.",
       },
     ],
@@ -140,3 +149,4 @@ export default function RootLayout({
     </html>
   );
 }
+
