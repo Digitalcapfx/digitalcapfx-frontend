@@ -117,7 +117,10 @@ export async function POST(request: NextRequest) {
             body: fetchBody,
         });
 
-        const isAuthEndpoint = endpoint.includes('/auth/login') || endpoint.includes('/auth/register') || endpoint.includes('/auth/token/refresh');
+        const isAuthEndpoint =
+            endpoint.includes('/auth/') ||
+            endpoint.includes('/login') ||
+            endpoint.includes('/register');
         let newAccessToken: string | null = null;
         let newRefreshToken: string | null = null;
         let didRefresh = false;
@@ -154,8 +157,8 @@ export async function POST(request: NextRequest) {
         const res = NextResponse.json(parsedData, { status: response.status });
 
         const dataObj = parsedData?.data || parsedData;
-        const respAccessToken = dataObj?.access_token || dataObj?.accessToken || dataObj?.token;
-        const respRefreshToken = dataObj?.refresh_token || dataObj?.refreshToken;
+        const respAccessToken = isAuthEndpoint ? (dataObj?.access_token || dataObj?.accessToken || dataObj?.token) : null;
+        const respRefreshToken = isAuthEndpoint ? (dataObj?.refresh_token || dataObj?.refreshToken) : null;
 
         // Save rotated access and refresh tokens to cookies
         if (didRefresh && newAccessToken && newRefreshToken) {
@@ -180,7 +183,7 @@ export async function POST(request: NextRequest) {
                     maxAge: 30 * 24 * 60 * 60,
                 });
             }
-        } else if (response.status >= 200 && response.status < 300) {
+        } else if (response.status >= 200 && response.status < 300 && isAuthEndpoint) {
             if (respAccessToken) {
                 res.cookies.set('noe_token', respAccessToken, {
                     httpOnly: true,
