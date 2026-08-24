@@ -51,21 +51,10 @@ export interface WithdrawResponse {
   error?: any;
 }
 
-export interface TransactionActivity {
-  id: string;
-  type: string;
-  amount: string;
-  currency: string;
-  status: string;
-  reference: string;
-  description: string;
-  createdAt: string;
-}
+import { ActivityItem, ActivityListResponse } from './activity.service';
 
-export interface ActivityResponse {
-  success: boolean;
-  data: TransactionActivity[];
-}
+export type TransactionActivity = ActivityItem;
+export type ActivityResponse = ActivityListResponse;
 
 class TransferService extends BaseService {
   async initiateDeposit(payload: FundAccountRequest & { isStablecoin?: boolean }): Promise<FundAccountResponse> {

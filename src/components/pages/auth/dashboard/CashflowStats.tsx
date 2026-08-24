@@ -34,10 +34,10 @@ const CashflowStats: React.FC<CashflowStatsProps> = ({ period }) => {
 
     const rawSummary = insightsQuery.data?.data?.summary;
     const summary = {
-        income: rawSummary?.incomeMonth ?? 0,
-        spending: rawSummary?.spendingMonth ?? 0,
-        netFlow: rawSummary?.netFlow ?? 0,
-        transactionCount: insightsQuery.data?.data?.totalActivity ?? 0
+        income: rawSummary?.incomeMonth ?? rawSummary?.income_month ?? 0,
+        spending: rawSummary?.spendingMonth ?? rawSummary?.spending_month ?? 0,
+        netFlow: rawSummary?.netFlow ?? rawSummary?.net_flow ?? 0,
+        transactionCount: insightsQuery.data?.data?.totalActivity ?? insightsQuery.data?.data?.total_activity ?? 0
     };
 
     const isNetPositive = summary.netFlow >= 0;

@@ -4,6 +4,7 @@ import React from 'react'
 import { ArrowDownLeft, Send, RefreshCw, CheckCircle, XCircle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { transferService } from '@/services/transfer.service'
+import { extractActivityGroupsAndItems } from '@/services/activity.service'
 import { cn, formatCurrencyByLocale } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
 
@@ -50,9 +51,7 @@ const RecentActivity: React.FC = () => {
         queryFn: () => transferService.getActivity(),
     });
 
-    const txList = activityQuery.data?.success && Array.isArray(activityQuery.data.data)
-        ? activityQuery.data.data
-        : [];
+    const { items: txList } = extractActivityGroupsAndItems(activityQuery.data?.data);
 
     return (
         <div className="bg-[#0C1224] border border-[#131B30] rounded-3xl p-6 text-left shadow-xl space-y-6">
@@ -78,15 +77,24 @@ const RecentActivity: React.FC = () => {
             ) : txList.length > 0 ? (
                 <div className="space-y-3.5 min-h-[220px] max-h-[480px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                     {txList.slice(0, 5).map((tx) => {
-                        const tokenSym = (tx as any).token || tx.currency;
+                        const tokenSym = tx.asset || tx.currency || (tx as any).token || '';
                         const tokenStyle = getTokenStyles(tokenSym);
-                        const isIncoming = tx.type?.toLowerCase().includes('deposit') || 
+                        const isIncoming = tx.amount_sign === '+' ||
+                                           (tx.icon_type && tx.icon_type.startsWith('received')) ||
+                                           tx.type?.toLowerCase().includes('deposit') || 
                                            tx.type?.toLowerCase().includes('receive') || 
                                            tx.type?.toLowerCase().includes('fund') ||
-                                           (tx.type?.toLowerCase() === 'exchange' && parseFloat(tx.amount) > 0);
+                                           (tx.type?.toLowerCase() === 'exchange' && parseFloat(tx.amount || '0') > 0);
                         
-                        const valNum = Math.abs(parseFloat(tx.amount));
-                        const amtFormatted = (isIncoming ? '+' : '-') + formatBalance(valNum, tx.currency);
+                        let amtFormatted = tx.amount_formatted;
+                        if (!amtFormatted && tx.amount) {
+                            const valNum = Math.abs(parseFloat(tx.amount));
+                            amtFormatted = (isIncoming ? '+' : '-') + formatBalance(valNum, tokenSym);
+                        }
+
+                        const dateStr = tx.created_at || tx.createdAt 
+                            ? new Date(tx.created_at || tx.createdAt || '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                            : '';
 
                         return (
                             <div key={tx.id} className="flex items-center justify-between py-1 border-b border-white/[0.03] last:border-b-0">
@@ -102,29 +110,33 @@ const RecentActivity: React.FC = () => {
                                     <div className="text-left min-w-0">
                                         <div className="flex items-center space-x-2">
                                             <h4 className="font-sans font-bold text-xs text-white truncate">
-                                                {tx.description || `${tx.type} transaction`}
+                                                {tx.title || tx.description || `${tx.type} transaction`}
                                             </h4>
-                                            <span className={cn(
-                                                "px-1.5 py-0.25 rounded text-[9px] font-black tracking-wider uppercase border shrink-0 select-none font-mono",
-                                                tokenStyle.badgeBg
-                                            )}>
-                                                {tokenStyle.sym}
-                                            </span>
+                                            {tokenStyle.sym && (
+                                                <span className={cn(
+                                                    "px-1.5 py-0.25 rounded text-[9px] font-black tracking-wider uppercase border shrink-0 select-none font-mono",
+                                                    tokenStyle.badgeBg
+                                                )}>
+                                                    {tokenStyle.sym}
+                                                </span>
+                                            )}
                                         </div>
-                                        <span className="text-[10px] text-slate-500 font-medium block mt-0.5 select-none">
-                                            {tx.type} • {new Date(tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                        <span className="text-[10px] text-slate-500 font-medium block mt-0.5 select-none truncate">
+                                            {tx.subtitle || `${tx.type}${dateStr ? ' • ' + dateStr : ''}`}
                                         </span>
                                     </div>
                                 </div>
 
                                 <div className="text-right select-none flex items-center space-x-3">
                                     <div className="text-right">
-                                        <div className={cn(
-                                            "font-mono text-xs font-extrabold",
-                                            isIncoming ? "text-emerald-400" : "text-white"
-                                        )}>
-                                            {amtFormatted}
-                                        </div>
+                                        {amtFormatted && (
+                                            <div className={cn(
+                                                "font-mono text-xs font-extrabold",
+                                                isIncoming ? "text-emerald-400" : "text-white"
+                                            )}>
+                                                {amtFormatted}
+                                            </div>
+                                        )}
                                         <span className={cn(
                                             "text-[9px] font-bold block mt-0.5 uppercase tracking-wider",
                                             tx.status === 'completed' ? "text-emerald-500" : "text-rose-500"
