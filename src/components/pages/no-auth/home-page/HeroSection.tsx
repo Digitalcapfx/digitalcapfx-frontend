@@ -33,7 +33,7 @@ const HeroSection = () => {
                     {/* Heading */}
                     <div className="space-y-4">
                         <h1 className="font-satoshi font-black text-4xl sm:text-5xl lg:text-[60px] leading-[1.1] text-white tracking-tight">
-                            {t('hero.titlePrefix', { defaultValue: "Banking," })} <br className="hidden sm:inline" />
+                            {t('hero.titlePrefix', { defaultValue: "Platform," })} <br className="hidden sm:inline" />
                             <span className="bg-brand-gradient bg-clip-text text-transparent">{t('hero.titleHighlight', { defaultValue: "reimagined." })}</span>
                         </h1>
                         <p className="text-[#6D778A] text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl font-sans">
