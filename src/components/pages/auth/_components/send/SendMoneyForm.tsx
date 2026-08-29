@@ -11,7 +11,7 @@ import { Beneficiary } from '@/services/withdrawal.service'
 import { Button } from '@/components/ui/Button'
 import { useLanguageStore } from '@/store/languageStore'
 import { Select } from '@/components/ui/Select'
-import { CAAS_FEE_PERCENTAGE, calculateCaasFee, calculateCaasTotalRequired } from '@/constants/fees'
+import { CAAS_FEE_PERCENTAGE, CAAS_MAX_FEE, calculateCaasFee, calculateCaasRecipientReceives, calculateCaasTotalRequired } from '@/constants/fees'
 
 interface SendMoneyFormProps {
     walletsList: Wallet[];
@@ -177,37 +177,43 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
 
                     {isCrypto && activeWallet.provider !== 'waas' && (
                         <span className="text-[11px] font-mono text-slate-400 block mt-2">
-                            Fee: <span className="text-amber-400 font-bold">{CAAS_FEE_PERCENTAGE}%</span>
+                            Fee: <span className="text-amber-400 font-bold">{CAAS_FEE_PERCENTAGE}% (Max {CAAS_MAX_FEE} {activeWallet.code})</span>
                         </span>
                     )}
                 </div>
 
-                {/* CAAS 0.4% Fee Breakdown Card for USDT / USDC */}
+                {/* CAAS Fee Breakdown Card for USDT / USDC */}
                 {isCrypto && activeWallet.provider !== 'waas' && parseFloat(amount || '0') > 0 && (() => {
                     const numAmt = parseFloat(amount || '0');
                     const caasFee = calculateCaasFee(numAmt);
-                    const totalRequired = calculateCaasTotalRequired(numAmt);
-                    const isInsufficient = totalRequired > activeWallet.rawBalance;
+                    const recipientReceives = calculateCaasRecipientReceives(numAmt);
+                    const isInsufficient = numAmt > activeWallet.rawBalance;
+                    const isAmountTooLow = numAmt <= caasFee;
 
                     return (
                         <div className="bg-black/30 border border-white/10 rounded-2xl p-4 space-y-2 text-xs font-mono select-none">
                             <div className="flex items-center justify-between text-slate-400">
-                                <span>Send Amount</span>
+                                <span>Send Amount (Deducted)</span>
                                 <span className="font-bold text-white">{formatValueByLocale(numAmt, activeWallet.code)} {activeWallet.code}</span>
                             </div>
                             <div className="flex items-center justify-between text-slate-400">
-                                <span>Transfer Fee ({CAAS_FEE_PERCENTAGE}%)</span>
-                                <span className="font-bold text-amber-400">+{formatValueByLocale(caasFee, activeWallet.code)} {activeWallet.code}</span>
+                                <span>Transfer Fee ({CAAS_FEE_PERCENTAGE}%, Max {CAAS_MAX_FEE} {activeWallet.code})</span>
+                                <span className="font-bold text-amber-400">-{formatValueByLocale(caasFee, activeWallet.code)} {activeWallet.code}</span>
                             </div>
                             <div className="border-t border-white/10 pt-2 flex items-center justify-between text-white font-bold">
-                                <span>Total Deducted from Balance</span>
-                                <span className={cn("text-sm font-black", isInsufficient ? "text-rose-400" : "text-emerald-400")}>
-                                    {formatValueByLocale(totalRequired, activeWallet.code)} {activeWallet.code}
+                                <span>Recipient Receives</span>
+                                <span className={cn("text-sm font-black", (isInsufficient || isAmountTooLow) ? "text-rose-400" : "text-emerald-400")}>
+                                    {formatValueByLocale(recipientReceives, activeWallet.code)} {activeWallet.code}
                                 </span>
                             </div>
                             {isInsufficient && (
                                 <p className="text-[11px] font-sans font-semibold text-rose-400 mt-1 text-left">
-                                    Insufficient balance. You need {formatCurrencyByLocale(totalRequired, activeWallet.code)} (includes {CAAS_FEE_PERCENTAGE}% fee), but only have {formatCurrencyByLocale(activeWallet.rawBalance, activeWallet.code)}.
+                                    Insufficient balance. You need {formatCurrencyByLocale(numAmt, activeWallet.code)}, but only have {formatCurrencyByLocale(activeWallet.rawBalance, activeWallet.code)}.
+                                </p>
+                            )}
+                            {!isInsufficient && isAmountTooLow && (
+                                <p className="text-[11px] font-sans font-semibold text-rose-400 mt-1 text-left">
+                                    Send amount must be greater than the transfer fee ({formatValueByLocale(caasFee, activeWallet.code)} {activeWallet.code}).
                                 </p>
                             )}
                         </div>

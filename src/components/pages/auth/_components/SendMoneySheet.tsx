@@ -12,7 +12,7 @@ import { momoService } from '@/services/momo.service'
 import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
 import { FEATURE_FLAGS, filterCryptoItems } from '@/config/featureFlags'
-import { calculateCaasTotalRequired } from '@/constants/fees'
+import { calculateCaasFee, calculateCaasRecipientReceives, calculateCaasTotalRequired } from '@/constants/fees'
 
 // Import subcomponents
 import { SendMoneyForm } from './send/SendMoneyForm'
@@ -326,8 +326,8 @@ export const SendMoneySheet: React.FC = () => {
         if (isCrypto) {
             const isCaasWallet = activeWallet.provider !== 'waas';
             if (isCaasWallet) {
-                const totalRequired = calculateCaasTotalRequired(numAmt);
-                if (totalRequired > activeWallet.rawBalance) {
+                const fee = calculateCaasFee(numAmt);
+                if (numAmt > activeWallet.rawBalance || numAmt <= fee) {
                     return false;
                 }
             } else if (numAmt > activeWallet.rawBalance) {
@@ -665,6 +665,16 @@ export const SendMoneySheet: React.FC = () => {
                     <td class="label">Recipient</td>
                     <td class="value">${displayRecipientName}</td>
                 </tr>
+                ${isCrypto && activeWallet && activeWallet.provider !== 'waas' ? `
+                <tr class="details-row">
+                    <td class="label">Transfer Fee (0.3% max 1.2)</td>
+                    <td class="value mono">-${formatCurrencyByLocale(calculateCaasFee(parseFloat(amount || '0')), activeWallet.code)}</td>
+                </tr>
+                <tr class="details-row">
+                    <td class="label">Recipient Receives</td>
+                    <td class="value mono">${formatCurrencyByLocale(calculateCaasRecipientReceives(parseFloat(amount || '0')), activeWallet.code)}</td>
+                </tr>
+                ` : ''}
                 <tr class="details-row">
                     <td class="label">Reference</td>
                     <td class="value">${note || 'Invoice payment'}</td>

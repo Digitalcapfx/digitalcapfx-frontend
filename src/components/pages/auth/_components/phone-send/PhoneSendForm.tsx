@@ -4,9 +4,10 @@ import React from 'react'
 import { PhoneInput } from '@/components/ui/PhoneInput'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { Button } from '@/components/ui/Button'
-import { cn } from '@/lib/utils'
+import { cn, formatValueByLocale, formatCurrencyByLocale } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
 import { Select } from '@/components/ui/Select'
+import { CAAS_FEE_PERCENTAGE, CAAS_MAX_FEE, calculateCaasFee, calculateCaasRecipientReceives } from '@/constants/fees'
 
 interface PhoneSendFormProps {
     isSheet: boolean;
@@ -168,9 +169,51 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
 
                 <div className="text-center">
                     <span className="text-[9px] text-slate-400 font-semibold block mt-1">{t('phone.send.form.available', { balance: balanceUsdc })}</span>
+                    <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                        Fee: <span className="text-amber-400 font-bold">{CAAS_FEE_PERCENTAGE}% (Max {CAAS_MAX_FEE} {selectedToken})</span>
+                    </span>
                     {amountError && <span className="text-[10px] text-rose-500 font-bold block mt-1.5">{amountError}</span>}
                 </div>
             </div>
+
+            {/* CAAS Fee Breakdown Card */}
+            {parseFloat(amount || '0') > 0 && (() => {
+                const numAmt = parseFloat(amount || '0');
+                const caasFee = calculateCaasFee(numAmt);
+                const recipientReceives = calculateCaasRecipientReceives(numAmt);
+                const numBalance = parseFloat(balanceUsdc.replace(/,/g, '') || '0');
+                const isInsufficient = numAmt > numBalance;
+                const isAmountTooLow = numAmt <= caasFee;
+
+                return (
+                    <div className="bg-black/30 border border-white/10 rounded-2xl p-4 space-y-2 text-xs font-mono select-none">
+                        <div className="flex items-center justify-between text-slate-400">
+                            <span>Send Amount (Deducted)</span>
+                            <span className="font-bold text-white">{formatValueByLocale(numAmt, selectedToken)} {selectedToken}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-400">
+                            <span>Transfer Fee ({CAAS_FEE_PERCENTAGE}%, Max {CAAS_MAX_FEE} {selectedToken})</span>
+                            <span className="font-bold text-amber-400">-{formatValueByLocale(caasFee, selectedToken)} {selectedToken}</span>
+                        </div>
+                        <div className="border-t border-white/10 pt-2 flex items-center justify-between text-white font-bold">
+                            <span>Recipient Receives</span>
+                            <span className={cn("text-sm font-black", (isInsufficient || isAmountTooLow) ? "text-rose-400" : "text-emerald-400")}>
+                                {formatValueByLocale(recipientReceives, selectedToken)} {selectedToken}
+                            </span>
+                        </div>
+                        {isInsufficient && (
+                            <p className="text-[11px] font-sans font-semibold text-rose-400 mt-1 text-left">
+                                Insufficient balance. You need {formatCurrencyByLocale(numAmt, selectedToken)}, but only have {formatCurrencyByLocale(numBalance, selectedToken)}.
+                            </p>
+                        )}
+                        {!isInsufficient && isAmountTooLow && (
+                            <p className="text-[11px] font-sans font-semibold text-rose-400 mt-1 text-left">
+                                Send amount must be greater than the transfer fee ({formatValueByLocale(caasFee, selectedToken)} {selectedToken}).
+                            </p>
+                        )}
+                    </div>
+                );
+            })()}
 
             {/* Optional reference */}
             <div className="space-y-1.5">

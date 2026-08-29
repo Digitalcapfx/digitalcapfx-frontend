@@ -7,7 +7,7 @@ import { formatCurrencyByLocale, formatValueByLocale } from '@/lib/utils'
 import { Wallet } from '../SendMoneySheet'
 import { Beneficiary } from '@/services/withdrawal.service'
 import { useLanguageStore } from '@/store/languageStore'
-import { CAAS_FEE_PERCENTAGE, calculateCaasFee } from '@/constants/fees'
+import { CAAS_FEE_PERCENTAGE, CAAS_MAX_FEE, calculateCaasFee, calculateCaasRecipientReceives } from '@/constants/fees'
 
 interface SendMoneyReviewProps {
     amount: string;
@@ -50,11 +50,13 @@ export const SendMoneyReview: React.FC<SendMoneyReviewProps> = ({
         ? calculateCaasFee(parseFloat(amount))
         : (isCrypto || isMobileMoney || isInternal ? 0 : (quoteDetails?.fee || 0));
 
-    const totalSending = parseFloat(amount) + feeAmount;
+    const totalSending = parseFloat(amount);
 
-    const totalRecipientGets = isCrypto || isMobileMoney || isInternal
-        ? parseFloat(amount)
-        : (quoteDetails?.totalAmount || parseFloat(amount));
+    const totalRecipientGets = isCaasWallet
+        ? calculateCaasRecipientReceives(parseFloat(amount))
+        : (isCrypto || isMobileMoney || isInternal
+            ? parseFloat(amount)
+            : (quoteDetails?.totalAmount || parseFloat(amount)));
 
     const displayRate = isCrypto || isMobileMoney || isInternal
         ? 1
@@ -74,7 +76,7 @@ export const SendMoneyReview: React.FC<SendMoneyReviewProps> = ({
                     </span>
                     {isCaasWallet && (
                         <span className="text-[9.5px] text-slate-400 font-bold block mt-1.5 uppercase font-mono">
-                            Total Deducted: <span className="text-amber-400 font-bold">{formatCurrencyByLocale(totalSending, activeWallet.code)}</span> (Includes {CAAS_FEE_PERCENTAGE}% Fee)
+                            Recipient Gets: <span className="text-emerald-400 font-bold">{formatCurrencyByLocale(totalRecipientGets, activeWallet.code)}</span> (Includes {CAAS_FEE_PERCENTAGE}% Fee, Max {CAAS_MAX_FEE} {activeWallet.code})
                         </span>
                     )}
                 </div>
@@ -102,9 +104,9 @@ export const SendMoneyReview: React.FC<SendMoneyReviewProps> = ({
                     {isCaasWallet && (
                         <>
                             <div className="flex justify-between items-center py-0.5">
-                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Transfer Fee ({CAAS_FEE_PERCENTAGE}%)</span>
+                                <span className="text-slate-555 font-bold uppercase tracking-wider text-[9px]">Transfer Fee ({CAAS_FEE_PERCENTAGE}%, Max {CAAS_MAX_FEE} {activeWallet.code})</span>
                                 <span className="font-bold text-amber-400 font-mono">
-                                    +{formatValueByLocale(feeAmount, activeWallet.code)} {activeWallet.code}
+                                    -{formatValueByLocale(feeAmount, activeWallet.code)} {activeWallet.code}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center py-0.5 border-t border-white/5 pt-2">
