@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import QueryProvider from "@/components/providers/QueryProvider";
+import MaintenanceGuard from "@/components/providers/MaintenanceGuard";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -142,7 +143,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <QueryProvider>
-          {children}
+          <MaintenanceGuard>
+            {children}
+          </MaintenanceGuard>
           <Toaster theme="dark" position="top-center" richColors closeButton />
         </QueryProvider>
       </body>

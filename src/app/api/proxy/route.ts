@@ -91,7 +91,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Clean slash combinations
-        const cleanedEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+        let cleanedEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+        if (backendUrl.endsWith('/api/v1') && cleanedEndpoint.startsWith('api/v1/')) {
+            cleanedEndpoint = cleanedEndpoint.slice(7);
+        }
         const targetUrl = `${backendUrl}/${cleanedEndpoint}`;
 
         // Prepare headers to forward to backend
