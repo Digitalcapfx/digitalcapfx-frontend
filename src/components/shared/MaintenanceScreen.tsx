@@ -123,7 +123,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
             </div>
             <div>
               <p className="text-xs font-bold text-slate-200">Wallet Funds Protected</p>
-              <p className="text-[11px] text-slate-400 leading-tight mt-0.5">All multi-currency accounts and crypto vaults are safe</p>
+              <p className="text-[11px] text-slate-400 leading-tight mt-0.5">All multi-currency accounts and stablecoin vaults are safe</p>
             </div>
           </div>
         </div>

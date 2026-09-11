@@ -63,7 +63,7 @@ export const WalletInfoPanel: React.FC<WalletInfoPanelProps> = ({
                 <div className="space-y-4 text-xs font-sans">
                     <div className="flex flex-col space-y-1">
                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider select-none">
-                            Crypto Wallet Address
+                            Stablecoin Wallet Address
                         </span>
                         <div className="flex items-center justify-between bg-black/40 border border-white/5 rounded-xl px-3 py-2">
                             <span className="font-mono text-slate-300 font-semibold text-[11px] truncate mr-2">

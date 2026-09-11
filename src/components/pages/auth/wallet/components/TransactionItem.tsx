@@ -35,7 +35,7 @@ export const getTokenStyles = (token?: string, walletCode?: string) => {
         };
     }
     return {
-        sym: sym || 'CRYPTO',
+        sym: sym || 'STABLECOIN',
         badgeBg: 'bg-slate-500/10 border-slate-500/20 text-slate-400',
         iconBg: 'bg-slate-500/10 border-slate-500/20 text-slate-400',
     };

@@ -18,8 +18,8 @@ const FeaturesSection = () => {
             iconBg: 'bg-primary-500/10',
         },
         ...(FEATURE_FLAGS.ALLOW_CRYPTO ? [{
-            title: t('features.crypto.title', { defaultValue: 'Crypto Built-In' }),
-            description: t('features.crypto.desc', { defaultValue: 'BTC, ETH, SOL, USDT, USDC and more. Your crypto wallet, fully integrated.' }),
+            title: t('features.crypto.title', { defaultValue: 'Stablecoins Built-In' }),
+            description: t('features.crypto.desc', { defaultValue: 'USDT, USDC, EURC and more. Your stablecoin wallet, fully integrated.' }),
             icon: Bitcoin,
             iconColor: 'text-[#F59E0B]',
             iconBg: 'bg-[#F59E0B]/10',

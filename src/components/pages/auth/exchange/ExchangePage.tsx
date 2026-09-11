@@ -444,7 +444,7 @@ export const ExchangePage: React.FC = () => {
             setIsConfirmOpen(true);
         } else if (isCryptoSwap) {
             if (!cryptoRateQuery.data?.success || !cryptoRateQuery.data.data) {
-                toast.error('No crypto swap rate quote available. Please wait a moment.');
+                toast.error('No swap rate quote available. Please wait a moment.');
                 return;
             }
             const q = cryptoRateQuery.data.data;

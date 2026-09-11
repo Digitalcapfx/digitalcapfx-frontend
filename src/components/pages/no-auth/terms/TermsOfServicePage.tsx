@@ -22,7 +22,7 @@ const SECTIONS = [
             <ul className="list-disc list-inside space-y-3 pl-3 text-slate-300">
                 <li><strong>&quot;User&quot;:</strong> any individual or legal entity who has created an account on the Platform;</li>
                 <li><strong>&quot;Account&quot;:</strong> the secure personal space allowing the User to access the Service;</li>
-                <li><strong>&quot;Digital Assets&quot;:</strong> cryptocurrencies and stablecoins (including USDT and USDC) accessible through the Platform;</li>
+                <li><strong>&quot;Digital Assets&quot;:</strong> stablecoins (including USDT and USDC) accessible through the Platform;</li>
                 <li><strong>&quot;Funds&quot;:</strong> amounts of money in fiat currency or electronic money held in the Account.</li>
             </ul>
         )

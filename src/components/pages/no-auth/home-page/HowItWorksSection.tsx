@@ -17,7 +17,7 @@ const HowItWorksSection = () => {
         {
             number: 2,
             title: t('how.step2.title', { defaultValue: 'Add your currencies' }),
-            description: t('how.step2.desc', { defaultValue: 'Fund your wallets with fiat, stablecoins, or crypto.' }),
+            description: t('how.step2.desc', { defaultValue: 'Fund your wallets with fiat or stablecoins.' }),
             icon: Globe,
         },
         {

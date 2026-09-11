@@ -50,7 +50,7 @@ const SECTIONS = [
                     <li><strong>Identification data:</strong> name, surname(s), date and place of birth, nationality, copy of official identity document, verification photograph or selfie;</li>
                     <li><strong>Contact details:</strong> postal address, email address, phone number;</li>
                     <li><strong>Financial data:</strong> bank account or digital wallet information, transaction history, declared income, source of funds;</li>
-                    <li><strong>Digital asset data:</strong> cryptocurrency and stablecoin wallet addresses (including USDT/USDC) used in connection with the Service;</li>
+                    <li><strong>Digital asset data:</strong> stablecoin wallet addresses (including USDT/USDC) used in connection with the Service;</li>
                     <li><strong>Connection and usage data:</strong> IP address, device identifiers, log data, approximate geolocation data, cookies;</li>
                     <li>Any other data voluntarily provided, including through communications with our customer support.</li>
                 </ul>
@@ -65,7 +65,7 @@ const SECTIONS = [
                 <p>Your personal data is processed for the following purposes:</p>
                 <ul className="list-disc list-inside space-y-3 pl-3 text-slate-300">
                     <li>Opening, managing and securing your account;</li>
-                    <li>Executing foreign exchange transactions, transfers, fiat-crypto conversions and issuing virtual cards;</li>
+                    <li>Executing foreign exchange transactions, transfers, fiat-stablecoin conversions and issuing virtual cards;</li>
                     <li>Complying with our legal and regulatory obligations, including KYC, AML/CTF requirements and supervision by the competent authorities of the CEMAC and WAEMU regions;</li>
                     <li>Preventing fraud and managing risk;</li>
                     <li>Improving and personalizing the Service;</li>

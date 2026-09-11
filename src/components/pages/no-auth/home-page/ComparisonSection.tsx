@@ -23,7 +23,7 @@ const ComparisonSection = () => {
     const COMPARISON_ROWS = [
         { feature: t('compare.f1', { defaultValue: 'Multi-currency wallets' }), dfx: true, bank: false },
         { feature: t('compare.f2', { defaultValue: 'Instant cross-border transfers' }), dfx: true, bank: false },
-        { feature: t('compare.f3', { defaultValue: 'Built-in crypto exchange' }), dfx: true, bank: false },
+        { feature: t('compare.f3', { defaultValue: 'Built-in stablecoin exchange' }), dfx: true, bank: false },
         { feature: t('compare.f4', { defaultValue: 'Virtual cards in seconds' }), dfx: true, bank: false },
         { feature: t('compare.f5', { defaultValue: 'No hidden fees' }), dfx: true, bank: false },
         { feature: t('compare.f6', { defaultValue: 'Real-time exchange rates' }), dfx: true, bank: false },

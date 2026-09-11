@@ -16,7 +16,7 @@ const FaqSection = () => {
         },
         {
             question: t('faq.q2', { defaultValue: 'Which currencies can I hold?' }),
-            answer: t('faq.a2', { defaultValue: 'We support USD, EUR, GBP, CAD, XAF, XOF, and multiple other global fiat currencies alongside stablecoins like USDT and USDC and major cryptocurrencies.' }),
+            answer: t('faq.a2', { defaultValue: 'We support USD, EUR, GBP, CAD, XAF, XOF, and multiple other global fiat currencies alongside stablecoins like USDT and USDC.' }),
         },
         {
             question: t('faq.q3', { defaultValue: 'How fast are transfers?' }),
