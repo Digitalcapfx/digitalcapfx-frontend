@@ -8,7 +8,7 @@ import { transferService } from '@/services/transfer.service'
 import { toast } from 'sonner'
 import { formatCurrencyByLocale } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
-import { calculateCaasFee } from '@/constants/fees'
+import { calculateCaasFee, isFeeEnabled } from '@/constants/fees'
 
 // Import subcomponents
 import { PhoneSendForm } from './phone-send/PhoneSendForm'
@@ -96,7 +96,7 @@ const PhoneSend: React.FC<PhoneSendProps> = ({ isSheet = false, onClose }) => {
         } else if (val > numBalance) {
             setAmountError(`Insufficient balance. You only have $${balanceUsdc} ${selectedToken}.`);
             hasError = true;
-        } else if (val <= fee) {
+        } else if (isFeeEnabled() && fee > 0 && val <= fee) {
             setAmountError(`Amount must be greater than the transfer fee ($${fee.toFixed(2)} ${selectedToken}).`);
             hasError = true;
         } else {

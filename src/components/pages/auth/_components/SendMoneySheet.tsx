@@ -12,7 +12,7 @@ import { momoService } from '@/services/momo.service'
 import { toast } from 'sonner'
 import { useLanguageStore } from '@/store/languageStore'
 import { FEATURE_FLAGS, filterCryptoItems } from '@/config/featureFlags'
-import { calculateCaasFee, calculateCaasRecipientReceives, calculateCaasTotalRequired } from '@/constants/fees'
+import { calculateCaasFee, calculateCaasRecipientReceives, calculateCaasTotalRequired, isFeeEnabled } from '@/constants/fees'
 
 // Import subcomponents
 import { SendMoneyForm } from './send/SendMoneyForm'
@@ -324,7 +324,7 @@ export const SendMoneySheet: React.FC = () => {
         if (!selectedWalletId || !amount || numAmt <= 0) return false;
 
         if (isCrypto) {
-            const isCaasWallet = activeWallet.provider !== 'waas';
+            const isCaasWallet = isFeeEnabled() && activeWallet.provider !== 'waas';
             if (isCaasWallet) {
                 const fee = calculateCaasFee(numAmt);
                 if (numAmt > activeWallet.rawBalance || numAmt <= fee) {
@@ -665,7 +665,7 @@ export const SendMoneySheet: React.FC = () => {
                     <td class="label">Recipient</td>
                     <td class="value">${displayRecipientName}</td>
                 </tr>
-                ${isCrypto && activeWallet && activeWallet.provider !== 'waas' ? `
+                ${isFeeEnabled() && isCrypto && activeWallet && activeWallet.provider !== 'waas' ? `
                 <tr class="details-row">
                     <td class="label">Transfer Fee (0.3% max 1.2)</td>
                     <td class="value mono">-${formatCurrencyByLocale(calculateCaasFee(parseFloat(amount || '0')), activeWallet.code)}</td>

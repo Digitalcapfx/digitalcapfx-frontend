@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { cn, formatValueByLocale, formatCurrencyByLocale } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
 import { Select } from '@/components/ui/Select'
-import { CAAS_FEE_PERCENTAGE, CAAS_MAX_FEE, calculateCaasFee, calculateCaasRecipientReceives } from '@/constants/fees'
+import { CAAS_FEE_PERCENTAGE, CAAS_MAX_FEE, calculateCaasFee, calculateCaasRecipientReceives, isFeeEnabled } from '@/constants/fees'
 
 interface PhoneSendFormProps {
     isSheet: boolean;
@@ -169,15 +169,17 @@ export const PhoneSendForm: React.FC<PhoneSendFormProps> = ({
 
                 <div className="text-center">
                     <span className="text-[9px] text-slate-400 font-semibold block mt-1">{t('phone.send.form.available', { balance: balanceUsdc })}</span>
-                    <span className="text-[10px] font-mono text-slate-400 block mt-1">
-                        Fee: <span className="text-amber-400 font-bold">{CAAS_FEE_PERCENTAGE}% (Max {CAAS_MAX_FEE} {selectedToken})</span>
-                    </span>
+                    {isFeeEnabled() && (
+                        <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                            Fee: <span className="text-amber-400 font-bold">{CAAS_FEE_PERCENTAGE}% (Max {CAAS_MAX_FEE} {selectedToken})</span>
+                        </span>
+                    )}
                     {amountError && <span className="text-[10px] text-rose-500 font-bold block mt-1.5">{amountError}</span>}
                 </div>
             </div>
 
             {/* CAAS Fee Breakdown Card */}
-            {parseFloat(amount || '0') > 0 && (() => {
+            {isFeeEnabled() && parseFloat(amount || '0') > 0 && (() => {
                 const numAmt = parseFloat(amount || '0');
                 const caasFee = calculateCaasFee(numAmt);
                 const recipientReceives = calculateCaasRecipientReceives(numAmt);

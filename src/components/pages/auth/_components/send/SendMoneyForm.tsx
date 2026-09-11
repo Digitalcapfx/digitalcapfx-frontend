@@ -11,7 +11,7 @@ import { Beneficiary } from '@/services/withdrawal.service'
 import { Button } from '@/components/ui/Button'
 import { useLanguageStore } from '@/store/languageStore'
 import { Select } from '@/components/ui/Select'
-import { CAAS_FEE_PERCENTAGE, CAAS_MAX_FEE, calculateCaasFee, calculateCaasRecipientReceives, calculateCaasTotalRequired } from '@/constants/fees'
+import { CAAS_FEE_PERCENTAGE, CAAS_MAX_FEE, calculateCaasFee, calculateCaasRecipientReceives, calculateCaasTotalRequired, isFeeEnabled } from '@/constants/fees'
 
 interface SendMoneyFormProps {
     walletsList: Wallet[];
@@ -175,7 +175,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                         )}
                     </div>
 
-                    {isCrypto && activeWallet.provider !== 'waas' && (
+                    {isFeeEnabled() && isCrypto && activeWallet.provider !== 'waas' && (
                         <span className="text-[11px] font-mono text-slate-400 block mt-2">
                             Fee: <span className="text-amber-400 font-bold">{CAAS_FEE_PERCENTAGE}% (Max {CAAS_MAX_FEE} {activeWallet.code})</span>
                         </span>
@@ -183,7 +183,7 @@ export const SendMoneyForm: React.FC<SendMoneyFormProps> = ({
                 </div>
 
                 {/* CAAS Fee Breakdown Card for USDT / USDC */}
-                {isCrypto && activeWallet.provider !== 'waas' && parseFloat(amount || '0') > 0 && (() => {
+                {isFeeEnabled() && isCrypto && activeWallet.provider !== 'waas' && parseFloat(amount || '0') > 0 && (() => {
                     const numAmt = parseFloat(amount || '0');
                     const caasFee = calculateCaasFee(numAmt);
                     const recipientReceives = calculateCaasRecipientReceives(numAmt);

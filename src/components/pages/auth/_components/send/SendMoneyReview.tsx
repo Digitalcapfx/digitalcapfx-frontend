@@ -7,7 +7,7 @@ import { formatCurrencyByLocale, formatValueByLocale } from '@/lib/utils'
 import { Wallet } from '../SendMoneySheet'
 import { Beneficiary } from '@/services/withdrawal.service'
 import { useLanguageStore } from '@/store/languageStore'
-import { CAAS_FEE_PERCENTAGE, CAAS_MAX_FEE, calculateCaasFee, calculateCaasRecipientReceives } from '@/constants/fees'
+import { CAAS_FEE_PERCENTAGE, CAAS_MAX_FEE, calculateCaasFee, calculateCaasRecipientReceives, isFeeEnabled } from '@/constants/fees'
 
 interface SendMoneyReviewProps {
     amount: string;
@@ -45,7 +45,7 @@ export const SendMoneyReview: React.FC<SendMoneyReviewProps> = ({
     const { t } = useLanguageStore();
 
     // Computes review variables
-    const isCaasWallet = isCrypto && activeWallet.provider !== 'waas';
+    const isCaasWallet = isFeeEnabled() && isCrypto && activeWallet.provider !== 'waas';
     const feeAmount = isCaasWallet
         ? calculateCaasFee(parseFloat(amount))
         : (isCrypto || isMobileMoney || isInternal ? 0 : (quoteDetails?.fee || 0));
