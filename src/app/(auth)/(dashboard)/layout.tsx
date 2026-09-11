@@ -393,7 +393,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     {/* Brand Logo on Mobile Left */}
                     <div className="lg:hidden shrink-0">
-                        <Logo href="/dashboard" size="md" showTagline={false} />
+                        <Logo href="/dashboard" size="md" />
                     </div>
 
                     {/* Notification & Avatar controls + Hamburger beside it on Mobile */}

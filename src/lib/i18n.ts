@@ -3359,7 +3359,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'fr',
-    lng: 'fr',
+    supportedLngs: ['en', 'fr', 'es', 'zh'],
     interpolation: {
       escapeValue: false
     },
@@ -3369,5 +3369,22 @@ i18n
       lookupLocalStorage: 'i18nextLng'
     }
   })
+
+// Sync stored language on initial client load
+if (typeof window !== 'undefined') {
+  try {
+    const saved = localStorage.getItem('i18nextLng') || localStorage.getItem('digitalfx_language');
+    if (saved) {
+      let code = saved.split('-')[0].toLowerCase();
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed?.state?.language) code = parsed.state.language;
+      } catch {}
+      if (['en', 'fr', 'es', 'zh'].includes(code) && i18n.language !== code) {
+        i18n.changeLanguage(code);
+      }
+    }
+  } catch {}
+}
 
 export default i18n

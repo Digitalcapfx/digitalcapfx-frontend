@@ -19,45 +19,54 @@ export const Logo: React.FC<LogoProps> = ({
     showTagline = true,
     size = 'md',
     className,
-    taglineClassName,
     onClick,
 }) => {
+    // 175:34 for full logo with tagline, 143:24 for compact
     const sizeMap = {
-        sm: { width: 140, height: 28, imgClass: 'h-7 w-auto' },
-        md: { width: 160, height: 32, imgClass: 'h-8 sm:h-8 md:h-7.5 w-auto' },
-        lg: { width: 180, height: 36, imgClass: 'h-9 sm:h-10 w-auto' },
+        withTagline: {
+            sm: { width: 140, height: 27, imgClass: 'h-6.5 sm:h-7 w-auto' },
+            md: { width: 165, height: 32, imgClass: 'h-7.5 sm:h-8 w-auto' },
+            lg: { width: 190, height: 37, imgClass: 'h-9 sm:h-10 w-auto' },
+        },
+        compact: {
+            sm: { width: 120, height: 20, imgClass: 'h-5 w-auto' },
+            md: { width: 143, height: 24, imgClass: 'h-6 w-auto' },
+            lg: { width: 165, height: 28, imgClass: 'h-7 sm:h-8 w-auto' },
+        },
     };
 
-    const currentSize = sizeMap[size];
+    const currentSize = showTagline
+        ? sizeMap.withTagline[size]
+        : sizeMap.compact[size];
+
+    const logoSrc = showTagline ? '/DFXLogo.svg' : '/DFXLogoCompact.svg';
 
     const logoContent = (
-        <div className={cn("flex flex-col justify-center items-start group select-none cursor-pointer", className)} onClick={onClick}>
+        <div
+            className={cn("flex items-center group select-none cursor-pointer shrink-0", className)}
+            onClick={onClick}
+        >
             <Image
-                src="/DFXLogo.svg"
+                src={logoSrc}
                 alt="DigitalCap FX Logo"
                 width={currentSize.width}
                 height={currentSize.height}
                 priority
                 className={cn(currentSize.imgClass, "object-contain transition-opacity hover:opacity-95")}
             />
-            {showTagline && (
-                <span
-                    className={cn(
-                        "text-[11px] sm:text-xs font-medium text-slate-300 group-hover:text-white transition-colors tracking-tight mt-1 font-sans",
-                        taglineClassName
-                    )}
-                >
-                    Your bridge to the world of payments
-                </span>
-            )}
         </div>
     );
 
     if (href) {
-        return <Link href={href}>{logoContent}</Link>;
+        return (
+            <Link href={href} className="inline-flex items-center shrink-0">
+                {logoContent}
+            </Link>
+        );
     }
 
     return logoContent;
 };
 
 export default Logo;
+

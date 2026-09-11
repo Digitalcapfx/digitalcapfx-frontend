@@ -143,11 +143,11 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
             </div>
 
             {/* Right Column (Child forms) */}
-            <div className="col-span-12 lg:col-span-8 flex flex-col justify-center items-center p-4 sm:p-8 md:p-12 min-h-screen relative overflow-hidden bg-[#040714]">
-                {/* Top Right Header Bar (Logo on mobile, LanguageSelector on all screens) */}
-                <div className="w-full flex items-center justify-between lg:justify-end px-4 sm:px-8 py-4 absolute top-0 left-0 right-0 z-20">
+            <div className="col-span-12 lg:col-span-8 flex flex-col justify-between items-center p-4 sm:p-8 md:p-12 min-h-screen relative overflow-y-auto bg-[#040714]">
+                {/* Top Header Bar (Logo on mobile, LanguageSelector on all screens) */}
+                <div className="w-full flex items-center justify-between lg:justify-end mb-4 sm:mb-6 z-20">
                     <div className="lg:hidden">
-                        <Logo href="/" size="sm" />
+                        <Logo href="/" size="sm" showTagline={true} />
                     </div>
                     <LanguageSelector />
                 </div>
@@ -159,6 +159,9 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
                 <div className="w-full max-w-[480px] bg-[#0A1124]/80 backdrop-blur-2xl border border-white/10 p-7 sm:p-10 rounded-3xl shadow-2xl shadow-cyan-950/40 relative z-10 my-auto">
                     {children}
                 </div>
+
+                {/* Bottom spacer for centering balance */}
+                <div className="w-full h-2 lg:h-0 pointer-events-none" />
             </div>
         </div>
     )

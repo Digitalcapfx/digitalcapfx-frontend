@@ -7,6 +7,33 @@ import { persist } from 'zustand/middleware'
 
 export type Language = 'en' | 'fr' | 'es' | 'zh'
 
+const VALID_LANGS: Language[] = ['en', 'fr', 'es', 'zh']
+
+export const getStoredLanguage = (): Language => {
+    if (typeof window !== 'undefined') {
+        try {
+            const i18nSaved = localStorage.getItem('i18nextLng')
+            if (i18nSaved) {
+                const code = i18nSaved.split('-')[0].toLowerCase() as Language
+                if (VALID_LANGS.includes(code)) return code
+            }
+            const storeSaved = localStorage.getItem('digitalfx_language')
+            if (storeSaved) {
+                try {
+                    const parsed = JSON.parse(storeSaved)
+                    const code = (parsed?.state?.language || '').split('-')[0].toLowerCase() as Language
+                    if (VALID_LANGS.includes(code)) return code
+                } catch {
+                    const code = storeSaved.split('-')[0].toLowerCase() as Language
+                    if (VALID_LANGS.includes(code)) return code
+                }
+            }
+        } catch {}
+    }
+    const current = ((i18n.language || 'fr').split('-')[0]).toLowerCase() as Language
+    return VALID_LANGS.includes(current) ? current : 'fr'
+}
+
 interface LanguageStoreState {
     language: Language
     setLanguage: (lang: Language) => void
@@ -14,45 +41,28 @@ interface LanguageStoreState {
 
 export const useLanguageBaseStore = create<LanguageStoreState>()(
     persist(
-        (set) => {
-            const getInitialLang = (): Language => {
+        (set) => ({
+            language: getStoredLanguage(),
+            setLanguage: (lang: Language) => {
                 if (typeof window !== 'undefined') {
-                    const saved = localStorage.getItem('i18nextLng') || localStorage.getItem('digitalfx_language')
-                    if (saved) {
-                        const code = saved.split('-')[0] as Language
-                        if (['en', 'fr', 'es', 'zh'].includes(code)) return code
-                    }
-                }
-                return ((i18n.language || 'fr').split('-')[0]) as Language
-            }
-
-            const initialLang = getInitialLang()
-            if (typeof window !== 'undefined' && initialLang !== i18n.language) {
-                i18n.changeLanguage(initialLang)
-            }
-
-            i18n.on('languageChanged', (lng) => {
-                const lang = (lng.split('-')[0]) as Language
-                set({ language: lang })
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem('i18nextLng', lang)
-                }
-            })
-
-            return {
-                language: initialLang,
-                setLanguage: (lang: Language) => {
-                    if (typeof window !== 'undefined') {
+                    try {
                         localStorage.setItem('i18nextLng', lang)
-                        localStorage.setItem('digitalfx_language', lang)
+                        localStorage.setItem('digitalfx_language', JSON.stringify({ state: { language: lang }, version: 0 }))
+                    } catch {}
+                }
+                i18n.changeLanguage(lang)
+                set({ language: lang })
+            }
+        }),
+        {
+            name: 'digitalfx_language',
+            onRehydrateStorage: () => (state) => {
+                if (state?.language && VALID_LANGS.includes(state.language)) {
+                    if (i18n.language !== state.language) {
+                        i18n.changeLanguage(state.language)
                     }
-                    i18n.changeLanguage(lang)
-                    set({ language: lang })
                 }
             }
-        },
-        {
-            name: 'digitalfx_language'
         }
     )
 )
@@ -61,14 +71,16 @@ export function useLanguageStore() {
     const { t: i18nT, i18n: i18nInstance } = useTranslation()
     const { language, setLanguage } = useLanguageBaseStore()
 
-    const currentLang = ((i18nInstance?.language || language || 'fr').split('-')[0]) as Language
+    const currentLang = ((language || i18nInstance?.language || getStoredLanguage()).split('-')[0]) as Language
 
     return {
-        language: currentLang,
+        language: VALID_LANGS.includes(currentLang) ? currentLang : 'fr',
         setLanguage: (lang: Language) => {
             if (typeof window !== 'undefined') {
-                localStorage.setItem('i18nextLng', lang)
-                localStorage.setItem('digitalfx_language', lang)
+                try {
+                    localStorage.setItem('i18nextLng', lang)
+                    localStorage.setItem('digitalfx_language', JSON.stringify({ state: { language: lang }, version: 0 }))
+                } catch {}
             }
             i18n.changeLanguage(lang)
             setLanguage(lang)
