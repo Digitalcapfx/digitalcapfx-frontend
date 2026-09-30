@@ -22,14 +22,15 @@ const ComparisonSection = () => {
     const { t } = useLanguageStore();
 
     const COMPARISON_ROWS = [
-        { feature: t('compare.f1', { defaultValue: 'Comptes multi-devises (XAF, USD, CNY, EUR)' }), dfx: true, bank: false },
-        { feature: t('compare.f2', { defaultValue: 'Paiements fournisseurs internationaux' }), dfx: true, bank: false },
+        { feature: t('compare.f0', { defaultValue: 'Collections & Payouts (Encaissements & Décaissements)' }), dfx: true, bank: false },
+        { feature: t('compare.f1', { defaultValue: 'Paiements fournisseurs : Euro, USD et Naira' }), dfx: true, bank: false },
+        { feature: t('compare.f2', { defaultValue: 'Comptes multi-devises (XAF, USD, EUR, NGN, CNY)' }), dfx: true, bank: false },
         { feature: t('compare.f3', { defaultValue: 'Conversion de devises en temps réel' }), dfx: true, bank: false },
-        { feature: t('compare.f4', { defaultValue: 'Cartes virtuelles instantanées' }), dfx: true, bank: false },
+        { feature: t('compare.f4', { defaultValue: 'Cartes virtuelles d\'entreprise' }), dfx: true, bank: false },
         { feature: t('compare.f5', { defaultValue: 'Zéro frais cachés' }), dfx: true, bank: false },
-        { feature: t('compare.f6', { defaultValue: 'Suivi des transactions en temps réel' }), dfx: true, bank: false },
-        { feature: t('compare.f7', { defaultValue: 'Support client réactif' }), dfx: true, bank: true },
-        { feature: t('compare.f8', { defaultValue: 'Ségrégation des fonds clients' }), dfx: true, bank: true },
+        { feature: t('compare.f6', { defaultValue: 'Suivi et justificatifs en temps réel' }), dfx: true, bank: false },
+        { feature: t('compare.f7', { defaultValue: 'Support client réactif dédié' }), dfx: true, bank: true },
+        { feature: t('compare.f8', { defaultValue: 'Ségrégation stricte des fonds clients' }), dfx: true, bank: true },
     ];
 
     return (

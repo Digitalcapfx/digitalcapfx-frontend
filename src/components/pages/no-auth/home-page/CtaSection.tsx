@@ -28,7 +28,7 @@ const CtaSection = () => {
                             {t('cta.title', { defaultValue: 'Prêt à simplifier vos paiements internationaux ?' })}
                         </h2>
                         <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-sans max-w-lg mx-auto">
-                            {t('cta.subtitle', { defaultValue: 'Créez votre compte entreprise en quelques minutes. Payez vos fournisseurs dans le monde entier depuis une seule plateforme.' })}
+                            {t('cta.subtitle', { defaultValue: 'Collections & Payouts automatisés. Payez vos fournisseurs en Euro, USD et Naira dans le monde entier depuis une seule plateforme sécurisée.' })}
                         </p>
 
                         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">

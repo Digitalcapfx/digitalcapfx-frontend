@@ -23,26 +23,26 @@ const HowItWorksSection = () => {
         },
         {
             number: 3,
-            title: t('how.step3.title', { defaultValue: 'Alimentez votre compte en XAF' }),
-            description: t('how.step3.desc', { defaultValue: 'Par virement bancaire ou Mobile Money (Orange Money, MTN MoMo).' }),
+            title: t('how.step3.title', { defaultValue: 'Collections (Encaissement local)' }),
+            description: t('how.step3.desc', { defaultValue: 'Alimentez par virement bancaire ou Mobile Money (Orange Money, MTN MoMo) en XAF/XOF.' }),
             icon: Wallet,
         },
         {
             number: 4,
-            title: t('how.step4.title', { defaultValue: 'Convertissez XAF → USD/CNY' }),
-            description: t('how.step4.desc', { defaultValue: 'Taux de change compétitifs, conversion instantanée.' }),
+            title: t('how.step4.title', { defaultValue: 'Conversion FX en Temps Réel' }),
+            description: t('how.step4.desc', { defaultValue: 'Convertissez instantanément vos fonds vers Euro, USD, CNY ou Naira aux taux du marché.' }),
             icon: ArrowLeftRight,
         },
         {
             number: 5,
             title: t('how.step5.title', { defaultValue: 'Ajoutez votre fournisseur' }),
-            description: t('how.step5.desc', { defaultValue: 'Chine, Europe ou tout autre marché international.' }),
+            description: t('how.step5.desc', { defaultValue: 'Renseignez les coordonnées bancaires de vos partenaires en Europe, USA, Chine ou Nigéria.' }),
             icon: Building2,
         },
         {
             number: 6,
-            title: t('how.step6.title', { defaultValue: 'Envoyez le paiement' }),
-            description: t('how.step6.desc', { defaultValue: 'Téléchargez la facture ou le bon de commande et confirmez.' }),
+            title: t('how.step6.title', { defaultValue: 'Payez vos fournisseurs' }),
+            description: t('how.step6.desc', { defaultValue: 'Exécutez vos payouts en Euro, USD et Naira avec justificatifs instantanés et traçabilité.' }),
             icon: Send,
         },
     ];
@@ -104,11 +104,11 @@ const HowItWorksSection = () => {
                 <div className="max-w-3xl mx-auto px-4">
                     <div className="glass-panel p-6 border border-white/10 rounded-2xl">
                         <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-bold">
-                            <span className="bg-primary-500/10 text-primary-400 px-4 py-2 rounded-lg border border-primary-500/20">XAF</span>
+                            <span className="bg-primary-500/10 text-primary-400 px-4 py-2 rounded-lg border border-primary-500/20">Collections (XAF / XOF)</span>
                             <span className="text-slate-500">→</span>
-                            <span className="bg-white/5 text-white px-4 py-2 rounded-lg border border-white/10">USD / CNY</span>
+                            <span className="bg-white/5 text-white px-4 py-2 rounded-lg border border-white/10">Conversion FX</span>
                             <span className="text-slate-500">→</span>
-                            <span className="bg-white/5 text-white px-4 py-2 rounded-lg border border-white/10">Fournisseur Chinois</span>
+                            <span className="bg-white/5 text-white px-4 py-2 rounded-lg border border-white/10">Payouts Fournisseurs (Euro, USD, Naira)</span>
                             <span className="text-slate-500">→</span>
                             <span className="bg-[#22C55E]/10 text-[#22C55E] px-4 py-2 rounded-lg border border-[#22C55E]/20">✓ Confirmation</span>
                         </div>

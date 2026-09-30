@@ -3,16 +3,16 @@
 import React from 'react'
 import { useLanguageStore } from '@/store/languageStore'
 
-// Change #6: Removed all unverified company names. Only show generic capability descriptors.
 const CAPABILITIES = [
+    'Collections & Payouts (Encaissements & Décaissements)',
+    'Payez vos Fournisseurs : Euro, USD et Naira',
     'Paiements Transfrontaliers',
-    'Change Multi-Devises',
-    'Comptes Entreprise',
-    'Paiements Fournisseurs',
-    'Infrastructure API',
-    'KYC/KYB Intégré',
-    'Suivi en Temps Réel',
-    'Conformité Réglementaire',
+    'Change Multi-Devises en Temps Réel',
+    'Comptes Trésorerie Entreprise',
+    'Infrastructure & API de Paiement',
+    'Vérification KYC / KYB Instantanée',
+    'Suivi & Justificatifs en Temps Réel',
+    'Conformité Réglementaire Internationale',
 ];
 
 const TrustedMarquee = () => {

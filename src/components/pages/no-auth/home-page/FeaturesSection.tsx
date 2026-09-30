@@ -1,53 +1,53 @@
 'use client'
 
 import React from 'react'
-import { Globe, Zap, Shield, CreditCard, TrendingUp, Building2 } from 'lucide-react'
+import { Globe, Zap, Shield, CreditCard, TrendingUp, Building2, ArrowLeftRight } from 'lucide-react'
 
 import { useLanguageStore } from '@/store/languageStore'
 
 const FeaturesSection = () => {
     const { t } = useLanguageStore();
 
-    // Change #3: No crypto features on homepage. Change #7: B2B-focused features
+    // B2B & Global FX features: Collections & Payouts, Multi-currency supplier payments
     const FEATURES = [
         {
-            title: t('features.multiCurrency.title', { defaultValue: 'Multi-Devises' }),
-            description: t('features.multiCurrency.desc', { defaultValue: 'Détenez et échangez XAF, XOF, USD, EUR, GBP, CNY et bien plus — depuis un seul compte.' }),
-            icon: Globe,
+            title: t('features.collectionsPayouts.title', { defaultValue: 'Collections & Payouts' }),
+            description: t('features.collectionsPayouts.desc', { defaultValue: 'Encaissez facilement les règlements de vos clients et automatisez vos décaissements (payouts) locaux et transfrontaliers sans friction.' }),
+            icon: ArrowLeftRight,
             iconColor: 'text-primary-500',
             iconBg: 'bg-primary-500/10',
         },
         {
-            title: t('features.supplierPayments.title', { defaultValue: 'Paiements Fournisseurs' }),
-            description: t('features.supplierPayments.desc', { defaultValue: 'Payez vos fournisseurs en Chine, en Europe et dans le monde entier directement depuis votre compte.' }),
+            title: t('features.supplierPayments.title', { defaultValue: 'Payez vos Fournisseurs : Euro, USD & Naira' }),
+            description: t('features.supplierPayments.desc', { defaultValue: 'Réglez directement vos factures fournisseurs et partenaires en Europe, aux États-Unis, en Chine et au Nigéria en Euro, USD, CNY et Naira.' }),
             icon: Building2,
             iconColor: 'text-[#F59E0B]',
             iconBg: 'bg-[#F59E0B]/10',
         },
         {
-            title: t('features.transfers.title', { defaultValue: 'Transferts Rapides' }),
-            description: t('features.transfers.desc', { defaultValue: 'Envoyez et recevez des paiements en quelques secondes. Sans frontières, sans délais, sans frais cachés.' }),
-            icon: Zap,
+            title: t('features.multiCurrency.title', { defaultValue: 'Comptes Multi-Devises' }),
+            description: t('features.multiCurrency.desc', { defaultValue: 'Détenez et échangez XAF, XOF, USD, EUR, GBP, NGN, CNY et bien plus — depuis une interface trésorerie unique.' }),
+            icon: Globe,
             iconColor: 'text-[#7C3AED]',
             iconBg: 'bg-[#7C3AED]/10',
         },
         {
-            title: t('features.security.title', { defaultValue: 'Sécurité Renforcée' }),
-            description: t('features.security.desc', { defaultValue: 'Chiffrement 256-bit, authentification biométrique et ségrégation des fonds clients.' }),
-            icon: Shield,
+            title: t('features.transfers.title', { defaultValue: 'Transferts Rapides' }),
+            description: t('features.transfers.desc', { defaultValue: 'Envoyez et recevez des paiements en quelques secondes. Sans frontières, sans délais et en toute conformité.' }),
+            icon: Zap,
             iconColor: 'text-[#22C55E]',
             iconBg: 'bg-[#22C55E]/10',
         },
         {
-            title: t('features.cards.title', { defaultValue: 'Cartes Virtuelles' }),
-            description: t('features.cards.desc', { defaultValue: 'Créez des cartes virtuelles instantanément. Gélez ou annulez en un clic.' }),
-            icon: CreditCard,
+            title: t('features.security.title', { defaultValue: 'Sécurité & Ségrégation' }),
+            description: t('features.security.desc', { defaultValue: 'Chiffrement 256-bit, authentification biométrique et ségrégation stricte des fonds clients.' }),
+            icon: Shield,
             iconColor: 'text-[#19C2FF]',
             iconBg: 'bg-[#19C2FF]/10',
         },
         {
-            title: t('features.exchange.title', { defaultValue: 'Change en Temps Réel' }),
-            description: t('features.exchange.desc', { defaultValue: 'Convertissez entre devises aux taux du marché en temps réel. XAF, USD, CNY et plus.' }),
+            title: t('features.exchange.title', { defaultValue: 'Change aux Taux Réels' }),
+            description: t('features.exchange.desc', { defaultValue: 'Convertissez instantanément vos devises aux cours du marché interbancaire en temps réel.' }),
             icon: TrendingUp,
             iconColor: 'text-[#FB7185]',
             iconBg: 'bg-[#FB7185]/10',

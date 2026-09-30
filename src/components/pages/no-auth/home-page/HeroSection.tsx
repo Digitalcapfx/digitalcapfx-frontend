@@ -37,17 +37,17 @@ const HeroSection = () => {
                             <span className="bg-brand-gradient bg-clip-text text-transparent">{t('hero.titleHighlight', { defaultValue: "pour les Entreprises Africaines." })}</span>
                         </h1>
                         <p className="text-[#6D778A] text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl font-sans">
-                            {t('hero.subtitle', { defaultValue: "Collectez en monnaie locale. Convertissez en USD ou CNY. Payez vos fournisseurs dans le monde entier — le tout depuis une seule plateforme." })}
+                            {t('hero.subtitle', { defaultValue: "Collections & Payouts automatisés : encaissez en monnaie locale et payez vos fournisseurs internationaux en Euro, USD, CNY et Naira — le tout depuis une seule plateforme sécurisée." })}
                         </p>
                     </div>
 
-                    {/* Corridor indicator — Change #2 & #7 */}
+                    {/* Corridor indicator — Collections and Payouts & Multi-currency supplier payments */}
                     <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-                        <span className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-white font-bold">Cameroun → Chine</span>
+                        <span className="bg-primary-500/15 border border-primary-500/30 px-3 py-1.5 rounded-lg text-primary-400 font-bold">Collections & Payouts</span>
                         <span className="text-slate-500">|</span>
-                        <span className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-slate-300">XAF → USD/CNY</span>
+                        <span className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-white font-bold">Payez vos fournisseurs : Euro, USD & Naira</span>
                         <span className="text-slate-500">|</span>
-                        <span className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-slate-300">Paiements B2B</span>
+                        <span className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-slate-300">Afrique ↔ Monde</span>
                     </div>
 
                     {/* Buttons Row — Change #2 CTAs */}
@@ -91,16 +91,16 @@ const HeroSection = () => {
                         <div className="glass-panel p-6 sm:p-8 space-y-6 border border-white/10 rounded-[24px] shadow-2xl shadow-black/60">
                             {/* Flow header */}
                             <div className="text-center">
-                                <span className="text-[10px] font-bold tracking-[0.2em] text-primary-400 uppercase font-mono">Flux de paiement fournisseur</span>
+                                <span className="text-[10px] font-bold tracking-[0.2em] text-primary-400 uppercase font-mono">Collections & Payouts Fournisseurs</span>
                             </div>
 
                             {/* Step flow */}
                             <div className="space-y-3">
                                 {[
-                                    { step: '1', label: 'Dépôt en XAF', detail: 'Virement bancaire / Mobile Money', color: 'text-white' },
-                                    { step: '2', label: 'Conversion XAF → USD/CNY', detail: 'Taux de change en temps réel', color: 'text-primary-400' },
-                                    { step: '3', label: 'Paiement du fournisseur', detail: 'Chine, Europe, Monde entier', color: 'text-cyan-400' },
-                                    { step: '4', label: 'Confirmation de paiement', detail: 'Suivi en temps réel', color: 'text-[#22C55E]' },
+                                    { step: '1', label: 'Collections (Encaissements)', detail: 'Dépôt XAF / XOF via Banque & MoMo', color: 'text-white' },
+                                    { step: '2', label: 'Conversion FX en Temps Réel', detail: 'Vers Euro, USD, CNY ou Naira', color: 'text-primary-400' },
+                                    { step: '3', label: 'Payouts Fournisseurs', detail: 'Règlement direct : Euro, USD, CNY & Naira', color: 'text-cyan-400' },
+                                    { step: '4', label: 'Confirmation & Traçabilité', detail: 'Justificatif & suivi en temps réel', color: 'text-[#22C55E]' },
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all duration-300 group">
                                         <div className={`w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-xs font-bold ${item.color} shrink-0`}>
