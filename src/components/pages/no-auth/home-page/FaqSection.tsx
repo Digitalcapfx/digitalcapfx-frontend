@@ -5,34 +5,40 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguageStore } from '@/store/languageStore'
 
+// Change #3: Removed crypto/stablecoin FAQs. Change #4: Removed FDIC claim.
+// Rewritten to focus on B2B cross-border payments and compliance.
 const FaqSection = () => {
     const { t } = useLanguageStore();
     const [openIndex, setOpenIndex] = useState<number | null>(0);
 
     const FAQ_ITEMS = [
         {
-            question: t('faq.q1', { defaultValue: 'Is my money safe with DigitalCapFx?' }),
-            answer: t('faq.a1', { defaultValue: 'Absolutely. All fiat funds are held in segregated accounts at partner banks. We use 256-bit encryption, biometric authentication, and cold storage for digital assets. Your account is protected to the highest industry standards.' }),
+            question: t('faq.q1', { defaultValue: 'Mes fonds sont-ils en sécurité avec Digitalcap FX ?' }),
+            answer: t('faq.a1', { defaultValue: 'Oui. Les fonds des clients sont détenus dans des comptes ségrégués auprès de nos partenaires bancaires. Nous utilisons un chiffrement 256-bit et une authentification renforcée pour protéger chaque transaction.' }),
         },
         {
-            question: t('faq.q2', { defaultValue: 'Which currencies can I hold?' }),
-            answer: t('faq.a2', { defaultValue: 'We support USD, EUR, GBP, CAD, XAF, XOF, and multiple other global fiat currencies alongside stablecoins like USDT and USDC.' }),
+            question: t('faq.q2', { defaultValue: 'Quelles devises puis-je détenir et convertir ?' }),
+            answer: t('faq.a2', { defaultValue: 'Nous prenons en charge le XAF, XOF, USD, EUR, GBP, CNY et d\'autres devises internationales. Les conversions sont effectuées aux taux du marché en temps réel.' }),
         },
         {
-            question: t('faq.q3', { defaultValue: 'How fast are transfers?' }),
-            answer: t('faq.a3', { defaultValue: 'Locally, bank transfers settle instantly. Cross-border payments and currency conversions execute in seconds, ensuring real-time settlement.' }),
+            question: t('faq.q3', { defaultValue: 'Comment payer un fournisseur en Chine ?' }),
+            answer: t('faq.a3', { defaultValue: 'Après avoir créé votre compte et complété la vérification KYC/KYB, vous pouvez alimenter votre compte en XAF, convertir en USD ou CNY, ajouter les coordonnées de votre fournisseur, télécharger la facture et envoyer le paiement. Le suivi se fait en temps réel.' }),
         },
         {
-            question: t('faq.q4', { defaultValue: 'Are there any hidden fees?' }),
-            answer: t('faq.a4', { defaultValue: 'No. All conversion rates and transaction fees are fully transparent and displayed on the interface before you click confirm.' }),
+            question: t('faq.q4', { defaultValue: 'Y a-t-il des frais cachés ?' }),
+            answer: t('faq.a4', { defaultValue: 'Non. Tous les taux de conversion et frais de transaction sont affichés de manière transparente avant chaque confirmation de paiement.' }),
         },
         {
-            question: t('faq.q5', { defaultValue: 'Can I get a physical card?' }),
-            answer: t('faq.a5', { defaultValue: 'Yes. In addition to instant virtual cards, you can request a contactless physical debit card to spend from your multi-currency balances directly.' }),
+            question: t('faq.q5', { defaultValue: 'Quel est le délai de traitement des paiements ?' }),
+            answer: t('faq.a5', { defaultValue: 'Les conversions de devises sont quasi instantanées. Les paiements internationaux vers les fournisseurs sont généralement traités sous 24 à 48 heures ouvrées selon le corridor.' }),
         },
         {
-            question: t('faq.q6', { defaultValue: 'How do I get started?' }),
-            answer: t('faq.a6', { defaultValue: "Simply click 'Get Started' to verify your business details. Verification is entirely online and typically takes less than two minutes." }),
+            question: t('faq.q6', { defaultValue: 'Comment ouvrir un compte entreprise ?' }),
+            answer: t('faq.a6', { defaultValue: 'Cliquez sur \"Ouvrir un Compte Entreprise\" et suivez les étapes de vérification KYC/KYB en ligne. La procédure est entièrement digitale et prend généralement moins de 10 minutes.' }),
+        },
+        {
+            question: t('faq.q7', { defaultValue: 'Digitalcap FX est-elle une institution réglementée ?' }),
+            answer: t('faq.a7', { defaultValue: 'Digitalcap FX opère en conformité avec les réglementations applicables. Pour plus de détails sur notre cadre réglementaire, nos licences et nos procédures de conformité, consultez notre page Conformité & Réglementation.' }),
         },
     ];
 
@@ -48,14 +54,14 @@ const FaqSection = () => {
                 <div className="space-y-4 max-w-3xl mx-auto flex flex-col items-center">
                     <div className="inline-flex items-center space-x-2 bg-primary-500/10 border border-primary-500/20 px-3 py-1.5 rounded-full select-none">
                         <span className="text-[10px] font-bold tracking-wider text-primary-400 uppercase">
-                            {t('faq.badge', { defaultValue: '❓ Questions & Answers' })}
+                            {t('faq.badge', { defaultValue: '❓ Questions & Réponses' })}
                         </span>
                     </div>
                     <h2 className="font-satoshi font-black text-3xl sm:text-4xl lg:text-[48px] leading-[1.15] text-white tracking-tight">
-                        {t('faq.title', { defaultValue: 'Frequently asked' })} <span className="bg-brand-gradient bg-clip-text text-transparent">{t('faq.titleHighlight', { defaultValue: 'questions' })}</span>
+                        {t('faq.title', { defaultValue: 'Questions' })} <span className="bg-brand-gradient bg-clip-text text-transparent">{t('faq.titleHighlight', { defaultValue: 'fréquentes' })}</span>
                     </h2>
                     <p className="text-slate-400 text-sm sm:text-base max-w-lg font-sans">
-                        {t('faq.subtitle', { defaultValue: "Everything you need to know about DigitalCapFx. Can't find an answer? Reach out to our support team." })}
+                        {t('faq.subtitle', { defaultValue: "Tout ce que vous devez savoir sur Digitalcap FX. Vous ne trouvez pas la réponse ? Contactez notre équipe." })}
                     </p>
                 </div>
 

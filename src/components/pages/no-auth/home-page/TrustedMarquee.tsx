@@ -3,31 +3,28 @@
 import React from 'react'
 import { useLanguageStore } from '@/store/languageStore'
 
-const PARTNERS = [
-    'Standard Bank',
-    'Interswitch',
-    'Paystack',
-    'Andela',
-    'Jumia',
-    'Wave',
-    'MFS Africa',
-    'Chipper Cash',
-    'Lipa Na M-PESA',
-    'Stripe',
-    'Flutterwave',
-    'MTN Business',
+// Change #6: Removed all unverified company names. Only show generic capability descriptors.
+const CAPABILITIES = [
+    'Paiements Transfrontaliers',
+    'Change Multi-Devises',
+    'Comptes Entreprise',
+    'Paiements Fournisseurs',
+    'Infrastructure API',
+    'KYC/KYB Intégré',
+    'Suivi en Temps Réel',
+    'Conformité Réglementaire',
 ];
 
 const TrustedMarquee = () => {
     const { t } = useLanguageStore();
-    // Duplicate partners to fill screen and scroll continuously
-    const doublePartners = [...PARTNERS, ...PARTNERS, ...PARTNERS];
+    // Duplicate items to fill screen and scroll continuously
+    const doubleItems = [...CAPABILITIES, ...CAPABILITIES, ...CAPABILITIES];
 
     return (
         <div className="w-full bg-[#0C1224] py-12 border-b border-white/5 relative overflow-hidden select-none">
-            {/* Centered Heading */}
+            {/* Centered Heading — Change #6: Generic, truthful heading */}
             <div className="text-center text-[11px] font-bold tracking-[0.25em] text-[#3E4658] uppercase mb-8 select-none">
-                {t('trusted.title', { defaultValue: 'Trusted Infrastructure & Networks' })}
+                {t('trusted.title', { defaultValue: 'Nos Capacités' })}
             </div>
 
             {/* Left and Right Fade overlays */}
@@ -36,12 +33,12 @@ const TrustedMarquee = () => {
 
             <div className="flex whitespace-nowrap min-w-full">
                 <div className="flex space-x-16 animate-marquee-slow shrink-0 hover:[animation-play-state:paused] cursor-pointer">
-                    {doublePartners.map((partner, idx) => (
+                    {doubleItems.map((item, idx) => (
                         <div
-                            key={`${partner}-${idx}`}
+                            key={`${item}-${idx}`}
                             className="text-sm font-bold tracking-tight text-[#3E4658] hover:text-slate-400 transition duration-300 select-none"
                         >
-                            {partner}
+                            {item}
                         </div>
                     ))}
                 </div>

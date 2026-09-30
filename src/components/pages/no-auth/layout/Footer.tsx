@@ -33,57 +33,57 @@ const SOCIAL_LINKS = [
     { icon: Mail, href: '#', label: 'Email' },
 ];
 
+// Change #5: Added Conformité & Réglementation section in footer
 const FOOTER_SECTIONS = [
     {
         titleKey: 'footer.product',
-        title: 'Product',
+        title: 'Produit',
         links: [
-            { labelKey: 'footer.features', label: 'Features', href: '#features' },
-            { labelKey: 'footer.virtualCards', label: 'Virtual Cards', href: '#virtual-cards' },
-            { labelKey: 'footer.exchangeRates', label: 'Exchange Rates', href: '#exchange-rates' },
-            { labelKey: 'footer.security', label: 'Security', href: '#security' },
+            { labelKey: 'footer.features', label: 'Fonctionnalités', href: '#features' },
+            { labelKey: 'footer.supplierPayments', label: 'Paiements Fournisseurs', href: '#how-it-works' },
+            { labelKey: 'footer.exchangeRates', label: 'Taux de Change', href: '#' },
+            { labelKey: 'footer.virtualCards', label: 'Cartes Virtuelles', href: '#' },
         ],
     },
     {
         titleKey: 'footer.company',
-        title: 'Company',
+        title: 'Entreprise',
         links: [
-            { labelKey: 'footer.aboutUs', label: 'About Us', href: '/about' },
-            { labelKey: 'footer.careers', label: 'Careers', href: '/careers' },
+            { labelKey: 'footer.aboutUs', label: 'À Propos', href: '/about' },
+            { labelKey: 'footer.careers', label: 'Carrières', href: '/careers' },
             { labelKey: 'footer.blog', label: 'Blog', href: '/blog' },
-            { labelKey: 'footer.pressKit', label: 'Press Kit', href: '/press-kit' },
+            { labelKey: 'footer.pressKit', label: 'Presse', href: '/press-kit' },
             { labelKey: 'footer.contact', label: 'Contact', href: '/contact' },
         ],
     },
     {
-        titleKey: 'footer.resources',
-        title: 'Resources',
+        titleKey: 'footer.compliance',
+        title: 'Conformité & Réglementation',
         links: [
-            { labelKey: 'footer.helpCenter', label: 'Help Center', href: '#help-center' },
-            { labelKey: 'footer.apiDocs', label: 'API Docs', href: '#api-docs' },
-            { labelKey: 'footer.status', label: 'Status', href: '#status' },
-            { labelKey: 'footer.community', label: 'Community', href: '#community' },
-            { labelKey: 'footer.partners', label: 'Partners', href: '#partners' },
+            { labelKey: 'footer.compliancePage', label: 'Cadre Réglementaire', href: '/compliance' },
+            { labelKey: 'footer.kycKyb', label: 'Procédures KYC/KYB', href: '/compliance#kyc' },
+            { labelKey: 'footer.amlCft', label: 'Politique LCB-FT', href: '/compliance#aml' },
+            { labelKey: 'footer.dataProtection', label: 'Protection des Données', href: '/compliance#data' },
+            { labelKey: 'footer.complaints', label: 'Réclamations', href: '/compliance#complaints' },
         ],
     },
     {
         titleKey: 'footer.legal',
-        title: 'Legal',
+        title: 'Légal',
         links: [
-            { labelKey: 'footer.privacyPolicy', label: 'Privacy Policy', href: '/privacy' },
-            { labelKey: 'footer.termsOfService', label: 'Terms of Service', href: '/terms' },
-            { labelKey: 'footer.cookiePolicy', label: 'Cookie Policy', href: '#cookie-policy' },
-            { labelKey: 'footer.licenses', label: 'Licenses', href: '#licenses' },
-            { labelKey: 'footer.amlPolicy', label: 'AML Policy', href: '#aml-policy' },
+            { labelKey: 'footer.privacyPolicy', label: 'Politique de Confidentialité', href: '/privacy' },
+            { labelKey: 'footer.termsOfService', label: 'Conditions d\'Utilisation', href: '/terms' },
+            { labelKey: 'footer.cookiePolicy', label: 'Politique de Cookies', href: '#cookie-policy' },
         ],
     },
 ];
 
+// Change #4: Removed "FDIC Insured" and "SOC 2 Certified" — unsubstantiated claims.
+// Only display verifiable security measures.
 const COMPLIANCE_ITEMS = [
-    { labelKey: 'footer.encryption', label: '256-bit Encryption' },
-    { labelKey: 'footer.pci', label: 'PCI DSS Compliant' },
-    { labelKey: 'footer.soc2', label: 'SOC 2 Certified' },
-    { labelKey: 'footer.fdic', label: 'FDIC Insured' },
+    { labelKey: 'footer.encryption', label: 'Chiffrement 256-bit' },
+    { labelKey: 'footer.segregation', label: 'Fonds Ségrégués' },
+    { labelKey: 'footer.amlCompliant', label: 'Conformité LCB-FT' },
 ];
 
 const Footer = () => {
@@ -94,11 +94,11 @@ const Footer = () => {
             {/* Top Grid Section */}
             <section className="mx-auto px-4 md:px-8 py-16 grid grid-cols-12 gap-8 lg:gap-12">
 
-                {/* Brand Column */}
+                {/* Brand Column — Change #1: Updated tagline for B2B positioning */}
                 <div className="col-span-12 lg:col-span-4 space-y-6">
                     <Logo href="/" size="md" />
                     <p className="text-sm leading-relaxed text-slate-400 max-w-sm font-sans">
-                        {t('footer.tagline', { defaultValue: 'Banking without borders. Hold, send, exchange and spend across fiat, stablecoins — all in one account.' })}
+                        {t('footer.tagline', { defaultValue: 'Paiements internationaux pour les entreprises africaines. Collectez en monnaie locale, convertissez et payez vos fournisseurs dans le monde entier.' })}
                     </p>
                     <div className="flex items-center space-x-3">
                         {SOCIAL_LINKS.map((social) => {
@@ -142,7 +142,7 @@ const Footer = () => {
 
             </section>
 
-            {/* Middle Compliance Section */}
+            {/* Middle Compliance Section — Change #4: Only verifiable claims */}
             <section className="border-t border-white/5">
                 <div className="mx-auto px-4 md:px-8 py-8">
                     <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
@@ -160,17 +160,17 @@ const Footer = () => {
             <section className="border-t border-white/5 bg-black/20">
                 <div className="mx-auto px-4 md:px-8 py-8 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <p className="text-xs text-slate-500 font-sans">
-                        © {new Date().getFullYear()} DigitalCapFx. {t('footer.allRights', { defaultValue: 'All rights reserved.' })}
+                        © {new Date().getFullYear()} Digitalcap FX. {t('footer.allRights', { defaultValue: 'Tous droits réservés.' })}
                     </p>
                     <div className="flex items-center space-x-6">
                         <Link href="/privacy" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
-                            {t('footer.privacy', { defaultValue: 'Privacy' })}
+                            {t('footer.privacy', { defaultValue: 'Confidentialité' })}
                         </Link>
                         <Link href="/terms" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
-                            {t('footer.terms', { defaultValue: 'Terms' })}
+                            {t('footer.terms', { defaultValue: 'Conditions' })}
                         </Link>
-                        <Link href="#cookies" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
-                            {t('footer.cookies', { defaultValue: 'Cookies' })}
+                        <Link href="/compliance" className="text-xs text-slate-500 hover:text-slate-400 font-sans transition">
+                            {t('footer.complianceLink', { defaultValue: 'Conformité' })}
                         </Link>
                     </div>
                 </div>

@@ -4,63 +4,73 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
-import { ArrowRight, Check } from 'lucide-react'
+import { ArrowRight, Check, Building2, Banknote } from 'lucide-react'
 import { useLanguageStore } from '@/store/languageStore'
 
 const HeroSection = () => {
     const { t } = useLanguageStore();
 
     const BENEFITS = [
-        t('hero.benefit1', { defaultValue: "No hidden fees" }),
-        t('hero.benefit2', { defaultValue: "Instant setup" }),
-        t('hero.benefit3', { defaultValue: "FDIC insured" })
+        t('hero.benefit1', { defaultValue: "Zéro frais cachés" }),
+        t('hero.benefit2', { defaultValue: "Inscription en 2 minutes" }),
+        t('hero.benefit3', { defaultValue: "Fonds sécurisés et ségrégués" })
     ];
 
     return (
         <section className="w-full max-w-full overflow-hidden">
-            <main className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center  py-12 pt-24 lg:py-32">
+            <main className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center py-12 pt-24 lg:py-32">
                 {/* Left Content Column */}
-                <div className="col-span-1 lg:col-span-6 space-y-6 text-left min-w-0">
+                <div className="col-span-1 lg:col-span-7 space-y-6 text-left min-w-0">
 
                     {/* Support Badge */}
                     <div className="inline-flex items-center space-x-2 bg-primary-500/10 border border-primary-500/20 px-3 py-1.5 rounded-full select-none">
                         <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E] animate-pulse"></span>
                         <span className="text-[10px] font-bold tracking-wider text-primary-500 uppercase">
-                            {t('hero.badge', { defaultValue: "Now Supporting 13+ Currencies" })}
+                            {t('hero.badge', { defaultValue: "Paiements Transfrontaliers & Change" })}
                         </span>
                     </div>
 
-                    {/* Heading */}
+                    {/* Heading — Clear positioning per Change #1 & #7 */}
                     <div className="space-y-4">
-                        <h1 className="font-satoshi font-black text-4xl sm:text-5xl lg:text-[60px] leading-[1.1] text-white tracking-tight">
-                            {t('hero.titlePrefix', { defaultValue: "Platform," })} <br className="hidden sm:inline" />
-                            <span className="bg-brand-gradient bg-clip-text text-transparent">{t('hero.titleHighlight', { defaultValue: "reimagined." })}</span>
+                        <h1 className="font-satoshi font-black text-4xl sm:text-5xl lg:text-[56px] leading-[1.1] text-white tracking-tight">
+                            {t('hero.titlePrefix', { defaultValue: "Paiements Internationaux" })} <br className="hidden sm:inline" />
+                            <span className="bg-brand-gradient bg-clip-text text-transparent">{t('hero.titleHighlight', { defaultValue: "pour les Entreprises Africaines." })}</span>
                         </h1>
                         <p className="text-[#6D778A] text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl font-sans">
-                            {t('hero.subtitle', { defaultValue: "One account for fiat. Send, receive, exchange, and spend iUSD – all from a single, beautifully designed platform." })}
+                            {t('hero.subtitle', { defaultValue: "Collectez en monnaie locale. Convertissez en USD ou CNY. Payez vos fournisseurs dans le monde entier — le tout depuis une seule plateforme." })}
                         </p>
                     </div>
 
-                    {/* Buttons Row */}
+                    {/* Corridor indicator — Change #2 & #7 */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+                        <span className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-white font-bold">Cameroun → Chine</span>
+                        <span className="text-slate-500">|</span>
+                        <span className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-slate-300">XAF → USD/CNY</span>
+                        <span className="text-slate-500">|</span>
+                        <span className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-slate-300">Paiements B2B</span>
+                    </div>
+
+                    {/* Buttons Row — Change #2 CTAs */}
                     <div className="flex flex-wrap items-center gap-4">
                         <Link href="/get-started">
                             <Button
                                 variant="primary"
                                 size="large"
                                 className="rounded-full px-7 shadow-lg shadow-primary-500/20 text-sm font-bold"
-                                rightIcon={<ArrowRight className="h-5 w-5" />}
+                                rightIcon={<Building2 className="h-5 w-5" />}
                             >
-                                {t('hero.openAccount', { defaultValue: "Open Account" })}
+                                {t('hero.openAccount', { defaultValue: "Ouvrir un Compte Entreprise" })}
                             </Button>
                         </Link>
-                        <Link href="/login">
-                            <button className="h-[52px] cursor-pointer px-8 rounded-2xl border border-white/15 text-white hover:bg-white/5 hover:border-white/20 transition duration-200 text-sm font-semibold focus:outline-none select-none active:scale-[0.98]">
-                                {t('nav.login', { defaultValue: "Log in" })}
+                        <Link href="/get-started">
+                            <button className="h-[52px] cursor-pointer px-8 rounded-2xl border border-white/15 text-white hover:bg-white/5 hover:border-white/20 transition duration-200 text-sm font-semibold focus:outline-none select-none active:scale-[0.98] flex items-center gap-2">
+                                <Banknote className="h-5 w-5 text-primary-400" />
+                                {t('hero.paySupplier', { defaultValue: "Payer un Fournisseur" })}
                             </button>
                         </Link>
                     </div>
 
-                    {/* Checklist Benefits */}
+                    {/* Checklist Benefits — Change #4: removed FDIC, replaced with safe phrasing */}
                     <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs sm:text-sm text-slate-500 select-none">
                         {BENEFITS.map((benefit) => (
                             <div key={benefit} className="flex items-center space-x-2">
@@ -72,37 +82,50 @@ const HeroSection = () => {
 
                 </div>
 
-                {/* Right Illustration Column */}
-                <div className="col-span-1 lg:col-span-6 flex justify-center lg:justify-end relative mt-8 lg:mt-0 min-w-0 w-full">
+                {/* Right Illustration Column — Change #2: XAF→CNY flow instead of EUR→GBP */}
+                <div className="col-span-1 lg:col-span-5 flex justify-center lg:justify-end relative mt-8 lg:mt-0 min-w-0 w-full">
                     <div className="relative w-full max-w-[340px] sm:max-w-[450px] lg:max-w-none h-auto mx-auto lg:mx-0">
                         <div className="absolute inset-0 bg-primary-500/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
 
-                        <Image
-                            src="/HeroImage.svg"
-                            alt="DigitalCap FX Dashboard Platform Preview"
-                            width={600}
-                            height={450}
-                            priority
-                            className="w-full h-auto object-contain select-none"
-                        />
+                        {/* Payment Flow Visual Card */}
+                        <div className="glass-panel p-6 sm:p-8 space-y-6 border border-white/10 rounded-[24px] shadow-2xl shadow-black/60">
+                            {/* Flow header */}
+                            <div className="text-center">
+                                <span className="text-[10px] font-bold tracking-[0.2em] text-primary-400 uppercase font-mono">Flux de paiement fournisseur</span>
+                            </div>
 
-                        <div
-                            className="absolute bottom-[5%] sm:-left-8 lg:-left-12 bg-[#0C1224] border border-white/10 rounded-[20px] p-5 shadow-2xl shadow-black/80 max-w-[260px] w-full select-none hover:scale-[1.02] transition-transform duration-300 hidden sm:block"
-                            style={{ animation: 'float-card 6s ease-in-out infinite' }}
-                        >
-                            <div className="flex items-center space-x-3">
-                                <div className="w-9 h-9 rounded-full bg-primary-500/10 border border-primary-500/25 flex items-center justify-center text-primary-400">
-                                    <span className="font-bold text-sm">€</span>
+                            {/* Step flow */}
+                            <div className="space-y-3">
+                                {[
+                                    { step: '1', label: 'Dépôt en XAF', detail: 'Virement bancaire / Mobile Money', color: 'text-white' },
+                                    { step: '2', label: 'Conversion XAF → USD/CNY', detail: 'Taux de change en temps réel', color: 'text-primary-400' },
+                                    { step: '3', label: 'Paiement du fournisseur', detail: 'Chine, Europe, Monde entier', color: 'text-cyan-400' },
+                                    { step: '4', label: 'Confirmation de paiement', detail: 'Suivi en temps réel', color: 'text-[#22C55E]' },
+                                ].map((item, i) => (
+                                    <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all duration-300 group">
+                                        <div className={`w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-xs font-bold ${item.color} shrink-0`}>
+                                            {item.step}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className={`text-sm font-bold ${item.color} font-satoshi`}>{item.label}</p>
+                                            <p className="text-[11px] text-slate-500 font-sans">{item.detail}</p>
+                                        </div>
+                                        {i < 3 && <ArrowRight className="h-3.5 w-3.5 text-slate-600 ml-auto shrink-0 group-hover:text-primary-400 transition-colors" />}
+                                        {i === 3 && <Check className="h-4 w-4 text-[#22C55E] ml-auto shrink-0 stroke-[3]" />}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Live rate preview */}
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                                <div>
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Taux indicatif</span>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-lg font-extrabold text-primary-400 font-satoshi">1,000,000 XAF</span>
+                                        <ArrowRight className="h-3.5 w-3.5 text-slate-500" />
+                                        <span className="text-lg font-extrabold text-white font-satoshi">¥10,980</span>
+                                    </div>
                                 </div>
-                                <span className="font-bold text-sm text-white tracking-tight">Instant Exchange</span>
-                            </div>
-                            <div className="flex items-center space-x-2.5 mt-4">
-                                <span className="text-xl font-extrabold text-primary-400 font-satoshi">€2,000</span>
-                                <ArrowRight className="h-4 w-4 text-slate-500" />
-                                <span className="text-xl font-extrabold text-white font-satoshi">£1,715</span>
-                            </div>
-                            <div className="text-[10px] font-bold text-slate-500 font-mono tracking-wider mt-1.5 uppercase">
-                                EUR → GBP • Live rate
                             </div>
                         </div>
                     </div>

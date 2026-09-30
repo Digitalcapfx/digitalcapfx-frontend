@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Logo } from '@/components/ui/Logo'
-import { ArrowRight, Menu, X, Globe } from 'lucide-react'
+import { ArrowRight, Building2, Menu, X, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguageStore, Language } from '@/store/languageStore'
 import LanguageSelector from '@/components/ui/LanguageSelector'
@@ -17,10 +17,12 @@ interface NavLink {
     href: string;
 }
 
+// Change #5: Added Conformité link. Change #1: Updated labels to French B2B focus.
 const NAV_LINKS: NavLink[] = [
-    { id: 'features', labelKey: 'nav.features', defaultLabel: 'Features', href: '#features' },
-    { id: 'how-it-works', labelKey: 'nav.howItWorks', defaultLabel: 'How it works', href: '#how-it-works' },
-    { id: 'reviews', labelKey: 'nav.reviews', defaultLabel: 'Reviews', href: '#reviews' },
+    { id: 'features', labelKey: 'nav.features', defaultLabel: 'Fonctionnalités', href: '#features' },
+    { id: 'how-it-works', labelKey: 'nav.howItWorks', defaultLabel: 'Comment ça marche', href: '#how-it-works' },
+    { id: 'compliance', labelKey: 'nav.compliance', defaultLabel: 'Conformité', href: '/compliance' },
+    { id: 'reviews', labelKey: 'nav.reviews', defaultLabel: 'Témoignages', href: '#reviews' },
 ];
 
 const LANGUAGES: { code: Language; label: string }[] = [
@@ -70,16 +72,16 @@ const NavBar = () => {
 
                 <Link href="/login">
                     <Button variant="ghost" className="text-slate-300 font-medium px-4 text-sm h-9">
-                        {t('nav.login', { defaultValue: 'Log in' })}
+                        {t('nav.login', { defaultValue: 'Connexion' })}
                     </Button>
                 </Link>
                 <Link href="/get-started">
                     <Button
                         variant="primary"
                         className="rounded-full px-5 text-sm h-9 font-medium"
-                        rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
+                        rightIcon={<Building2 className="h-3.5 w-3.5" />}
                     >
-                        {t('nav.getStarted', { defaultValue: 'Get Started' })}
+                        {t('nav.getStarted', { defaultValue: 'Ouvrir un Compte' })}
                     </Button>
                 </Link>
             </div>
@@ -118,16 +120,16 @@ const NavBar = () => {
                     <div className="border-t border-white/5 pt-4 flex flex-col space-y-3">
                         <Link href="/login" onClick={() => setIsOpen(false)}>
                             <Button variant="ghost" className="w-full text-slate-300 font-semibold">
-                                {t('nav.login', { defaultValue: 'Log in' })}
+                                {t('nav.login', { defaultValue: 'Connexion' })}
                             </Button>
                         </Link>
                         <Link href="/get-started" onClick={() => setIsOpen(false)}>
                             <Button
                                 variant="primary"
                                 className="w-full rounded-full font-semibold"
-                                rightIcon={<ArrowRight className="h-4 w-4" />}
+                                rightIcon={<Building2 className="h-4 w-4" />}
                             >
-                                {t('nav.getStarted', { defaultValue: 'Get Started' })}
+                                {t('nav.getStarted', { defaultValue: 'Ouvrir un Compte' })}
                             </Button>
                         </Link>
                     </div>

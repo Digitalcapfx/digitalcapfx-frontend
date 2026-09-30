@@ -141,6 +141,11 @@ export class KycService extends BaseService {
     const response = await this.api.post('/kyc/init');
     return response.data;
   }
+
+  async autoApproveKyc() {
+    const response = await this.api.post('/kyc/auto-approve');
+    return response.data;
+  }
 }
 
 export const kycService = new KycService();

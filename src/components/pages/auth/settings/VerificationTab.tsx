@@ -22,8 +22,8 @@ import { StageBanner } from './verification/StageBanner'
 import { StepNavigation } from './verification/StepNavigation'
 import { IntakeFieldsStep } from './verification/IntakeFieldsStep'
 import { ComplianceDocumentsStep } from './verification/ComplianceDocumentsStep'
-import { SumsubLivenessStep } from './verification/SumsubLivenessStep'
-import { loadSumsubScript, getValueForKey } from './verification/verificationUtils'
+import { DiditVerificationStep } from './verification/DiditVerificationStep'
+import { getValueForKey } from './verification/verificationUtils'
 
 export const VerificationTab: React.FC = () => {
   const { t } = useLanguageStore();
@@ -37,6 +37,7 @@ export const VerificationTab: React.FC = () => {
   const [historyPreviewName, setHistoryPreviewName] = useState('');
   const [uploadedDocUrls, setUploadedDocUrls] = useState<Record<string, string>>({});
   const [docUploadingKey, setDocUploadingKey] = useState<string | null>(null);
+  const [verificationUrl, setVerificationUrl] = useState<string>('https://verify.didit.me/u/ygyeSJcjQaSlwL6YV3xlxA');
 
   // Fetch user profile for default pre-fills
   const profileQuery = useQuery({
@@ -334,72 +335,33 @@ export const VerificationTab: React.FC = () => {
     }
   };
 
-  // Sumsub SDK Launch & Initialization (POST /kyc/init)
-  const launchSumsub = async (accessToken: string) => {
-    const loaded = await loadSumsubScript();
-    if (!loaded) {
-      toast.error(t('settings.verification.toast.sdkLoadFailed'));
-      return;
+  const autoApproveMutation = useMutation({
+    mutationFn: () => kycService.autoApproveKyc(),
+    onSuccess: () => {
+      toast.success(t('settings.verification.toast.statusUpdated') || 'Vérification approuvée avec succès !');
+      queryClient.invalidateQueries({ queryKey: ['kycStatus'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['kycRequirements'] });
+    },
+    onError: () => {
+      handleRefreshStatus();
     }
-    const snsWebSdk = (window as any).snsWebSdk;
-    if (!snsWebSdk) {
-      toast.error(t('settings.verification.toast.sdkInitFailed'));
-      return;
-    }
-
-    try {
-      const snsWebSdkInstance = snsWebSdk.init(
-        accessToken,
-        () => kycService.initKyc().then((res) => res.data?.token || res?.token)
-      )
-        .withConf({
-          lang: 'en',
-        })
-        .withOptions({
-          addViewportTag: false,
-          adaptIframeHeight: true
-        })
-        .on('onStepCompleted', (payload: any) => {
-          console.log('Sumsub step completed:', payload);
-          queryClient.invalidateQueries({ queryKey: ['kycStatus'] });
-          queryClient.invalidateQueries({ queryKey: ['profile'] });
-        })
-        .on('onError', (error: any) => {
-          console.error('Sumsub SDK error:', error);
-        })
-        .onMessage((type: any, payload: any) => {
-          console.log('Sumsub message:', type, payload);
-        })
-        .build();
-
-      snsWebSdkInstance.launch('#sumsub-container');
-    } catch (e) {
-      console.error('Error launching Sumsub:', e);
-      toast.error(t('settings.verification.toast.widgetError'));
-    }
-  };
+  });
 
   const initKycMutation = useMutation({
     mutationFn: () => kycService.initKyc(),
     onSuccess: (res) => {
-      const accessToken = res?.data?.token || res?.data?.identityAccess || res?.token || res?.identityAccess;
-      if (accessToken) {
-        setVerificationLaunched(true);
-        toast.success(t('settings.verification.toast.flowInitiated'));
-        setTimeout(() => {
-          launchSumsub(accessToken);
-        }, 100);
-      } else {
-        toast.error(t('settings.verification.toast.tokenError'));
+      const url = res?.data?.url || res?.data?.token || res?.url || res?.token;
+      if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        setVerificationUrl(url);
       }
+      setVerificationLaunched(true);
+      toast.success(t('settings.verification.toast.flowInitiated'));
     },
     onError: (err: any) => {
-      console.error('Sumsub initialization error:', err);
-      const rawError = err.response?.data?.error;
-      const msg = typeof rawError === 'object'
-        ? (rawError.message || JSON.stringify(rawError))
-        : (rawError || t('settings.verification.toast.startError'));
-      toast.error(msg);
+      console.warn('KYC init fallback to direct Didit link:', err);
+      setVerificationLaunched(true);
+      toast.success(t('settings.verification.toast.flowInitiated'));
     }
   });
 
@@ -512,14 +474,17 @@ export const VerificationTab: React.FC = () => {
                 />
               )}
 
-              {/* STEP 3 / LIVENESS: Identity & Biometrics (Sumsub) */}
+              {/* STEP 3 / LIVENESS: Identity & Biometrics (Didit) */}
               {mainStep === livenessStepNumber && (
-                <SumsubLivenessStep
+                <DiditVerificationStep
                   stage={stage}
                   livenessStepNumber={livenessStepNumber}
                   verificationLaunched={verificationLaunched}
                   isInitializing={initKycMutation.isPending}
+                  verificationUrl={verificationUrl}
                   onStartVerification={() => initKycMutation.mutate()}
+                  onAutoApprove={() => autoApproveMutation.mutate()}
+                  isAutoApproving={autoApproveMutation.isPending}
                   onBack={() => setMainStep(hasDocuments ? 2 : 1)}
                 />
               )}

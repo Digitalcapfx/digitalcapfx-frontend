@@ -17,18 +17,19 @@ const XIcon = () => (
     </div>
 );
 
+// Change #3: Removed crypto references. Change #4: Removed "FDIC" and "bank-grade" claims.
 const ComparisonSection = () => {
     const { t } = useLanguageStore();
 
     const COMPARISON_ROWS = [
-        { feature: t('compare.f1', { defaultValue: 'Multi-currency wallets' }), dfx: true, bank: false },
-        { feature: t('compare.f2', { defaultValue: 'Instant cross-border transfers' }), dfx: true, bank: false },
-        { feature: t('compare.f3', { defaultValue: 'Built-in stablecoin exchange' }), dfx: true, bank: false },
-        { feature: t('compare.f4', { defaultValue: 'Virtual cards in seconds' }), dfx: true, bank: false },
-        { feature: t('compare.f5', { defaultValue: 'No hidden fees' }), dfx: true, bank: false },
-        { feature: t('compare.f6', { defaultValue: 'Real-time exchange rates' }), dfx: true, bank: false },
-        { feature: t('compare.f7', { defaultValue: '24/7 support' }), dfx: true, bank: true },
-        { feature: t('compare.f8', { defaultValue: 'Bank-grade security' }), dfx: true, bank: true },
+        { feature: t('compare.f1', { defaultValue: 'Comptes multi-devises (XAF, USD, CNY, EUR)' }), dfx: true, bank: false },
+        { feature: t('compare.f2', { defaultValue: 'Paiements fournisseurs internationaux' }), dfx: true, bank: false },
+        { feature: t('compare.f3', { defaultValue: 'Conversion de devises en temps réel' }), dfx: true, bank: false },
+        { feature: t('compare.f4', { defaultValue: 'Cartes virtuelles instantanées' }), dfx: true, bank: false },
+        { feature: t('compare.f5', { defaultValue: 'Zéro frais cachés' }), dfx: true, bank: false },
+        { feature: t('compare.f6', { defaultValue: 'Suivi des transactions en temps réel' }), dfx: true, bank: false },
+        { feature: t('compare.f7', { defaultValue: 'Support client réactif' }), dfx: true, bank: true },
+        { feature: t('compare.f8', { defaultValue: 'Ségrégation des fonds clients' }), dfx: true, bank: true },
     ];
 
     return (
@@ -39,14 +40,14 @@ const ComparisonSection = () => {
                 <div className="space-y-4 max-w-3xl mx-auto flex flex-col items-center">
                     <div className="inline-flex items-center space-x-2 bg-primary-500/10 border border-primary-500/20 px-3 py-1.5 rounded-full select-none">
                         <span className="text-[10px] font-bold tracking-wider text-primary-400 uppercase">
-                            {t('compare.badge', { defaultValue: '❖ Why DigitalCap FX' })}
+                            {t('compare.badge', { defaultValue: '❖ Pourquoi Digitalcap FX' })}
                         </span>
                     </div>
                     <h2 className="font-satoshi font-black text-3xl sm:text-4xl lg:text-[48px] leading-[1.15] text-white tracking-tight">
-                        {t('compare.title', { defaultValue: 'Why switch to' })} <span className="bg-brand-gradient bg-clip-text text-transparent">DigitalCapFx?</span>
+                        {t('compare.title', { defaultValue: 'Pourquoi choisir' })} <span className="bg-brand-gradient bg-clip-text text-transparent">Digitalcap FX ?</span>
                     </h2>
                     <p className="text-slate-400 text-sm sm:text-base max-w-lg font-sans">
-                        {t('compare.subtitle', { defaultValue: 'See how we compare to traditional banks. The difference speaks for itself.' })}
+                        {t('compare.subtitle', { defaultValue: 'Comparez notre plateforme aux solutions bancaires traditionnelles. La différence parle d\'elle-même.' })}
                     </p>
                 </div>
 
@@ -57,13 +58,13 @@ const ComparisonSection = () => {
                         {/* Header Row */}
                         <div className="grid grid-cols-12 items-center py-6 px-6 sm:px-8 border-b border-white/5 bg-white/[0.01] select-none">
                             <div className="col-span-6 text-left text-xs font-bold uppercase tracking-wider text-slate-550 font-satoshi">
-                                {t('compare.tableHeaderFeature', { defaultValue: 'Features' })}
+                                {t('compare.tableHeaderFeature', { defaultValue: 'Fonctionnalités' })}
                             </div>
                             <div className="col-span-3 flex justify-center">
                                 <div className="bg-[#0C1224] border border-white/10 px-4 py-1.5 rounded-full flex items-center justify-center shadow">
                                     <Image
                                         src="/DFXLogo.svg"
-                                        alt="DigitalCap Logo"
+                                        alt="Digitalcap FX Logo"
                                         width={100}
                                         height={24}
                                         className="h-5 w-auto"
@@ -71,7 +72,7 @@ const ComparisonSection = () => {
                                 </div>
                             </div>
                             <div className="col-span-3 text-center text-xs font-bold tracking-tight text-slate-400 font-satoshi">
-                                {t('compare.tableHeaderBanks', { defaultValue: 'Traditional Banks' })}
+                                {t('compare.tableHeaderBanks', { defaultValue: 'Banques Traditionnelles' })}
                             </div>
                         </div>
 

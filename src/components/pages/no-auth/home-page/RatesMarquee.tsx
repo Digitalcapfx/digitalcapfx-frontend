@@ -3,8 +3,6 @@
 import React from 'react'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 
-import { FEATURE_FLAGS, isCryptoCurrency } from '@/config/featureFlags'
-
 interface TickerItem {
     pair: string;
     price: string;
@@ -12,27 +10,21 @@ interface TickerItem {
     isPositive: boolean;
 }
 
-const RAW_TICKER_ITEMS: TickerItem[] = [
+// Change #2 & #3: Focus on corridors relevant to the business (XAF, USD, CNY, EUR).
+// Removed crypto pairs entirely.
+const TICKER_ITEMS: TickerItem[] = [
     { pair: 'USD/XAF', price: '610.50', change: '+0.2%', isPositive: true },
-    { pair: 'EUR/USD', price: '1.0850', change: '+0.3%', isPositive: true },
-    { pair: 'GBP/USD', price: '1.2710', change: '-0.1%', isPositive: false },
-    { pair: 'USD/XOF', price: '598.20', change: '+0.1%', isPositive: true },
+    { pair: 'CNY/XAF', price: '84.30', change: '+0.15%', isPositive: true },
     { pair: 'EUR/XAF', price: '655.95', change: '+0.4%', isPositive: true },
-    { pair: 'GBP/EUR', price: '1.1715', change: '-0.2%', isPositive: false },
-    { pair: 'USD/EUR', price: '0.9220', change: '+0.15%', isPositive: true },
-    { pair: 'USDT/XAF', price: '612.10', change: '+0.05%', isPositive: true },
+    { pair: 'GBP/XAF', price: '776.20', change: '-0.1%', isPositive: false },
+    { pair: 'USD/CNY', price: '7.24', change: '+0.1%', isPositive: true },
+    { pair: 'EUR/USD', price: '1.0850', change: '+0.3%', isPositive: true },
+    { pair: 'XAF/USD', price: '0.00164', change: '-0.2%', isPositive: false },
 ];
 
 const RatesMarquee = () => {
-    const tickerItems = FEATURE_FLAGS.ALLOW_CRYPTO
-        ? RAW_TICKER_ITEMS
-        : RAW_TICKER_ITEMS.filter(item => {
-            const [from, to] = item.pair.split('/');
-            return !isCryptoCurrency(from) && !isCryptoCurrency(to);
-        });
-
     // Duplicate items to ensure smooth infinite loop
-    const doubleItems = [...tickerItems, ...tickerItems, ...tickerItems];
+    const doubleItems = [...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS];
 
     return (
         <div className="w-full bg-[#050816] border-y border-white/5 py-4 overflow-hidden relative select-none">
@@ -48,7 +40,7 @@ const RatesMarquee = () => {
                             className="flex items-center space-x-2 text-xs font-semibold"
                         >
                             <span className="text-[#6D778A] tracking-wider">{item.pair}</span>
-                            <span className="text-[#F8FAFC] font-semibold">${item.price}</span>
+                            <span className="text-[#F8FAFC] font-semibold">{item.price}</span>
                             <div className={`flex items-center space-x-1 text-[10px] ${item.isPositive ? 'text-[#22C55E]' : 'text-[#EF4444]'
                                 }`}>
                                 {item.isPositive ? (

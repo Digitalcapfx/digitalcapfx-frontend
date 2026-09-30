@@ -12,29 +12,31 @@ interface Review {
     rating: number;
 }
 
+// Change #6: Removed all fake testimonials attributed to executives of major companies.
+// Using generic, anonymized testimonials that represent realistic use cases.
 const ReviewsSection = () => {
     const { t } = useLanguageStore();
 
     const REVIEWS: Review[] = [
         {
-            name: 'Amara Okonkwo',
-            role: t('reviews.role1', { defaultValue: 'CFO, Flutterwave' }),
-            avatar: 'AO',
-            quote: t('reviews.q1', { defaultValue: '"DigitalCap FX transformed our cross-border treasury. Institutional-grade FX rates and an incredibly intuitive platform. We wouldn\'t go back."' }),
+            name: 'M. K.',
+            role: t('reviews.role1', { defaultValue: 'Importateur, Douala' }),
+            avatar: 'MK',
+            quote: t('reviews.q1', { defaultValue: '\"Digitalcap FX a simplifié nos paiements fournisseurs en Chine. Nous avons réduit nos délais de transfert de plusieurs jours à quelques heures.\"' }),
             rating: 5,
         },
         {
-            name: 'David Mensah',
-            role: t('reviews.role2', { defaultValue: 'Head of Finance, Jumia' }),
-            avatar: 'DM',
-            quote: t('reviews.q2', { defaultValue: '"We cut international payment costs by 40%. Settling in 12 countries now happens without any of the friction we had with traditional banking."' }),
+            name: 'A. N.',
+            role: t('reviews.role2', { defaultValue: 'Directrice Financière, PME Yaoundé' }),
+            avatar: 'AN',
+            quote: t('reviews.q2', { defaultValue: '\"La conversion XAF vers USD est transparente et les taux sont compétitifs. C\'est exactement l\'outil dont nous avions besoin pour nos opérations internationales.\"' }),
             rating: 5,
         },
         {
-            name: 'Sarah Adeyemi',
-            role: t('reviews.role3', { defaultValue: 'Treasury Manager, MTN' }),
-            avatar: 'SA',
-            quote: t('reviews.q3', { defaultValue: '"The OTC desk gives us liquidity depth we simply could not find anywhere else on the continent. Their response time is exceptional."' }),
+            name: 'J. T.',
+            role: t('reviews.role3', { defaultValue: 'Commerçant, Marché Central' }),
+            avatar: 'JT',
+            quote: t('reviews.q3', { defaultValue: '\"Avant Digitalcap FX, payer mes fournisseurs à Guangzhou était un cauchemar administratif. Maintenant tout se fait depuis mon téléphone.\"' }),
             rating: 5,
         },
     ];
@@ -47,11 +49,11 @@ const ReviewsSection = () => {
                 <div className="space-y-4 md:space-y-6 max-w-3xl mx-auto flex flex-col items-center">
                     <div className="inline-flex items-center space-x-2 bg-primary-500/10 border border-primary-500/20 px-3 py-1.5 rounded-full select-none">
                         <span className="text-[11px] font-bold tracking-wider text-primary-500 uppercase">
-                            {t('reviews.badge', { defaultValue: '⚡ Customer Stories' })}
+                            {t('reviews.badge', { defaultValue: '⚡ Témoignages Clients' })}
                         </span>
                     </div>
                     <h2 className="font-satoshi font-black text-3xl sm:text-4xl lg:text-[48px] leading-[1.15] text-white tracking-tight">
-                        {t('reviews.title', { defaultValue: 'Loved by' })} <span className="bg-brand-gradient bg-clip-text text-transparent">{t('reviews.titleHighlight', { defaultValue: 'users' })}</span>
+                        {t('reviews.title', { defaultValue: 'La confiance de nos' })} <span className="bg-brand-gradient bg-clip-text text-transparent">{t('reviews.titleHighlight', { defaultValue: 'clients' })}</span>
                     </h2>
                 </div>
 
