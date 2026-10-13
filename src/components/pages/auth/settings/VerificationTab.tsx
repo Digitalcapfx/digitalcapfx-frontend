@@ -37,7 +37,11 @@ export const VerificationTab: React.FC = () => {
   const [historyPreviewName, setHistoryPreviewName] = useState('');
   const [uploadedDocUrls, setUploadedDocUrls] = useState<Record<string, string>>({});
   const [docUploadingKey, setDocUploadingKey] = useState<string | null>(null);
-  const [verificationUrl, setVerificationUrl] = useState<string>('https://verify.didit.me/u/ygyeSJcjQaSlwL6YV3xlxA');
+  // No default: a verification URL is only ever valid if the backend minted a
+  // per-user session for it. A shared link carries no vendor_data, so its result
+  // could never be attributed to this user.
+  const [verificationUrl, setVerificationUrl] = useState<string>('');
+  const [initError, setInitError] = useState<string | null>(null);
 
   // Fetch user profile for default pre-fills
   const profileQuery = useQuery({
@@ -335,33 +339,37 @@ export const VerificationTab: React.FC = () => {
     }
   };
 
-  const autoApproveMutation = useMutation({
-    mutationFn: () => kycService.autoApproveKyc(),
-    onSuccess: () => {
-      toast.success(t('settings.verification.toast.statusUpdated') || 'Vérification approuvée avec succès !');
-      queryClient.invalidateQueries({ queryKey: ['kycStatus'] });
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['kycRequirements'] });
-    },
-    onError: () => {
-      handleRefreshStatus();
-    }
-  });
-
   const initKycMutation = useMutation({
     mutationFn: () => kycService.initKyc(),
     onSuccess: (res) => {
       const url = res?.data?.url || res?.data?.token || res?.url || res?.token;
-      if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-        setVerificationUrl(url);
+      if (!url || !url.startsWith('https://')) {
+        // Without a per-user session URL there is nothing safe to open.
+        setInitError(
+          t('settings.verification.toast.flowInitFailed') ||
+            "Impossible de démarrer la vérification pour le moment. Veuillez réessayer."
+        );
+        setVerificationLaunched(false);
+        return;
       }
+      setInitError(null);
+      setVerificationUrl(url);
       setVerificationLaunched(true);
       toast.success(t('settings.verification.toast.flowInitiated'));
     },
     onError: (err: any) => {
-      console.warn('KYC init fallback to direct Didit link:', err);
-      setVerificationLaunched(true);
-      toast.success(t('settings.verification.toast.flowInitiated'));
+      // Never report success here. Previously this fell back to a shared Didit
+      // link and showed a success toast, so a failed init looked identical to a
+      // working one while producing a verification nobody could attribute.
+      console.error('KYC init failed:', err);
+      const detail =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        t('settings.verification.toast.flowInitFailed') ||
+        "Impossible de démarrer la vérification pour le moment. Veuillez réessayer.";
+      setInitError(detail);
+      setVerificationLaunched(false);
+      toast.error(detail);
     }
   });
 
@@ -482,9 +490,8 @@ export const VerificationTab: React.FC = () => {
                   verificationLaunched={verificationLaunched}
                   isInitializing={initKycMutation.isPending}
                   verificationUrl={verificationUrl}
+                  initError={initError}
                   onStartVerification={() => initKycMutation.mutate()}
-                  onAutoApprove={() => autoApproveMutation.mutate()}
-                  isAutoApproving={autoApproveMutation.isPending}
                   onBack={() => setMainStep(hasDocuments ? 2 : 1)}
                 />
               )}

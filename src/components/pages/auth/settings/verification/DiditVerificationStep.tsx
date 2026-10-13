@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useEffect } from 'react'
-import { UserCheck, Shield, Lock, CheckCircle2, ArrowLeft, RefreshCw, ExternalLink, Sparkles } from 'lucide-react'
+import React from 'react'
+import { UserCheck, Shield, Lock, CheckCircle2, ArrowLeft, RefreshCw, ExternalLink, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { KycStage } from '@/services/kyc.service'
@@ -12,14 +12,12 @@ interface DiditVerificationStepProps {
   livenessStepNumber: number;
   verificationLaunched: boolean;
   isInitializing: boolean;
+  /** Per-user session URL minted by the backend. Empty until it arrives. */
   verificationUrl?: string;
+  initError?: string | null;
   onStartVerification: () => void;
-  onAutoApprove?: () => void;
-  isAutoApproving?: boolean;
   onBack: () => void;
 }
-
-const DEFAULT_DIDIT_URL = 'https://verify.didit.me/u/ygyeSJcjQaSlwL6YV3xlxA';
 
 export const DiditVerificationStep: React.FC<DiditVerificationStepProps> = ({
   stage,
@@ -27,43 +25,22 @@ export const DiditVerificationStep: React.FC<DiditVerificationStepProps> = ({
   verificationLaunched,
   isInitializing,
   verificationUrl,
+  initError,
   onStartVerification,
-  onAutoApprove,
-  isAutoApproving = false,
   onBack,
 }) => {
   const { t } = useLanguageStore();
   const isSubmittedOrStarted = stage === 'submitted' || stage === 'identity_started' || stage === 'resubmit';
-  const effectiveUrl = verificationUrl || DEFAULT_DIDIT_URL;
 
-  // Listen to postMessage from Didit iframe for automatic completion detection
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      // Didit sends status updates or completion events
-      try {
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        if (
-          data?.type === 'DIDIT_VERIFICATION_COMPLETED' ||
-          data?.event === 'status.updated' ||
-          data?.status === 'Approved' ||
-          data?.status === 'APPROVED' ||
-          data?.status === 'In Review'
-        ) {
-          if (onAutoApprove) {
-            onAutoApprove();
-          }
-        }
-      } catch {
-        // Not a JSON message, ignore
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [onAutoApprove]);
+  // Only a session URL issued by our backend is usable. There is deliberately no
+  // fallback link: a shared hosted link carries no vendor_data, so Didit's
+  // decision could not be attributed to this user.
+  const hasSession = Boolean(verificationUrl);
+  const showFlow = hasSession && (verificationLaunched || isSubmittedOrStarted);
 
   const handleOpenNewTab = () => {
-    window.open(effectiveUrl, '_blank', 'noopener,noreferrer');
+    if (!verificationUrl) return;
+    window.open(verificationUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -83,7 +60,7 @@ export const DiditVerificationStep: React.FC<DiditVerificationStepProps> = ({
           </div>
         </div>
 
-        {verificationLaunched || isSubmittedOrStarted ? (
+        {showFlow ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center space-x-2 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
@@ -112,46 +89,26 @@ export const DiditVerificationStep: React.FC<DiditVerificationStepProps> = ({
                 >
                   {t('settings.verification.step3.reloadWidget')}
                 </Button>
-
-                {onAutoApprove && (
-                  <Button
-                    type="button"
-                    onClick={onAutoApprove}
-                    isLoading={isAutoApproving}
-                    className="rounded-xl text-xs font-bold h-9 px-4 shrink-0 bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20"
-                    leftIcon={<Sparkles className="h-3.5 w-3.5" />}
-                  >
-                    {t('settings.verification.step3.autoApproveBtn') || "J'ai terminé — Auto-valider"}
-                  </Button>
-                )}
               </div>
             </div>
 
-            {/* Embedded Didit Verification Iframe */}
+            {/* Embedded Didit verification — per-user session URL */}
             <div className="relative w-full min-h-[620px] rounded-2xl overflow-hidden border border-white/10 bg-[#070b14] shadow-2xl">
               <iframe
-                src={effectiveUrl}
+                src={verificationUrl}
                 title="Didit KYC Identity Verification"
                 className="w-full h-full min-h-[620px] border-0"
-                allow="camera; microphone; fullscreen; accelerometer; gyroscope; payment"
+                allow="camera; microphone; fullscreen; accelerometer; gyroscope; autoplay; encrypted-media"
                 loading="lazy"
               />
             </div>
 
-            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3.5 flex items-center justify-between text-xs text-slate-300">
-              <div className="flex items-center space-x-2">
-                <Sparkles className="h-4 w-4 text-emerald-400 shrink-0" />
-                <span>Une fois vos pièces scannées sur Didit, le système valide automatiquement votre compte.</span>
-              </div>
-              {onAutoApprove && (
-                <button
-                  type="button"
-                  onClick={onAutoApprove}
-                  className="text-emerald-400 hover:text-emerald-300 font-bold underline ml-2 shrink-0 cursor-pointer"
-                >
-                  Valider maintenant
-                </button>
-              )}
+            <div className="bg-white/[0.03] border border-white/10 rounded-xl p-3.5 flex items-start space-x-2 text-xs text-slate-300">
+              <Shield className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+              <span>
+                {t('settings.verification.step3.decisionPending') ||
+                  "Une fois vos documents soumis, notre équipe reçoit la décision de Didit et votre statut est mis à jour automatiquement. Cela prend généralement moins d'une minute."}
+              </span>
             </div>
           </div>
         ) : (
@@ -184,6 +141,13 @@ export const DiditVerificationStep: React.FC<DiditVerificationStepProps> = ({
               </div>
             </div>
 
+            {initError && (
+              <div className="max-w-lg mx-auto bg-red-500/5 border border-red-500/20 rounded-xl p-3.5 flex items-start space-x-2 text-xs text-red-300 text-left">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{initError}</span>
+              </div>
+            )}
+
             <div className="pt-2">
               <Button
                 type="button"
@@ -191,7 +155,9 @@ export const DiditVerificationStep: React.FC<DiditVerificationStepProps> = ({
                 isLoading={isInitializing}
                 className="rounded-xl text-xs font-bold px-8 h-12 bg-emerald-500 hover:bg-emerald-400 text-white shadow-xl"
               >
-                {t('settings.verification.startSumsub')}
+                {initError
+                  ? (t('settings.verification.step3.retry') || 'Réessayer')
+                  : t('settings.verification.startSumsub')}
               </Button>
             </div>
           </div>
